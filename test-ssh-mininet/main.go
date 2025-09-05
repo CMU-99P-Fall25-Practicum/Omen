@@ -254,9 +254,9 @@ func getPassword(prompt string) string {
 func main() {
 	// Configuration - leave empty strings to trigger interactive input
 	var (
-		host     = ""
-		username = ""
-		password = ""
+		host     = "172.20.10.2"
+		username = "gavinliao89"
+		password = "gavin891029"
 	)
 
 	// Check command line arguments first
