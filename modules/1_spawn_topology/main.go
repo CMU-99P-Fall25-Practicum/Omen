@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func main() {
+func main_skeloton() {
 	// slurp input
 	var sshAddr netip.AddrPort
 	// check for output redirection
