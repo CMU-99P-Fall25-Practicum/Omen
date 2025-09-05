@@ -12,7 +12,7 @@ sudo mn --custom /tmp/topo_from_json.py --topo fromjson --test pingall
 ```
 sudo mn --custom /tmp/topo_from_json.py --topo fromjson
 ```
-	5.	Cleanup: attempt to delete the remote Python file (rm -f /tmp/topo_from_json.py) before exiting.
+5.	Cleanup: attempt to delete the remote Python file (rm -f /tmp/topo_from_json.py) before exiting.
 ## Requirements
 - Local machine
   - Go (1.20+ recommended)
