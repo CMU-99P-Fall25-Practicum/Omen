@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -24,7 +23,7 @@ func parseFlags() (*Config, error) {
 	// Custom usage function
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Mininet Topology Manager\n\n")
-		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS] [topology.json]\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "Usage: go run . [OPTIONS] [topo.json]\n\n")
 		fmt.Fprintf(os.Stderr, "Description:\n")
 		fmt.Fprintf(os.Stderr, "  This program creates and runs Mininet topologies from JSON files on remote VMs.\n")
 		fmt.Fprintf(os.Stderr, "  It handles SSH connections, uploads topology scripts, and manages Mininet sessions.\n\n")
@@ -34,8 +33,8 @@ func parseFlags() (*Config, error) {
 		fmt.Fprintf(os.Stderr, "  --remote-path=PATH     Remote path for generated Python file (default: /tmp/topo_from_json.py)\n")
 		fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
 		fmt.Fprintf(os.Stderr, "Arguments:\n")
-		fmt.Fprintf(os.Stderr, "  topology.json          JSON file containing network topology (default: topo.json)\n\n")
-		fmt.Fprintf(os.Stderr, "JSON Format:\n")
+		fmt.Fprintf(os.Stderr, "  topo.json          JSON file containing network topology (default: topo.json)\n\n")
+		fmt.Fprintf(os.Stderr, "JSON Format example:\n")
 		fmt.Fprintf(os.Stderr, "  {\n")
 		fmt.Fprintf(os.Stderr, "    \"hosts\":    [\"h1\", \"h2\", \"h3\"],\n")
 		fmt.Fprintf(os.Stderr, "    \"switches\": [\"s1\", \"s2\"],\n")
@@ -45,9 +44,9 @@ func parseFlags() (*Config, error) {
 		fmt.Fprintf(os.Stderr, "    \"host\":     \"192.168.1.100\"  // Optional: VM IP address\n")
 		fmt.Fprintf(os.Stderr, "  }\n\n")
 		fmt.Fprintf(os.Stderr, "Examples:\n")
-		fmt.Fprintf(os.Stderr, "  %s --remote=user@192.168.1.100 --cli topology.json\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(os.Stderr, "  %s --cli --remote=user@192.168.1.100\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(os.Stderr, "  %s topology.json  # Uses hardcoded or prompts for connection info\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "  go run . --remote=user@192.168.1.100 --cli topo.json\n")
+		fmt.Fprintf(os.Stderr, "  go run . --cli --remote=user@192.168.1.100\n")
+		fmt.Fprintf(os.Stderr, "  go run . topo.json  # Prompts for connection info\n")
 		fmt.Fprintf(os.Stderr, "\nNote: If connection info is not provided via --remote flag, the program will\n")
 		fmt.Fprintf(os.Stderr, "      check the JSON file, then hardcoded defaults, then prompt for input.\n")
 	}

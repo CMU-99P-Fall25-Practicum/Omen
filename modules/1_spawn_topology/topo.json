@@ -2,7 +2,7 @@
   "hosts":    ["h1", "h2", "h3"],
   "switches": ["s1", "s2"],
   "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"]],
-  "username": "",
-  "password": "",
-  "host": ""
+  "username": "gavinliao89",
+  "password": "gavin891029",
+  "host": "192.168.86.120"
 }
