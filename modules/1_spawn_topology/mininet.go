@@ -155,7 +155,7 @@ func runMininetCommand(client *ssh.Client, config *Config) error {
 
 	// Output handling goroutine
 	go func() {
-		defer func() { done <- true }()
+		defer func() { close(done) }()
 
 		reader := io.MultiReader(stdout, stderr)
 		scanner := bufio.NewScanner(reader)
