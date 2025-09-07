@@ -103,6 +103,7 @@ Note: If connection info is not provided via --remote flag, the program will
 	}
 }
 
+// loadTopology slurps the given file and attempts to unmarshal it (from JSON) to a Topo struct.
 func loadTopology(filename string) (*Topo, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
