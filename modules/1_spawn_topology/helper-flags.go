@@ -22,33 +22,46 @@ func parseFlags() (*Config, error) {
 
 	// Custom usage function
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Mininet Topology Manager\n\n")
-		fmt.Fprintf(os.Stderr, "Usage: go run . [OPTIONS] [topo.json]\n\n")
-		fmt.Fprintf(os.Stderr, "Description:\n")
-		fmt.Fprintf(os.Stderr, "  This program creates and runs Mininet topologies from JSON files on remote VMs.\n")
-		fmt.Fprintf(os.Stderr, "  It handles SSH connections, uploads topology scripts, and manages Mininet sessions.\n\n")
-		fmt.Fprintf(os.Stderr, "Options:\n")
-		fmt.Fprintf(os.Stderr, "  --remote=USER@HOST     Remote VM to connect to (e.g., gavinliao89@192.168.1.100)\n")
-		fmt.Fprintf(os.Stderr, "  --cli                  Enter interactive Mininet CLI (default: run pingall and exit)\n")
-		fmt.Fprintf(os.Stderr, "  --remote-path=PATH     Remote path for generated Python file (default: /tmp/topo_from_json.py)\n")
-		fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
-		fmt.Fprintf(os.Stderr, "Arguments:\n")
-		fmt.Fprintf(os.Stderr, "  topo.json          JSON file containing network topology (default: topo.json)\n\n")
-		fmt.Fprintf(os.Stderr, "JSON Format example:\n")
-		fmt.Fprintf(os.Stderr, "  {\n")
-		fmt.Fprintf(os.Stderr, "    \"hosts\":    [\"h1\", \"h2\", \"h3\"],\n")
-		fmt.Fprintf(os.Stderr, "    \"switches\": [\"s1\", \"s2\"],\n")
-		fmt.Fprintf(os.Stderr, "    \"links\":    [[\"h1\",\"s1\"], [\"h2\",\"s1\"], [\"h3\",\"s2\"], [\"s1\",\"s2\"]],\n")
-		fmt.Fprintf(os.Stderr, "    \"username\": \"gavinliao89\",    // Optional: SSH username\n")
-		fmt.Fprintf(os.Stderr, "    \"password\": \"mypassword\",    // Optional: SSH/sudo password\n")
-		fmt.Fprintf(os.Stderr, "    \"host\":     \"192.168.1.100\"  // Optional: VM IP address\n")
-		fmt.Fprintf(os.Stderr, "  }\n\n")
-		fmt.Fprintf(os.Stderr, "Examples:\n")
-		fmt.Fprintf(os.Stderr, "  go run . --remote=user@192.168.1.100 --cli topo.json\n")
-		fmt.Fprintf(os.Stderr, "  go run . --cli --remote=user@192.168.1.100\n")
-		fmt.Fprintf(os.Stderr, "  go run . topo.json  # Prompts for connection info\n")
-		fmt.Fprintf(os.Stderr, "\nNote: If connection info is not provided via --remote flag, the program will\n")
-		fmt.Fprintf(os.Stderr, "      check the JSON file, then hardcoded defaults, then prompt for input.\n")
+		var bin string = "UNKNOWN"
+		if len(os.Args) > 1 {
+			bin = os.Args[0]
+		}
+
+		fmt.Fprintf(os.Stderr,
+			`Mininet Topology Manager
+
+Usage: %[1]v [OPTIONS] [topo.json]
+
+Description:
+  This program creates and runs Mininet topologies from JSON files on remote VMs.
+  It handles SSH connections, uploads topology scripts, and manages Mininet sessions.
+
+Options:
+  --remote=USER@HOST     Remote VM to connect to (e.g., gavinliao89@192.168.1.100)
+  --cli                  Enter interactive Mininet CLI (default: run pingall and exit)
+  --remote-path=PATH     Remote path for generated Python file (default: /tmp/topo_from_json.py)
+  -h, --help             Show this help message
+
+Arguments:
+  topo.json          JSON file containing network topology (default: topo.json)
+
+JSON Format example:
+  {
+    "hosts":    ["h1", "h2", "h3"],
+    "switches": ["s1", "s2"],
+    "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"]],
+    "username": "gavinliao89",    // Optional: SSH username
+    "password": "mypassword",    // Optional: SSH/sudo password
+    "host":     "192.168.1.100"  // Optional: VM IP address
+  }
+
+Examples:
+  %[1]v --remote=user@192.168.1.100 --cli topo.json
+  %[1]v --cli --remote=user@192.168.1.100
+  %[1]v topo.json  # Prompts for connection info
+
+Note: If connection info is not provided via --remote flag, the program will
+      check the JSON file, then hardcoded defaults, then prompt for input.`, bin)
 	}
 
 	flag.Parse()

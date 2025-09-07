@@ -144,17 +144,25 @@ func main() {
 	}
 
 	// Display final configuration
-	fmt.Printf("\nFinal Configuration:\n")
-	fmt.Printf("  Host: %s\n", config.Host)
-	fmt.Printf("  Username: %s\n", config.Username)
-	fmt.Printf("  Password: [hidden]\n")
-	fmt.Printf("  Topology: %s\n", config.TopoFile)
-	fmt.Printf("  Mode: %s\n", map[bool]string{true: "Interactive CLI", false: "Automated pingall"}[config.UseCLI])
-	fmt.Printf("  Remote path: %s\n", config.RemotePath)
-	fmt.Printf("  Hosts: %v\n", topo.Hosts)
-	fmt.Printf("  Switches: %v\n", topo.Switches)
-	fmt.Printf("  Links: %v\n", topo.Links)
-	fmt.Println()
+	fmt.Printf("\n"+`Final Configuration:
+	Host       : %s
+	Username   : %s
+	Password   : [hidden]
+	Topology   : %s
+	Mode       : %s\n
+	Remote path: %s
+	Hosts      : %v
+	Switches   : %v
+	Links      : %v`+"\n",
+		config.Host,
+		config.Username,
+
+		config.TopoFile,
+		map[bool]string{true: "Interactive CLI", false: "Automated pingall"}[config.UseCLI],
+		config.RemotePath,
+		topo.Hosts,
+		topo.Switches,
+		topo.Links)
 
 	// Execute the remote Mininet session
 	if err := runRemoteMininet(config, topo); err != nil {
