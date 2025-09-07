@@ -79,7 +79,7 @@ func runRemoteMininet(config *Config, topo *Topo) error {
 	}
 
 	fmt.Printf("-> Connecting to %s@%s\n", config.Username, config.Host)
-	client, err := ssh.Dial("tcp", config.Host+":22", sshConfig)
+	client, err := ssh.Dial("tcp", config.Host.String(), sshConfig)
 	if err != nil {
 		return fmt.Errorf("SSH connection failed: %w", err)
 	}

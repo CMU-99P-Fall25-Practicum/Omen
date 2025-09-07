@@ -4,5 +4,5 @@
   "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"]],
   "username": "gavinliao89",
   "password": "gavin891029",
-  "host": "192.168.86.120"
+  "address": "192.168.86.120:22"
 }

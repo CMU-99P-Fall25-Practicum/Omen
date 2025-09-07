@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net/netip"
 	"os"
 	"strings"
 
@@ -31,11 +32,11 @@ type Topo struct {
 	// Optional connection info in JSON
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
-	Host     string `json:"host,omitempty"`
+	AP       string `json:"address,omitempty"`
 }
 
 type Config struct {
-	Host       string
+	Host       netip.AddrPort
 	Username   string
 	Password   string
 	TopoFile   string
@@ -59,7 +60,7 @@ func init() {
 
 	// Custom usage function
 	flag.Usage = func() {
-		var bin string = "UNKNOWN"
+		var bin = "UNKNOWN"
 		if len(os.Args) > 1 {
 			bin = os.Args[0]
 		}
@@ -116,13 +117,13 @@ func loadTopology(filename string) (*Topo, error) {
 	return &topo, nil
 }
 
-func resolveConfig(config *Config, topo *Topo) error {
-	// Priority: command line flags > JSON file > hardcoded defaults > user input
-
+// resolveConfig fetches requires configuration information (username, host, and password) hierarchically.
+// Hierarchical priority: command line flags > JSON file > hardcoded defaults > user input
+func resolveConfig(config *Config, js *Topo) error {
 	// Resolve username
 	if config.Username == "" {
-		if topo.Username != "" {
-			config.Username = topo.Username
+		if js.Username != "" {
+			config.Username = js.Username
 			fmt.Printf("Using username from JSON: %s\n", config.Username)
 		} else if defaultUsername != "" {
 			config.Username = defaultUsername
@@ -135,24 +136,38 @@ func resolveConfig(config *Config, topo *Topo) error {
 	}
 
 	// Resolve host
-	if config.Host == "" {
-		if topo.Host != "" {
-			config.Host = topo.Host
-			fmt.Printf("Using host from JSON: %s\n", config.Host)
-		} else if defaultHost != "" {
-			config.Host = defaultHost
-			fmt.Printf("Using hardcoded host: %s\n", config.Host)
-		} else {
-			config.Host = getInput("Enter host IP address: ")
+	config.Host = func() netip.AddrPort {
+		// if it was set by cli, we are done
+		if config.Host.IsValid() {
+			fmt.Printf("Using host from --remote flag: %v\n", config.Host)
+			return config.Host
 		}
-	} else {
-		fmt.Printf("Using host from --remote flag: %s\n", config.Host)
-	}
+
+		// pull from topo
+		if ap, err := netip.ParseAddrPort(js.AP); err == nil {
+			fmt.Printf("Using host from JSON: %v\n", ap)
+			return ap
+		}
+
+		// pull from default host
+		if ap, err := netip.ParseAddrPort(defaultHost); err == nil {
+			fmt.Printf("Using hardcoded host: %v\n", ap)
+			return ap
+		}
+
+		// pull from stdin
+		var ap netip.AddrPort
+		var err error
+		for ap, err = netip.ParseAddrPort(getInput("Enter a valid target of the form '<host>:<port>':")); err != nil; {
+		}
+		return ap
+
+	}()
 
 	// Resolve password
 	if config.Password == "" {
-		if topo.Password != "" {
-			config.Password = topo.Password
+		if js.Password != "" {
+			config.Password = js.Password
 			fmt.Println("Using password from JSON: [hidden]")
 		} else if defaultPassword != "" {
 			config.Password = defaultPassword
@@ -163,7 +178,7 @@ func resolveConfig(config *Config, topo *Topo) error {
 	}
 
 	// Validate required fields
-	if config.Username == "" || config.Host == "" || config.Password == "" {
+	if config.Username == "" || !config.Host.IsValid() || config.Password == "" {
 		return fmt.Errorf("username, host, and password are required")
 	}
 
@@ -190,10 +205,7 @@ func runRemoteCommand(client *ssh.Client, command string) error {
 
 func main() {
 	if err := parseFlags(); err != nil {
-		if err.Error() == "help requested" {
-			return // Normal exit for help
-		}
-		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+		fmt.Fprintf(os.Stderr, "failed to parse arguments: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -258,7 +270,7 @@ func parseFlags() error {
 			return fmt.Errorf("invalid remote format, expected username@host")
 		}
 		config.Username = parts[0]
-		config.Host = parts[1]
+		config.Host, _ = netip.ParseAddrPort(parts[1]) // throw away error; validity is checked later
 	}
 
 	// Get topology file (either from args or default)
