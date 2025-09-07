@@ -170,6 +170,9 @@ func resolveConfig(config *Config, topo *Topo) error {
 	return nil
 }
 
+// runRemoteCommand executes the given command against the client.
+//
+// ! Both stdout and stderr are swallowed.
 func runRemoteCommand(client *ssh.Client, command string) error {
 	session, err := client.NewSession()
 	if err != nil {
