@@ -7,8 +7,6 @@ import (
 	"net/netip"
 	"os"
 	"strings"
-
-	"golang.org/x/crypto/ssh"
 )
 
 // Configuration - Set these to hardcode values, leave empty for prompting
@@ -181,24 +179,6 @@ func resolveConfig(config *Config, js *Topo) error {
 	// Validate required fields
 	if config.Username == "" || !config.Host.IsValid() || config.Password == "" {
 		return fmt.Errorf("username, host, and password are required")
-	}
-
-	return nil
-}
-
-// runRemoteCommand executes the given command against the client.
-//
-// ! Both stdout and stderr are swallowed.
-func runRemoteCommand(client *ssh.Client, command string) error {
-	session, err := client.NewSession()
-	if err != nil {
-		return fmt.Errorf("create session: %w", err)
-	}
-	defer session.Close()
-
-	output, err := session.CombinedOutput(command)
-	if err != nil {
-		return fmt.Errorf("command failed: %w (output: %s)", err, string(output))
 	}
 
 	return nil

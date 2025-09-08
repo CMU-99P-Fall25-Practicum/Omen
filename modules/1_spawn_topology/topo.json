@@ -1,7 +1,7 @@
 {
-  "hosts":    ["h1", "h2", "h3"],
+  "hosts":    ["h1", "h2", "h3", "h4"],
   "switches": ["s1", "s2"],
-  "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"]],
+  "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"], ["h4", "s1"]],
   "username": "gavinliao89",
   "password": "gavin891029",
   "address": "192.168.86.120:22"

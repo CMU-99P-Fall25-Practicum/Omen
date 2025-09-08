@@ -96,12 +96,6 @@ func runRemoteMininet(config *Config, topo *Topo) error {
 		return fmt.Errorf("mininet execution failed: %w", err)
 	}
 
-	// 5) Cleanup remote file
-	//	fmt.Printf("-> Cleaning up remote file: %s\n", config.RemotePath)
-	//	if err := runRemoteCommand(client, fmt.Sprintf("rm %s", config.RemotePath)); err != nil {
-	//		fmt.Printf("Warning: cleanup failed: %v\n", err) // Non-fatal
-	//	}
-
 	return nil
 }
 
