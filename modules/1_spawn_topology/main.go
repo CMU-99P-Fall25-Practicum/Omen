@@ -52,10 +52,6 @@ func init() {
 	// set default values
 	config.TopoFile = defaultTopoFile
 
-	// Custom help flag
-	//showHelp := flag.Bool("h", false, "show help")
-	//flag.BoolVar(showHelp, "help", false, "show help")
-
 	// Custom usage function
 	flag.Usage = func() {
 		var bin = "UNKNOWN"
@@ -234,15 +230,9 @@ func main() {
 	fmt.Println("Program completed successfully!")
 }
 
-// Parses the default flagset and sets SSH information iff --remote was specified.
+// Parses the default flagset and sets SSH information if --remote was specified.
 func parseFlags() error {
 	flag.Parse()
-
-	// Show help if requested
-	/*if *showHelp {
-		flag.Usage()
-		return nil, fmt.Errorf("help requested")
-	}*/
 
 	// Parse remote flag if provided
 	if remote != "" {
