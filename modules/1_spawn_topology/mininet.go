@@ -129,14 +129,7 @@ func runMininet(client *ssh.Client, config *Config) error {
 	}
 
 	// Build Mininet command
-	var mnCommand string
-	if config.UseCLI {
-		mnCommand = fmt.Sprintf("sudo -E mn --custom %s --topo fromjson", config.RemotePath)
-		fmt.Printf("-> Starting interactive Mininet session (type 'exit' to quit)\n")
-	} else {
-		mnCommand = fmt.Sprintf("sudo -E mn --custom %s --topo fromjson --test pingall", config.RemotePath)
-		fmt.Printf("-> Running automated pingall test\n")
-	}
+	var mnCommand string = genCommand(config.UseCLI)
 
 	fmt.Printf("-> Executing: %s\n", mnCommand)
 
@@ -160,7 +153,7 @@ func runMininet(client *ssh.Client, config *Config) error {
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			if !strings.Contains(line, config.Password) {
+			if !strings.Contains(line, config.Password) { // forbit password output on terminal
 				fmt.Println(line)
 			}
 
