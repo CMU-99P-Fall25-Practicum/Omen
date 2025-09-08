@@ -112,8 +112,14 @@ func loadTopology(filename string) (*Topo, error) {
 	return &topo, nil
 }
 
-// resolveConfig fetches requires configuration information (username, host, and password) hierarchically.
-// Hierarchical priority: command line flags > JSON file > hardcoded defaults > user input
+/*
+*
+Hierarchical priority: command line flags > JSON file > hardcoded defaults > user input
+
+resolveConfig() fetches requires configuration information (username, host, and password) hierarchically.
+
+Note: Keep the "user input" functionality for now. Opt to remove when future pipeline is complete
+*/
 func resolveConfig(config *Config, js *Topo) error {
 	// Resolve username
 	if config.Username == "" {
