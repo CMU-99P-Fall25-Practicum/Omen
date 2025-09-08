@@ -165,7 +165,9 @@ func runMininetCommand(client *ssh.Client, config *Config) error {
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			fmt.Println(line)
+			if !strings.Contains(line, config.Password) {
+				fmt.Println(line)
+			}
 
 			// Detect sudo password prompt and auto-respond
 			lowerLine := strings.ToLower(line)
