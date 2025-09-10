@@ -16,13 +16,6 @@ func getInput(prompt string) string {
 	return strings.TrimSpace(input)
 }
 
-func getPassword(prompt string) string {
-	fmt.Print(prompt)
-	reader := bufio.NewReader(os.Stdin)
-	password, _ := reader.ReadString('\n')
-	return strings.TrimSpace(password)
-}
-
 func uploadFile(client *ssh.Client, localPath, remotePath string) error {
 	// Read local file
 	localData, err := os.ReadFile(localPath)

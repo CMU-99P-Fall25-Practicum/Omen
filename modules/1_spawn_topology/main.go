@@ -174,7 +174,7 @@ func resolveConfig(config *Config, js *Topo) error {
 			config.Password = defaultPassword
 			fmt.Println("Using hardcoded password: [hidden]")
 		} else {
-			config.Password = getPassword("Enter password (SSH/sudo): ")
+			config.Password = getInput("Enter password (SSH/sudo): ")
 		}
 	}
 
