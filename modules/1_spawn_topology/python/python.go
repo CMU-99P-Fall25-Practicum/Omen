@@ -1,6 +1,12 @@
 // Package python generates python code for Mininet.
 package python
 
+/**
+This file is responsible for Python Topo script generation
+
+Future improvements: Add consistency into python script generation
+*/
+
 import (
 	"fmt"
 	"strings"
@@ -24,6 +30,13 @@ topos = { 'fromjson': ( lambda: FromJSON() ) }
 		addHosts(8, hosts), addSwitches(switches), addLinks(links))
 }
 
+// Add tap for the python script
+// It's currently using four spaces " " instead of one tap for consistency
+func addTap(tapNum int) string {
+	tap := "    "
+	return strings.Repeat(tap, tapNum)
+}
+
 // addHosts generates one line for each host, where the host adds itself to the topology.
 // indentLevel is the number of spaces to insert before the command (to ensure proper indentation).
 func addHosts(indentLevel int, hosts []string) string {
@@ -39,7 +52,7 @@ func addHosts(indentLevel int, hosts []string) string {
 func addSwitches(sw []string) string {
 	s := ""
 	for _, x := range sw {
-		s += fmt.Sprintf("        %[1]s = self.addSwitch('%[1]s')\n", x)
+		s += addTap(2) + fmt.Sprintf("%[1]s = self.addSwitch('%[1]s')\n", x)
 	}
 	return s
 }
@@ -48,7 +61,7 @@ func addSwitches(sw []string) string {
 func addLinks(links [][2]string) string {
 	s := ""
 	for _, lk := range links {
-		s += fmt.Sprintf("        self.addLink(%s, %s)\n", lk[0], lk[1])
+		s += addTap(2) + fmt.Sprintf("self.addLink(%s, %s)\n", lk[0], lk[1])
 	}
 	return s
 }
