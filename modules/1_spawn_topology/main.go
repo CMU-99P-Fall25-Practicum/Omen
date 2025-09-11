@@ -144,13 +144,18 @@ func resolveConfig(config *Config, js *Topo) error {
 			return config.Host
 		}
 
-		// pull from topo
+		// Pull VM address from input JSON
+		// Check if default port exists
+		if !strings.Contains(js.AP, ":") {
+			fmt.Printf("No port detected -> Using default port 22\n")
+			js.AP = js.AP + ":22"
+		}
 		if ap, err := netip.ParseAddrPort(js.AP); err == nil {
 			fmt.Printf("Using host from JSON: %v\n", ap)
 			return ap
 		}
 
-		// pull from default host
+		// Pull hosts from input JSON
 		if ap, err := netip.ParseAddrPort(defaultHost); err == nil {
 			fmt.Printf("Using hardcoded host: %v\n", ap)
 			return ap
