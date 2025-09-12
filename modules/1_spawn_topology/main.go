@@ -7,6 +7,8 @@ import (
 	"net/netip"
 	"os"
 	"strings"
+
+	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/models"
 )
 
 // Configuration - Set these to hardcode values, leave empty for prompting
@@ -14,33 +16,14 @@ var (
 	defaultHost     = ""
 	defaultUsername = ""
 	defaultPassword = ""
-	defaultTopoFile = "topo.json" // default topology file name
+	defaultTopoFile = "input-topo.json" // default topology file name
 )
 
 // flag values
 var (
 	remote string
-	config Config
+	config models.Config
 )
-
-type Topo struct {
-	Hosts    []string    `json:"hosts"`
-	Switches []string    `json:"switches"`
-	Links    [][2]string `json:"links"`
-	// Optional connection info in JSON
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	AP       string `json:"address,omitempty"`
-}
-
-type Config struct {
-	Host       netip.AddrPort
-	Username   string
-	Password   string
-	TopoFile   string
-	UseCLI     bool
-	RemotePath string
-}
 
 // generate flags for later parsing
 func init() {
@@ -97,19 +80,19 @@ Note: If connection info is not provided via --remote flag, the program will
 	}
 }
 
-// loadTopology slurps the given file and attempts to unmarshal it (from JSON) to a Topo struct.
-func loadTopology(filename string) (*Topo, error) {
+// loadInputTopoFile slurps the given file and attempts to unmarshal it (from JSON) to a Topo struct.
+func loadInputTopoFile(filename string) (*models.Input, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("read topo file: %w", err)
 	}
 
-	var topo Topo
-	if err := json.Unmarshal(data, &topo); err != nil {
+	var input models.Input
+	if err := json.Unmarshal(data, &input); err != nil {
 		return nil, fmt.Errorf("parse JSON: %w", err)
 	}
 
-	return &topo, nil
+	return &input, nil
 }
 
 /*
@@ -120,7 +103,7 @@ resolveConfig() fetches requires configuration information (username, host, and 
 
 Note: Keep the "user input" functionality for now. Opt to remove when future pipeline is complete
 */
-func resolveConfig(config *Config, js *Topo) error {
+func resolveConfig(config *models.Config, js *models.Input) error {
 	// Resolve username
 	if config.Username == "" {
 		if js.Username != "" {
@@ -144,13 +127,18 @@ func resolveConfig(config *Config, js *Topo) error {
 			return config.Host
 		}
 
-		// pull from topo
+		// Pull VM address from input JSON
+		// Check if default port exists
+		if !strings.Contains(js.AP, ":") {
+			fmt.Printf("No port detected -> Using default port 22\n")
+			js.AP = js.AP + ":22"
+		}
 		if ap, err := netip.ParseAddrPort(js.AP); err == nil {
 			fmt.Printf("Using host from JSON: %v\n", ap)
 			return ap
 		}
 
-		// pull from default host
+		// Pull hosts from input JSON
 		if ap, err := netip.ParseAddrPort(defaultHost); err == nil {
 			fmt.Printf("Using hardcoded host: %v\n", ap)
 			return ap
@@ -194,14 +182,14 @@ func main() {
 
 	// Load topology from JSON file
 	fmt.Printf("Loading topology from: %s\n", config.TopoFile)
-	topo, err := loadTopology(config.TopoFile)
+	inputTopo, err := loadInputTopoFile(config.TopoFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Resolve configuration (merge flags, JSON, defaults, and user input)
-	if err := resolveConfig(&config, topo); err != nil {
+	if err := resolveConfig(&config, inputTopo); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
@@ -216,6 +204,7 @@ func main() {
 	Remote path: %s
 	Hosts      : %v
 	Switches   : %v
+	Aps        : %v
 	Links      : %v`+"\n",
 		config.Host,
 		config.Username,
@@ -223,12 +212,13 @@ func main() {
 		config.TopoFile,
 		map[bool]string{true: "Interactive CLI", false: "Automated pingall"}[config.UseCLI],
 		config.RemotePath,
-		topo.Hosts,
-		topo.Switches,
-		topo.Links)
+		inputTopo.Topo.Hosts,
+		inputTopo.Topo.Switches,
+		inputTopo.Topo.Aps,
+		inputTopo.Topo.Links)
 
 	// Execute the remote Mininet session
-	if err := runRemoteMininet(&config, topo); err != nil {
+	if err := runRemoteMininet(&config, inputTopo); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: run remote mininet: %v\n", err)
 		os.Exit(1)
 	}
