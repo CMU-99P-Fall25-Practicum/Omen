@@ -204,7 +204,7 @@ func main() {
 	Remote path: %s
 	Hosts      : %v
 	Switches   : %v
-	Aps		   : %v
+	Aps        : %v
 	Links      : %v`+"\n",
 		config.Host,
 		config.Username,
