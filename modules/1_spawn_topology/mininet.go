@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/models"
 	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/python"
 	"golang.org/x/crypto/ssh"
 )
 
-func runRemoteMininet(config *Config, topo *Topo) error {
+func runRemoteMininet(config *models.Config, inputTopo *models.Input) error {
 	// 1) Generate Python script
-	py := python.TopologyScript(topo.Hosts, topo.Switches, topo.Links)
+	py := python.TopologyScript(inputTopo.Topo.Hosts, inputTopo.Topo.Switches, inputTopo.Topo.Links)
 	tmpFile, err := os.CreateTemp("", "topo_from_json_*.py")
 	if err != nil {
 		return fmt.Errorf("create temp python: %w", err)
@@ -57,7 +58,7 @@ func runRemoteMininet(config *Config, topo *Topo) error {
 	return nil
 }
 
-func runMininet(client *ssh.Client, config *Config) error {
+func runMininet(client *ssh.Client, config *models.Config) error {
 	session, err := client.NewSession()
 	if err != nil {
 		return fmt.Errorf("create session: %w", err)
