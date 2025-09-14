@@ -1,8 +1,8 @@
 {
     "0-input": {
         "path": "../modules/0_input/inputs.py",
-        "inputs": {
-            "stdin": "user input"
-        }
+    },
+    "1-frame_generation":{
+        "path":"cat"
     }
 }
