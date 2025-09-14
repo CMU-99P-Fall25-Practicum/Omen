@@ -1,0 +1,8 @@
+{
+    "0-input": {
+        "path": "modules/0_input/inputs.py",
+        "inputs": {
+            "stdin": "user input"
+        }
+    }
+}
