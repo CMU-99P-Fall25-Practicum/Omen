@@ -1,6 +1,6 @@
 {
     "0-input": {
-        "path": "../modules/0_input/inputs.py",
+        "path": "../modules/0_input/inputs.py"
     },
     "1-frame_generation":{
         "path":"cat"
