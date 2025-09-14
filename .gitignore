@@ -1,1 +1,13 @@
-spawn_topology
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+### Above combination will ignore all files without extension ###
+### ^Credit: https://stackoverflow.com/a/25592735
+
+*.log
