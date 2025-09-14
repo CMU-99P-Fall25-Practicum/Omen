@@ -3,10 +3,12 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/charmbracelet/fang"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -14,28 +16,27 @@ import (
 // Hardcoded module names and paths.
 // For this to be actually modular, these should be fed in via config or env, ideally with enumerations to prevent executing arbitrary shell commands.
 const (
-	inputModulePath = "modules/0_input/inputs.py"
+	inputModulePath string = "modules/0_input/inputs.py"
+	appName         string = "Omen"
 )
 
 var (
-	log  zerolog.Logger
-	root *cobra.Command
+	log zerolog.Logger // primary output mechanism.
 )
 
 func init() {
-	// spool up a dev logger
-	log = zerolog.New(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: time.RFC3339,
-	})
-	// generate the command tree
-	root = &cobra.Command{
-		Use:   "Omen",
-		Short: "Omen is a pipeline for executing network simulation tests",
-		Long:  `Longform description is still TODO`,
-		Run:   omen,
-	}
+	{ // spool up a dev logger that respects NO_COLOR
+		var nc bool
+		if v, found := os.LookupEnv("NO_COLOR"); found && (strings.TrimSpace(v) != "") {
+			nc = true
+		}
 
+		log = zerolog.New(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+			NoColor:    nc,
+		})
+	}
 }
 
 // omen is the primary driver function for the coordinator.
@@ -55,9 +56,26 @@ func omen(cmd *cobra.Command, args []string) {
 }
 
 func main() {
+	// generate the command tree
+	root := &cobra.Command{
+		Use:   appName,
+		Short: appName + " is a pipeline for executing network simulation tests",
+		Long: appName + ` is a helper pipeline capable of building topologies and testing them automatically.
+To start a run, simply invoke this binary and give it an input file.
+You may control the output and execution via a limited selection of flags.
+Because Omen is a set of disparate module run in sequence, this binary (the Coordinator) just serves to invoke each module and ensure its input/output are prepared.
+
+The set of modules composing the pipeline can be tweaked by creating a modules.json file and invoking ` + appName + ` with it using the -m switch.
+NOTE: the prototype does not provide alternative modules.
+
+When a run starts, it is assigned a random identifier.
+While modules operate independently and thus do not about correlating IDs, they can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
+		Run: omen,
+	}
+
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. omen() is the real "main" function
-	if err := root.Execute(); err != nil {
-		fmt.Fprintln(os.Stdout, err)
+	if err := fang.Execute(context.Background(), root); err != nil {
+		log.Fatal().Err(err).Send()
 		os.Exit(1)
 	}
 }
