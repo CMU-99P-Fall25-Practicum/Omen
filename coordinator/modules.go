@@ -45,7 +45,7 @@ func ReadModuleConfig(cfg io.Reader) (m modules, errs []error) {
 	{ // 0-inputs
 		// check path
 		if fi, err := os.Stat(m.ZeroInput.Path); err != nil {
-			errs = append(errs, fmt.Errorf("failed to stat 0-Input binary at '%s'", m.ZeroInput.Path))
+			errs = append(errs, fmt.Errorf("failed to stat 0-Input binary at '%s': %w", m.ZeroInput.Path, err))
 		} else if fi.Mode()&0111 == 0 {
 			errs = append(errs, fmt.Errorf("0-Input binary ('%s') is not executable by anyone", m.ZeroInput.Path))
 		}
