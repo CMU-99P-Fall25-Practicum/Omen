@@ -6,11 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/fang"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -18,8 +20,7 @@ import (
 // Hardcoded module names and paths.
 // For this to be actually modular, these should be fed in via config or env, ideally with enumerations to prevent executing arbitrary shell commands.
 const (
-	inputModulePath string = "modules/0_input/inputs.py"
-	appName         string = "Omen"
+	appName string = "Omen"
 )
 
 var (
@@ -47,16 +48,23 @@ func run(cmd *cobra.Command, args []string) error {
 	// capture and validate module configuration
 	var modules modules
 	{
-		path, err := cmd.Flags().GetString("module")
+		modulesCfgPath, err := cmd.Flags().GetString("modules")
 		if err != nil {
 			return fmt.Errorf("failed to fetch module switch: %w", err)
 		}
-		f, err := os.Open(path)
+		f, err := os.Open(modulesCfgPath)
 		if err != nil {
 			return err
 		}
 		if m, errs := ReadModuleConfig(f); len(errs) != 0 {
-			return errors.Join(append([]error{errors.New("failed to read module configuration")}, errs...)...)
+			// compose the errors into a clean list:
+			var sb strings.Builder
+			sb.WriteString("failed to read " + modulesCfgPath + ":\n")
+			for i, err := range errs {
+				fmt.Fprintf(&sb, "[%d] %s\n", i, err)
+			}
+			// chomp the newline
+			return errors.New(sb.String()[:sb.Len()-1])
 		} else {
 			modules = m
 		}
@@ -64,13 +72,9 @@ func run(cmd *cobra.Command, args []string) error {
 	log.Debug().Any("modules", modules).Msg("constructed module set")
 
 	// root the fs here
-	fs, err := os.OpenRoot(".")
+	_, err := os.OpenRoot(".")
 	if err != nil {
 		log.Error().Msg("failed to establish pwd as root")
-	}
-	// ensure we have each an executable for each stage we want to invoke
-	if _, err := fs.Stat(inputModulePath); err != nil {
-		return fmt.Errorf("failed to stat module: %w", err)
 	}
 	// TODO
 	return nil
@@ -97,9 +101,46 @@ While modules operate independently and thus do not about correlating IDs, they 
 	}
 	root.Flags().StringP("modules", "m", "modules.json", "path to modules.json file (the modules coordinator should launch)")
 
-	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. omen() is the real "main" function
-	if err := fang.Execute(context.Background(), root); err != nil {
-		log.Fatal().Err(err).Send()
+	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
+	if err := fang.Execute(context.Background(), root, fang.WithErrorHandler(
+		func(w io.Writer, styles fang.Styles, err error) {
+			// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
+			w.Write([]byte(err.Error()))
+
+			fmt.Fprintln(w, styles.ErrorHeader.String())
+			fmt.Fprintln(w, styles.ErrorText.UnsetTransform().Render(err.Error())) //styles.ErrorText.Render(err.Error()+"."))
+			fmt.Fprintln(w)
+			if isUsageError(err) {
+				_, _ = fmt.Fprintln(w, lipgloss.JoinHorizontal(
+					lipgloss.Left,
+					styles.ErrorText.UnsetWidth().Render("Try"),
+					styles.Program.Flag.Render(" --help "),
+					styles.ErrorText.UnsetWidth().UnsetMargins().UnsetTransform().Render("for usage."),
+				))
+				_, _ = fmt.Fprintln(w)
+			}
+
+		})); err != nil {
+		// fang logs returned errors for us
 		os.Exit(1)
 	}
+}
+
+// Borrowed from fang.go's DefaultErrorHandling.
+// XXX: this is a hack to detect usage errors.
+// See: https://github.com/spf13/cobra/pull/2266
+func isUsageError(err error) bool {
+	s := err.Error()
+	for _, prefix := range []string{
+		"flag needs an argument:",
+		"unknown flag:",
+		"unknown shorthand flag:",
+		"unknown command",
+		"invalid argument",
+	} {
+		if strings.HasPrefix(s, prefix) {
+			return true
+		}
+	}
+	return false
 }
