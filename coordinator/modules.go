@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"slices"
-	"strings"
 )
 
 // ErrInvalidEnumeration returns an error string indicating badEnum is not in the allowable set for module.
@@ -18,12 +16,6 @@ func ErrInvalidEnumeration(module, badEnum string, allowable []string) error {
 type modules struct {
 	ZeroInput struct { // 0-input, the module responsible for validating the user input file.
 		Path string `json:"path"` // path to module executable
-		// tell coordinator how to pass data into the executable.
-		// Valid values: ["user input"]
-		Inputs struct {
-			Stdin string   `json:"stdin"` // enumeration for the kind of data to be piped in via stdin
-			Args  []string `json:"args"`
-		} `json:"inputs"`
 	} `json:"0-input"`
 }
 
@@ -49,14 +41,6 @@ func ReadModuleConfig(cfg io.Reader) (m modules, errs []error) {
 		} else if fi.Mode()&0111 == 0 {
 			errs = append(errs, fmt.Errorf("0-Input binary ('%s') is not executable by anyone", m.ZeroInput.Path))
 		}
-		// ensure that at each input is expecting nothing or a value input
-		m.ZeroInput.Inputs.Stdin = strings.ToLower(m.ZeroInput.Inputs.Stdin)
-		if m.ZeroInput.Inputs.Stdin != "" && !slices.Contains(zeroInputsValidInputs, m.ZeroInput.Inputs.Stdin) {
-			errs = append(errs, ErrInvalidEnumeration("0-Input", m.ZeroInput.Inputs.Stdin, zeroInputsValidInputs))
-		}
-		/*for i, a := range m.ZeroInput.Inputs.Args {
-		// TODO
-		}*/
 	}
 
 	return
