@@ -105,7 +105,6 @@ While modules operate independently and thus do not about correlating IDs, they 
 	if err := fang.Execute(context.Background(), root, fang.WithErrorHandler(
 		func(w io.Writer, styles fang.Styles, err error) {
 			// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
-			w.Write([]byte(err.Error()))
 
 			fmt.Fprintln(w, styles.ErrorHeader.String())
 			fmt.Fprintln(w, styles.ErrorText.UnsetTransform().Render(err.Error())) //styles.ErrorText.Render(err.Error()+"."))
