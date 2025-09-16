@@ -9,8 +9,12 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/charmbracelet/fang"
@@ -22,7 +26,8 @@ import (
 // Hardcoded module names and paths.
 // For this to be actually modular, these should be fed in via config or env, ideally with enumerations to prevent executing arbitrary shell commands.
 const (
-	appName string = "Omen"
+	appName      string = "Omen"
+	validatedDir string = "validated_input" // intermediary directory hosting files that have been run through the validator
 )
 
 var (
@@ -80,8 +85,12 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	log.Debug().Any("modules", modules).Msg("constructed module set")
 
-	// execute input validation against the argument
-	// TODO
+	// run each validated file through spawn topo
+	_, err = runInputValidationModule(modules.ZeroInput.Path, inputPaths)
+	if err != nil {
+		return err
+	}
+	// TODO spawn each topology
 
 	return nil
 }
@@ -116,6 +125,39 @@ func collectJSONPaths(argPaths []string) ([]string, error) {
 		}
 	}
 	return inputPaths, nil
+}
+
+// Executes the input validator module against each given path, in parallel.
+// The files that pass validation are written to a temp directory; the path to this directory is returned.
+// Only returns an error if we failed to create the temporary directory or no files passed validation.
+func runInputValidationModule(modulePath string, inputPaths []string) (string, error) {
+	tDir := path.Join(os.TempDir(), validatedDir)
+	if err := os.Mkdir(tDir, 0755); err != nil {
+		return "", err
+	}
+	var (
+		wg               sync.WaitGroup
+		passedValidation atomic.Uint32
+	)
+	for _, ip := range inputPaths {
+		// as each file completes, write it into the temp directory
+		wg.Go(func() {
+			// execute input validation against each json file
+			exec.Command(modulePath, ip)
+			// TODO capture stdout and stderr pipes
+
+			// copy the validated file into our validated directory and attack a token to it for identification
+			// TODO
+		})
+	}
+	wg.Wait()
+
+	// ensure that at least one file passed validation
+	if passedValidation.Load() == 0 {
+		return "", ErrNoFilesValidated
+	}
+
+	return tDir, nil
 }
 
 func main() {
