@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"os"
+	"io/fs"
+	"os/exec"
 )
 
 // ErrInvalidEnumeration returns an error string indicating badEnum is not in the allowable set for module.
@@ -15,13 +17,10 @@ func ErrInvalidEnumeration(module, badEnum string, allowable []string) error {
 // modules represents the set of modules to run.
 type modules struct {
 	ZeroInput struct { // 0-input, the module responsible for validating the user input file.
-		Path string `json:"path"` // path to module executable
+		Path         string `json:"path"` // path to module executable
+		relativePath bool   // set after stating the path
 	} `json:"0-input"`
 }
-
-// set of valid inputs for the 0-input module.
-// all values are lower-cased before checking.
-var zeroInputsValidInputs = []string{"user input"}
 
 // ReadModuleConfig unmarshals a modules struct from the reader and validates the inputs of each module.
 // If no errors are returned, caller may assume m is valid and ready for use.
@@ -35,11 +34,15 @@ func ReadModuleConfig(cfg io.Reader) (m modules, errs []error) {
 	}
 	// validate enumerations
 	{ // 0-inputs
-		// check path
-		if fi, err := os.Stat(m.ZeroInput.Path); err != nil {
-			errs = append(errs, fmt.Errorf("failed to stat 0-Input binary at '%s': %w", m.ZeroInput.Path, err))
-		} else if fi.Mode()&0111 == 0 {
-			errs = append(errs, fmt.Errorf("0-Input binary ('%s') is not executable by anyone", m.ZeroInput.Path))
+		// check that the path is executable (locally (with './' notation) or via $PATH)
+		abs, err := exec.LookPath(m.ZeroInput.Path)
+		if err != nil {
+			if errors.Is(err, fs.ErrPermission) { // if permission error, add a suggestion
+				err = fmt.Errorf("%w; is the target executable?", err)
+			}
+			errs = append(errs, err)
+		} else {
+			m.ZeroInput.Path = abs
 		}
 	}
 
