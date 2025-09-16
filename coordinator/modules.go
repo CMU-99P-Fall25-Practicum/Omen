@@ -9,11 +9,6 @@ import (
 	"os/exec"
 )
 
-// ErrInvalidEnumeration returns an error string indicating badEnum is not in the allowable set for module.
-func ErrInvalidEnumeration(module, badEnum string, allowable []string) error {
-	return fmt.Errorf("invalid value in %s stdin ('%s'). Allowable values: %v", module, badEnum, allowable)
-}
-
 // modules represents the set of modules to run.
 type modules struct {
 	ZeroInput struct { // 0-input, the module responsible for validating the user input file.
