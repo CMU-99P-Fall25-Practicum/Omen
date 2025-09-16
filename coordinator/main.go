@@ -59,7 +59,7 @@ func run(cmd *cobra.Command, args []string) error {
 		if m, errs := ReadModuleConfig(f); len(errs) != 0 {
 			// compose the errors into a clean list:
 			var sb strings.Builder
-			sb.WriteString("failed to read " + modulesCfgPath + ":\n")
+			sb.WriteString("failed to generate module configuration from " + modulesCfgPath + ":\n")
 			for i, err := range errs {
 				fmt.Fprintf(&sb, "[%d] %s\n", i, err)
 			}
