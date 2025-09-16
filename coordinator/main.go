@@ -7,8 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -47,26 +48,9 @@ func init() {
 // It roots the filesystem, finds all required modules, and executes them in order.
 func run(cmd *cobra.Command, args []string) error {
 	// ensure each arg is a valid path and collect the absolute paths of each test to run
-	var inputPaths []string
-	for i, arg := range args {
-		fi, err := os.Stat(arg)
-		if err != nil {
-			return fmt.Errorf("argument %d: %w", i, err)
-		}
-		if fi.IsDir() {
-			// shallow walk the directory for jsons
-			entries, err := os.ReadDir(arg)
-			if err != nil {
-				return err
-			}
-			for _, e := range entries {
-				if path.Ext(e.Name()) == ".json" {
-					inputPaths = append(inputPaths, path.Join(arg, e.Name()))
-				}
-			}
-		} else {
-			inputPaths = append(inputPaths, arg)
-		}
+	inputPaths, err := collectJSONPaths(args)
+	if err != nil {
+		return err
 	}
 	log.Info().Strs("input paths", inputPaths).Msg("collected input file paths")
 
@@ -100,6 +84,38 @@ func run(cmd *cobra.Command, args []string) error {
 	// TODO
 
 	return nil
+}
+
+// Gathers the .json files relevant to each path.
+// For paths that point to a file, adds the file path to the list.
+// For paths that point to a directory, shallowly walks the directory, adding all .json files to the list.
+//
+// Returns a list of absolute paths to input files.
+func collectJSONPaths(argPaths []string) ([]string, error) {
+	var inputPaths []string
+	for i, arg := range argPaths {
+		fi, err := os.Stat(arg)
+		if err != nil {
+			return nil, fmt.Errorf("argument %d: %w", i, err)
+		}
+		if fi.IsDir() {
+			// shallow walk for .json
+			if err := filepath.WalkDir(arg, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if filepath.Ext(d.Name()) == ".json" {
+					inputPaths = append(inputPaths, path)
+				}
+				return nil
+			}); err != nil {
+				return nil, err
+			}
+		} else {
+			inputPaths = append(inputPaths, arg)
+		}
+	}
+	return inputPaths, nil
 }
 
 func main() {
