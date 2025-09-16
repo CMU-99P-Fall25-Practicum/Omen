@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -45,6 +46,30 @@ func init() {
 // run is the primary driver function for the coordinator.
 // It roots the filesystem, finds all required modules, and executes them in order.
 func run(cmd *cobra.Command, args []string) error {
+	// ensure each arg is a valid path and collect the absolute paths of each test to run
+	var inputPaths []string
+	for i, arg := range args {
+		fi, err := os.Stat(arg)
+		if err != nil {
+			return fmt.Errorf("argument %d: %w", i, err)
+		}
+		if fi.IsDir() {
+			// shallow walk the directory for jsons
+			entries, err := os.ReadDir(arg)
+			if err != nil {
+				return err
+			}
+			for _, e := range entries {
+				if path.Ext(e.Name()) == ".json" {
+					inputPaths = append(inputPaths, path.Join(arg, e.Name()))
+				}
+			}
+		} else {
+			inputPaths = append(inputPaths, arg)
+		}
+	}
+	log.Info().Strs("input paths", inputPaths).Msg("collected input file paths")
+
 	// capture and validate module configuration
 	var modules modules
 	{
@@ -71,12 +96,9 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	log.Debug().Any("modules", modules).Msg("constructed module set")
 
-	// root the fs here
-	_, err := os.OpenRoot(".")
-	if err != nil {
-		log.Error().Msg("failed to establish pwd as root")
-	}
+	// execute input validation against the argument
 	// TODO
+
 	return nil
 }
 
@@ -86,21 +108,18 @@ func main() {
 		Use:   appName + " <>.json...",
 		Short: appName + " is a pipeline for executing network simulation tests",
 		Long: appName + ` is a helper pipeline capable of building topologies and testing them automatically.
-To start a run, simply invoke this binary and give it an input file.
-Each bare argument is treated as a separate input file and thus separate run. 
+To start a run, simply invoke this binary and give it the path to a configuration file.
+Each bare argument is treated as a separate input file and thus separate run.
+If a directory is given as an argument, ` + appName + ` will run all json files at the top level; it will NOT recur into subdirectories to look for json files.
 
-You may control the output and execution via a limited selection of flags.
 Because Omen is a set of disparate module run in sequence, this binary (the Coordinator) just serves to invoke each module and ensure its input/output are prepared.
-
-The set of modules composing the pipeline can be tweaked by creating a modules.json file and invoking ` + appName + ` with it using the -m switch.
-NOTE: the prototype does not provide alternative modules.
 
 When a run starts, it is assigned a random identifier.
 While modules operate independently and thus do not about correlating IDs, they can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
 		RunE: run,
 	}
-	root.Example = appName + " topology1.json " + " topology2.json"
-	root.Args = cobra.ExactArgs(1)
+	root.Example = appName + " topology1.json " + " topologies/"
+	root.Args = cobra.MinimumNArgs(1)
 	root.Flags().StringP("modules", "m", "modules.json", "path to modules.json file (the modules coordinator should launch)")
 
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
