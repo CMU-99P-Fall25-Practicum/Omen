@@ -83,7 +83,7 @@ func run(cmd *cobra.Command, args []string) error {
 func main() {
 	// generate the command tree
 	root := &cobra.Command{
-		Use:   appName,
+		Use:   appName + " <>.json...",
 		Short: appName + " is a pipeline for executing network simulation tests",
 		Long: appName + ` is a helper pipeline capable of building topologies and testing them automatically.
 To start a run, simply invoke this binary and give it an input file.
@@ -99,10 +99,12 @@ When a run starts, it is assigned a random identifier.
 While modules operate independently and thus do not about correlating IDs, they can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
 		RunE: run,
 	}
+	root.Example = appName + " topology1.json " + " topology2.json"
+	root.Args = cobra.ExactArgs(1)
 	root.Flags().StringP("modules", "m", "modules.json", "path to modules.json file (the modules coordinator should launch)")
 
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
-	if err := fang.Execute(context.Background(), root, fang.WithErrorHandler(
+	if err := fang.Execute(context.Background(), root, fang.WithoutCompletions(), fang.WithErrorHandler(
 		func(w io.Writer, styles fang.Styles, err error) {
 			// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
 
