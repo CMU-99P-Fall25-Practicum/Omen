@@ -15,4 +15,4 @@ A modular pipeline for instrumenting network simulations and producing real, usa
 
 # Architectural Diagram
 
-![pipeline diagram](img/Pipeline_Final_Milestone.drawio.png)
+![pipeline diagram](img/Pipeline.drawio.png)
