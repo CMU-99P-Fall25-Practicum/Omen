@@ -13,6 +13,14 @@ func getInput(prompt string) string {
 	fmt.Print(prompt)
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
+
+	// auto add port if not provided
+	if strings.Contains(prompt, "Enter a valid target of the form '<host>:<port>':") {
+		if !strings.Contains(input, ":") {
+			fmt.Printf("No port detected -> Using default port 22\n")
+			input = strings.TrimSpace(input) + ":22"
+		}
+	}
 	return strings.TrimSpace(input)
 }
 
