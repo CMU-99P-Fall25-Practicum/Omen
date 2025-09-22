@@ -130,7 +130,7 @@ func resolveConfig(config *models.Config, js *models.Input) error {
 
 		// Pull VM address from input JSON
 		// Check if default port exists
-		if !strings.Contains(js.AP, ":") {
+		if js.AP != "" && !strings.Contains(js.AP, ":") {
 			fmt.Printf("No port detected -> Using default port 22\n")
 			js.AP = js.AP + ":22"
 		}
