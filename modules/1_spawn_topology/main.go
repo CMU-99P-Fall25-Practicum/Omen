@@ -13,10 +13,11 @@ import (
 
 // Configuration - Set these to hardcode values, leave empty for prompting
 var (
-	defaultHost     = ""
-	defaultUsername = ""
-	defaultPassword = ""
-	defaultTopoFile = "input-topo.json" // default topology file name
+	defaultHost         = ""
+	defaultUsername     = ""
+	defaultPassword     = ""
+	defaultTopoFile     = "input-topo.json"   // default topology filename
+	defaultPythonScript = "mininet-script.py" // default python script filename
 )
 
 // flag values
@@ -30,7 +31,7 @@ func init() {
 	// Define flags
 	flag.StringVar(&remote, "remote", "", "remote target to run on, e.g. username@192.168.64.5")
 	flag.BoolVar(&config.UseCLI, "cli", false, "enter Mininet CLI instead of running pingall")
-	flag.StringVar(&config.RemotePath, "remote-path", "/tmp/topo_from_json.py", "remote path for the generated Python file")
+	flag.StringVar(&config.RemotePath, "remote-path", "/tmp/"+defaultPythonScript, "remote path for the generated Python file")
 
 	// set default values
 	config.TopoFile = defaultTopoFile
@@ -200,6 +201,7 @@ func main() {
 	Username   : %s
 	Password   : [hidden]
 	Topology   : %s
+	Py Script  : %s
 	Mode       : %s\n
 	Remote path: %s
 	Hosts      : %v
@@ -210,6 +212,7 @@ func main() {
 		config.Username,
 
 		config.TopoFile,
+		defaultPythonScript,
 		map[bool]string{true: "Interactive CLI", false: "Automated pingall"}[config.UseCLI],
 		config.RemotePath,
 		inputTopo.Topo.Hosts,
@@ -218,7 +221,7 @@ func main() {
 		inputTopo.Topo.Links)
 
 	// Execute the remote Mininet session
-	if err := runRemoteMininet(&config, inputTopo); err != nil {
+	if err := runRemoteMininet(&config, defaultPythonScript); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: run remote mininet: %v\n", err)
 		os.Exit(1)
 	}
