@@ -9,23 +9,14 @@ import (
 	"time"
 
 	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/models"
-	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/python"
 	"golang.org/x/crypto/ssh"
 )
 
-func runRemoteMininet(config *models.Config, inputTopo *models.Input) error {
-	// 1) Generate Python script
-	py := python.TopologyScript(inputTopo.Topo.Hosts, inputTopo.Topo.Switches, inputTopo.Topo.Links)
-	tmpFile, err := os.CreateTemp("", "topo_from_json_*.py")
-	if err != nil {
-		return fmt.Errorf("create temp python: %w", err)
+func runRemoteMininet(config *models.Config, defaultPythonScript string) error {
+	// 1) Validate that the local file exists
+	if _, err := os.Stat(defaultPythonScript); os.IsNotExist(err) {
+		return fmt.Errorf("local Python file does not exist: %s", defaultPythonScript)
 	}
-	defer os.Remove(tmpFile.Name())
-
-	if _, err := tmpFile.WriteString(py); err != nil {
-		return fmt.Errorf("write temp python: %w", err)
-	}
-	_ = tmpFile.Close()
 
 	// 2) Establish SSH connection
 	sshConfig := &ssh.ClientConfig{
@@ -45,8 +36,8 @@ func runRemoteMininet(config *models.Config, inputTopo *models.Input) error {
 	defer client.Close()
 
 	// 3) Upload Python file via SFTP-like functionality
-	fmt.Printf("-> Uploading topology script to %s\n", config.RemotePath)
-	if err := uploadFile(client, tmpFile.Name(), config.RemotePath); err != nil {
+	fmt.Printf("-> Uploading topology script {%s} to {%s}\n", defaultPythonScript, config.RemotePath)
+	if err := uploadFile(client, defaultPythonScript, config.RemotePath); err != nil {
 		return fmt.Errorf("file upload failed: %w", err)
 	}
 
@@ -87,6 +78,8 @@ func runMininet(client *ssh.Client, config *models.Config) error {
 	}
 
 	// Build Mininet command
+	// TODO: Add --cli flag in python script to enable cli mode if requested
+	// Current: Execute Python script that we just uploaded
 	var mnCommand string = genCommand(config.UseCLI)
 
 	fmt.Printf("-> Executing: %s\n", mnCommand)
@@ -146,7 +139,7 @@ func runMininet(client *ssh.Client, config *models.Config) error {
 				}
 			} else {
 				// For automated mode, detect completion
-				if strings.Contains(line, "completed in") && strings.Contains(line, "seconds") {
+				if strings.Contains(line, "*** Done") {
 					fmt.Println("\n[DEBUG] Pingall test completed, ending session...")
 					time.Sleep(500 * time.Millisecond)
 					stdin.Write([]byte("exit\n"))
