@@ -2,4 +2,5 @@ package main
 
 import "errors"
 
-var ErrNoFilesValidated = errors.New("no given files passed validation")
+// ErrNoFilesValidated returns an error as it says on the tin
+var ErrNoFilesValidated = errors.New("no files passed validation")
