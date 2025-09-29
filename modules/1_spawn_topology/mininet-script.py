@@ -1,145 +1,164 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-"Mocked mobility using setPosition()"
+"""
+Build Mininet-WiFi from a JSON spec and run tests.
+Usage:
+    sudo python run_from_json.py topo.json
 
-import random
+Expected JSON:
+{
+  "topo": {
+    "net": {
+      "noise_th": -91,
+      "propagation": {"model": "logDistance", "exp": 4}
+    },
+    "ap": [
+      {"id": "ap1", "ssid": "new-ssid", "mode": "a", "channel": 36, "position": "0,0,0"}
+    ],
+    "stationt": [
+      {"id": "sta1", "position": "10,0,0"},
+      {"id": "sta2", "position": "-10,0,0"}
+    ],
+    "test": [
+      {"name": "ping_sta1_sta2", "type": "ping", "src": "sta1", "dst": "sta2", "count": 3}
+    ]
+  }
+}
+"""
+
+import sys, json
 import os
-import tempfile
-from mininet.log import setLogLevel, info
-from mn_wifi.cli import CLI
+import time
+from datetime import datetime
+from mininet.log import setLogLevel, info, error
 from mn_wifi.net import Mininet_wifi
+from mn_wifi.cli import CLI
+from mn_wifi.link import wmediumd
+from mn_wifi.wmediumdConnector import interference
 
-# how tf does Python not have constants?
-SSID: str = "TOPO_NET"
-stationCount: int = 5
-
-
-
-def capture_ping_output(net):
-    """Capture pingAll output by redirecting at process level"""
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_file:
-        # Redirect both stdout and stderr to temp file
-        old_stdout = os.dup(1)
-        old_stderr = os.dup(2)
-        
-        temp_fd = temp_file.fileno()
-        os.dup2(temp_fd, 1)  # redirect stdout
-        os.dup2(temp_fd, 2)  # redirect stderr
-        
-        try:
-            net.pingAll()
-        finally:
-            # Restore original stdout/stderr
-            os.dup2(old_stdout, 1)
-            os.dup2(old_stderr, 2)
-            os.close(old_stdout)
-            os.close(old_stderr)
-        
-        # Read the captured output
-        temp_file.seek(0)
-        output = temp_file.read()
-        
-    os.unlink(temp_file.name)
-    return output
+def make_results_dir():
+    base = "test_results"
+    # folder named by current time
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = os.path.join(base, ts)
+    os.makedirs(path, exist_ok=True)
+    return path
 
 
-def topology():
-    "One station moving from (10,0,0) to (100,0,0); print position 5 times"
-    
-    # Create output directory
-    output_dir = "/tmp/ping_results"
-    os.makedirs(output_dir, exist_ok=True)
-    
-    net = Mininet_wifi()
+def build_from_spec(spec):
+    # net options
+    net_cfg = spec["nets"]
+    noise_th = net_cfg["noise_th"]
 
-    # spin out 2 nodes and an access point; start them each at n,0,0
+    net = Mininet_wifi(link=wmediumd, wmediumd_mode=interference, noise_th=noise_th)
     info("*** Creating nodes\n")
-    ap1 = net.addAccessPoint("ap1", ssid=SSID, mode="g", channel="1", position="1,0,0")
-    stations = []
-    for i in range(5):
-        stations.append(
-            net.addStation(
-                f"sta{str(i)}",
-                mac="00:00:00:00:00:0" + str(i),
-                ip=f"10.0.0.{str(i)}/8",
-                position=f"{str(i)},0,0",  # coordinate system with unknown units
-                # unclear what range sets or what units it is in (https://mininet-wifi.github.io/commands/#range)
-                # imagine if the language/library didn't make you guess at acceptable values: https://mininet-wifi.github.io/faq/#q7
-                # the examples use a range of 10, but then we get a warning about it being too low for logDistance
-                # but if we set the range at or above what the warning recommends, we get another warning about TX power being too low.
-                # Even though we didn't fucking set it.
-                # Either use defaults or don't. Don't build libraries that half ass it.
-                # range=120,
-            )
-        )
-    c1 = net.addController("c1")  # unclear if this is necessary as we aren't using OF
+
+    # single default controller
+    c1 = net.addController("c1")
+
+    # APs
+    ap_objs = {}
+    for ap in spec["aps"]:
+        ap_id = ap["id"]
+        params = {
+            "ssid": ap["ssid"],
+            "mode": ap["mode"],
+            "channel": ap["channel"],
+            "position": ap["position"]
+        }
+        ap_objs[ap_id] = net.addAccessPoint(ap_id, **params)
+
+    # Stations
+    sta_objs = {}
+    for s in spec["stations"]:
+        sid = s["id"]
+        params = {
+            "position":s["position"]
+        }
+        sta_objs[sid] = net.addStation(sid, **params)
+
+    # Propagation Model
+    prop = net_cfg["propagation_model"]
+    model = prop["model"]
+    kwargs = {k: v for k, v in prop.items() if k != "model"}
+    info("*** Propagation: %s %s\n" % (model, kwargs))
+    net.setPropagationModel(model=model, **kwargs)
 
     info("*** Configuring nodes\n")
-    net.configureNodes()  # no clue what this does
+    net.configureNodes()
 
-    # should be enumerated in the input JSON
-    info("*** Configuring propagation model\n")
-    # 2 for open space (https://www.gaussianwaves.com/2013/09/log-distance-path-loss-or-log-normal-shadowing-model/), not that it seems to matter
-    # no matter what I set the exponent to, the recommended range never changes.
-    # net.setPropagationModel(model="logDistance", exp=2)
-
-    # info("*** Associating stations to access points\n")
-    # no links because afaik links represent physical links, rather than wireless association
-    # it is entirely unclear how wireless association is handled and what is automatic.
-    # if we omit this section, pingalls still seem to work fine.
-    # I can only find it referenced here: https://mininet-wifi.github.io/commands/#forcing
-    # sta2.setAssociation(ap1, intf='sta1-wlan0')
-
-    info("*** dumping configuration\n")
-    # why does this just print the variable name instead of dumping values?
-    # How do I do a %#v?
-    # why would I want to just print the fucking variable name?
-    # If I wanted that, I'd fucking quote it.
-    # Asinine.
-    print("1 AccessPoint: ", ap1)
-    print(f"{stationCount} stations:")
-    for i in range(len(stations)):
-        print(f"\t{i}: {stations[i]}")
-
-    info("*** Starting network\n")
+    info("*** Building & starting\n")
     net.build()
     c1.start()
-    ap1.start([c1])
+    for ap in ap_objs.values():
+        ap.start([c1])
 
-    info("*** testing initial connectivity\n")
-    initial_ping_output = capture_ping_output(net)
-    with open(f"{output_dir}/test_initial.txt", "w") as f:
-        f.write("Initial connectivity test\n")
-        f.write("=" * 40 + "\n")
-        f.write(initial_ping_output)
+    return net, sta_objs, ap_objs
 
-    for i in range(10):
-        # Record positions before moving
-        position_info = f"Test {i+1} - Node positions:\n"
-        for sta in stations:
-            new_position = f"{str(random.randrange(300))},0,0"
-            sta.setPosition(new_position)
-            position_info += f"{sta.name}: {sta.position}\n"
-            print(f"{sta} position updated to {sta.position}")
-        
-        info(f"*** testing connectivity iteration {i+1}\n")
-        ping_output = capture_ping_output(net)
-        
-        # Save to file
-        with open(f"{output_dir}/test_{i+1:02d}.txt", "w") as f:
-            f.write(position_info)
-            f.write("=" * 40 + "\n")
-            f.write(ping_output)
-            
-        print(f"Test {i+1} results saved to {output_dir}/test_{i+1:02d}.txt")
-    
+def run_tests(sta_objs, ap_objs, tests, results_dir):
+    info("*** Running tests\n")
+    time.sleep(15)
+    for idx, t in enumerate(tests, 1):
+        ttype = t["type"]
+        name = t['name']
+        outfile = os.path.join(results_dir, f"test{idx}.txt")
+
+        if ttype == "ping":
+            src = t["src"]
+            dst = t["dst"]
+            count = int(t["count"])
+            msg = f"\n[ping] {name}: {src} -> {dst} (-c {count})\n"
+            info(msg)
+
+            src_node = sta_objs[src]
+            dst_node = sta_objs.get(dst) or ap_objs.get(dst)
+            target_ip = dst_node.IP()
+
+            out = msg + src_node.cmd("ping -c {} {}".format(count, target_ip))
+
+        elif ttype == "iw":
+            node = sta_objs[t["node"]]
+            cmd = t["cmd"]
+            msg = f"\n[iw] {name}: {node.name} {cmd}\n"
+            info(msg)
+            out = msg + node.cmd(cmd)
+
+        elif ttype == "node movements":
+            node = sta_objs[t["node"]]
+            pos = t["position"]
+            msg = f"\n[node movements] {name}: moving {node.name} -> {pos}\n"
+            info(msg)
+            node.setPosition(pos)
+            time.sleep(5)
+            out = msg + f"Moved {node.name} to {pos}\n"
+        else:
+            msg = f"\n[skip] unsupported test type: {ttype}\n"
+            info(msg)
+            out = msg
+        # Write output to file
+        with open(outfile, "w") as f:
+            f.write(out)
+    info("\n*** All tests are complete\n")
+def main():
+
+    with open(sys.argv[1], "r") as f:
+        raw = json.load(f)
+
+    spec = raw["topo"]
+    tests = raw["tests"]
+
+    net, sta_objs, ap_objs = build_from_spec(spec)
+
+    results_dir = make_results_dir()
+    run_tests(sta_objs, ap_objs, tests, results_dir)
+
     # info("*** CLI\n")
     # CLI(net)
 
     info("*** Stopping network\n")
     net.stop()
 
-
 if __name__ == "__main__":
-    setLogLevel("info")
-    topology()
+    setLogLevel('info')
+    main()
