@@ -115,7 +115,11 @@ type invalidInput struct {
 		Code string `json:"code"`
 		Msg  string `json:"msg"`
 	} `json:"errors"`
-	Warnings []any `json:"warnings"`
+	Warnings []struct {
+		Loc  string `json:"loc"`
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"warnings"`
 }
 
 // Executes the input validator against each input path.
