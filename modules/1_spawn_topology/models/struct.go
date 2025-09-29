@@ -71,7 +71,19 @@ type Topo struct {
 	Hosts    []Node `json:"hosts"`
 	Switches []Node `json:"switches"`
 	Aps      []Node `json:"aps"`
+	Stations []Node `json:"stations"`
+	Nets     Nets   `json:"nets"`
 	Links    []Link `json:"links"`
+}
+
+type Nets struct {
+	NoiseThreashold  int       `json:"noise_th"`
+	PropagationModel Propmodel `json:"propagation_model"`
+}
+
+type Propmodel struct {
+	Model string `json:"model"`
+	Exp   int    `json:"exp"`
 }
 
 // Node represents a network node (host, switch, access point, etc.)
@@ -80,6 +92,11 @@ type Node struct {
 	ID               string `json:"id"`
 	TxDBM            int    `json:"tx_dbm,omitempty"`
 	RxSensitivityDBM int    `json:"rx_sensitivity_dbm,omitempty"`
+	// WiFi-specific fields
+	Mode     string `json:"mode,omitempty"`     // for APs
+	Channel  int    `json:"channel,omitempty"`  // for APs
+	SSID     string `json:"ssid,omitempty"`     // for APs
+	Position string `json:"position,omitempty"` // for APs and stations
 }
 
 // Link represents a connection between two nodes (topo -> links)

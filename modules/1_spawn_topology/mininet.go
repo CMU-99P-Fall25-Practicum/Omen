@@ -52,6 +52,13 @@ func runRemoteMininet(config *models.Config, defaultPythonScript string) error {
 		return fmt.Errorf("mininet execution failed: %w", err)
 	}
 
+	// 6) Copy test results from VM to local directory
+	fmt.Println("-> Copying test results from VM to local directory")
+	if err := copyResultsFromVM(client); err != nil {
+		fmt.Printf("Warning: Failed to copy results: %v\n", err)
+		// Don't return error here as the main operation succeeded
+	}
+
 	return nil
 }
 
