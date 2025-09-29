@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Network Config Validator
 # This script validates a JSON spec describing network topologies
 # before it is handed off to Mininet through the Controller. 
@@ -5,7 +7,6 @@
 # impossible values) and normalize the config into a predictable 
 # structure for the rest of the pipeline. 
 
-#!/usr/bin/env python3
 import sys, json, argparse, hashlib
 from typing import Literal, Optional, List, Dict
 from pydantic import BaseModel, Field, ValidationError, model_validator
