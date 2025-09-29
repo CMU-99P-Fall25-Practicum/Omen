@@ -229,14 +229,13 @@ func main() {
 		Use:   appName + " <>.json...",
 		Short: appName + " is a pipeline for executing network simulation tests",
 		Long: appName + ` is a helper pipeline capable of building topologies and testing them automatically.
-To start a run, simply invoke this binary and give it the path to a configuration file.
 Each bare argument is treated as a separate input file and thus separate run.
 If a directory is given as an argument, ` + appName + ` will run all json files at the top level; it will NOT recur into subdirectories to look for json files.
 
 Because Omen is a set of disparate module run in sequence, this binary (the Coordinator) just serves to invoke each module and ensure its input/output are prepared.
 
 When a run starts, it is assigned a random identifier.
-While modules operate independently and thus do not about correlating IDs, they can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
+While modules operate independently and thus do not care about correlating IDs, IDs can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
 		RunE: run,
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
