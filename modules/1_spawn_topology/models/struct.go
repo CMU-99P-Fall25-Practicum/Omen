@@ -114,10 +114,11 @@ type Test struct {
 
 // Input Config from user to setup ssh connection to VM
 type Config struct {
-	Host       netip.AddrPort
-	Username   string
-	Password   string
-	TopoFile   string
-	UseCLI     bool
-	RemotePath string
+	Host             netip.AddrPort
+	Username         string
+	Password         string
+	TopoFile         string
+	UseCLI           bool
+	RemotePathPython string
+	RemotePathJSON   string
 }

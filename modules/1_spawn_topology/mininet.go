@@ -36,12 +36,18 @@ func runRemoteMininet(config *models.Config, defaultPythonScript string) error {
 	defer client.Close()
 
 	// 3) Upload Python file via SFTP-like functionality
-	fmt.Printf("-> Uploading topology script {%s} to {%s}\n", defaultPythonScript, config.RemotePath)
-	if err := uploadFile(client, defaultPythonScript, config.RemotePath); err != nil {
+	fmt.Printf("-> Uploading topology script {%s} to {%s}\n", defaultPythonScript, config.RemotePathPython)
+	if err := uploadFile(client, defaultPythonScript, config.RemotePathPython); err != nil {
 		return fmt.Errorf("file upload failed: %w", err)
 	}
 
-	// 4) Run Mininet command
+	// 4) Upload Topo JSON file via SFTP-like functionality
+	fmt.Printf("-> Uploading topology JSON {%s} to {%s}\n", config.TopoFile, config.RemotePathJSON)
+	if err := uploadFile(client, config.TopoFile, config.RemotePathJSON); err != nil {
+		return fmt.Errorf("file upload failed: %w", err)
+	}
+
+	// 5) Run Mininet command
 	if err := runMininet(client, config); err != nil {
 		return fmt.Errorf("mininet execution failed: %w", err)
 	}

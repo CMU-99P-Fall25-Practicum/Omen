@@ -31,7 +31,8 @@ func init() {
 	// Define flags
 	flag.StringVar(&remote, "remote", "", "remote target to run on, e.g. username@192.168.64.5")
 	flag.BoolVar(&config.UseCLI, "cli", false, "enter Mininet CLI instead of running pingall")
-	flag.StringVar(&config.RemotePath, "remote-path", "/tmp/"+defaultPythonScript, "remote path for the generated Python file")
+	flag.StringVar(&config.RemotePathPython, "remote-path-python", "/tmp/"+defaultPythonScript, "remote path for the generated Python file")
+	flag.StringVar(&config.RemotePathJSON, "remote-path-json", "/tmp/"+defaultTopoFile, "remote path for the generated JSON file")
 
 	// set default values
 	config.TopoFile = defaultTopoFile
@@ -53,19 +54,24 @@ Description:
   It handles SSH connections, uploads topology scripts, and manages Mininet sessions.
 
 Options:
-  --remote=USER@HOST     Remote VM to connect to (e.g., gavinliao89@192.168.1.100)
-  --cli                  Enter interactive Mininet CLI (default: run pingall and exit)
-  --remote-path=PATH     Remote path for generated Python file (default: /tmp/topo_from_json.py)
-  -h, --help             Show this help message
+  --remote=USER@HOST            Remote VM to connect to (e.g., gavinliao89@192.168.1.100)
+  --cli                         Enter interactive Mininet CLI (default: run pingall and exit)
+  --remote-path-python=PATH     Remote path for generated Python file (default: /tmp/mininet-script.py)
+  --remote-path-json=PATH       Remote path for generated JSON file (default: /tmp/input-topo.json)
+  -h, --help                    Show this help message
 
 Arguments:
   topo.json          JSON file containing network topology (default: topo.json)
 
 JSON Format example:
   {
-    "hosts":    ["h1", "h2", "h3"],
-    "switches": ["s1", "s2"],
-    "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"]],
+    "topo": {
+      "nets":{},
+	  "aps":{}
+    },
+    "tests": [
+	  { <testing info> }
+    ],
     "username": "gavinliao89",    // Optional: SSH username
     "password": "mypassword",    // Optional: SSH/sudo password
     "host":     "192.168.1.100"  // Optional: VM IP address
@@ -197,24 +203,26 @@ func main() {
 
 	// Display final configuration
 	fmt.Printf("\n"+`Final Configuration:
-	Host       : %s
-	Username   : %s
-	Password   : [hidden]
-	Topology   : %s
-	Py Script  : %s
-	Mode       : %s\n
-	Remote path: %s
-	Hosts      : %v
-	Switches   : %v
-	Aps        : %v
-	Links      : %v`+"\n",
+	Host               : %s
+	Username           : %s
+	Password           : [hidden]
+	Topology           : %s
+	Py Script          : %s
+	Mode               : %s
+	Remote Python path : %s
+	Remote JSON path   : %s
+	Hosts              : %v
+	Switches           : %v
+	Aps                : %v
+	Links              : %v`+"\n",
 		config.Host,
 		config.Username,
 
 		config.TopoFile,
 		defaultPythonScript,
 		map[bool]string{true: "Interactive CLI", false: "Automated pingall"}[config.UseCLI],
-		config.RemotePath,
+		config.RemotePathPython,
+		config.RemotePathJSON,
 		inputTopo.Topo.Hosts,
 		inputTopo.Topo.Switches,
 		inputTopo.Topo.Aps,

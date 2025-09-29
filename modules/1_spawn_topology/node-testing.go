@@ -23,7 +23,7 @@ useCLI == false: run "pingall" test and end the session
 */
 func genCommand(useCLI bool) string {
 	// Build Mininet command
-	var mnCommand string = fmt.Sprintf("sudo python3 %s", config.RemotePath)
+	var mnCommand string = fmt.Sprintf("sudo python3 %s %s", config.RemotePathPython, config.RemotePathJSON)
 
 	if useCLI {
 		// mnCommand = fmt.Sprintf("sudo mn --custom %s --topo fromjson", config.RemotePath)

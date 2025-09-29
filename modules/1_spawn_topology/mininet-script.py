@@ -38,7 +38,7 @@ from mn_wifi.link import wmediumd
 from mn_wifi.wmediumdConnector import interference
 
 def make_results_dir():
-    base = "test_results"
+    base = "/tmp/test_results"
     # folder named by current time
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = os.path.join(base, ts)
