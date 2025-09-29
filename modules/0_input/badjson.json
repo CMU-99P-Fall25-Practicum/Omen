@@ -1,6 +1,0 @@
-{ "schemaVersion":"1.0",
-  "meta":{"backend":"mininet","name":"campus-demo","duration_s":60},
-  "topo":{"nodes":[{"id":"h1","role":"host"},{"id":"ap1","role":"ap"}],
-          "links":[{"node_id_a":"h1","node_id_b":"ap1","constraints":{"loss_pkt":0}}]},
-  "tests":[{"name":"bad","type":"ping","src":"h1","dst":"MISSING","count":1,"deadline_s":2}]
-}
