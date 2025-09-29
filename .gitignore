@@ -10,5 +10,8 @@
 ### Above combination will ignore all files without extension ###
 ### ^Credit: https://stackoverflow.com/a/25592735
 
+# Unignore Dockerfiles
+!Dockerfile
+
 *.log
 .vscode/**
