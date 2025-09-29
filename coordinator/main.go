@@ -196,10 +196,20 @@ func validateIn(iPath string, tokens *sync.Map) func() {
 					return
 				}
 				out := strings.Builder{}
-				fmt.Fprintf(&out, "File %v is invalid:\n", iPath)
-				for _, e := range inv.Errors {
-					fmt.Fprintf(&out, "---%s: %s\n", e.Loc, e.Msg)
+				fmt.Fprintf(&out, "File %v has issues:\n", iPath)
+				if len(inv.Errors) > 0 {
+					fmt.Fprintf(&out, "%v\n", errorHeaderSty.Render("ERRORS"))
+					for _, e := range inv.Errors {
+						fmt.Fprintf(&out, "---%s: %s\n", e.Loc, e.Msg)
+					}
 				}
+				if len(inv.Warnings) > 0 {
+					fmt.Fprintf(&out, "%v\n", warningHeaderSty.Render("WARNINGS"))
+					for _, w := range inv.Warnings {
+						fmt.Fprintf(&out, "---%s: %s\n", w.Loc, w.Msg)
+					}
+				}
+
 				fmt.Println(out.String())
 			} else {
 				log.Error().Str("stdout", string(stdout)).Err(err).Msg("failed to run input validation module")
@@ -246,24 +256,26 @@ While modules operate independently and thus do not care about correlating IDs, 
 	root.Args = cobra.MinimumNArgs(1)
 
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
-	if err := fang.Execute(context.Background(), root, fang.WithoutCompletions(), fang.WithVersion("MS2"), fang.WithErrorHandler(
-		func(w io.Writer, styles fang.Styles, err error) {
-			// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
+	if err := fang.Execute(context.Background(), root,
+		fang.WithoutCompletions(),
+		fang.WithVersion("MS2"),
+		fang.WithErrorHandler(
+			func(w io.Writer, styles fang.Styles, err error) {
+				// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
+				fmt.Fprintln(w, errorHeaderSty.Margin(1).MarginLeft(2).Render("ERROR"))
+				fmt.Fprintln(w, styles.ErrorText.UnsetTransform().Render(err.Error()))
+				fmt.Fprintln(w)
+				if isUsageError(err) {
+					_, _ = fmt.Fprintln(w, lipgloss.JoinHorizontal(
+						lipgloss.Left,
+						styles.ErrorText.UnsetWidth().Render("Try"),
+						styles.Program.Flag.Render(" --help "),
+						styles.ErrorText.UnsetWidth().UnsetMargins().UnsetTransform().Render("for usage."),
+					))
+					_, _ = fmt.Fprintln(w)
+				}
 
-			fmt.Fprintln(w, styles.ErrorHeader.String())
-			fmt.Fprintln(w, styles.ErrorText.UnsetTransform().Render(err.Error())) //styles.ErrorText.Render(err.Error()+"."))
-			fmt.Fprintln(w)
-			if isUsageError(err) {
-				_, _ = fmt.Fprintln(w, lipgloss.JoinHorizontal(
-					lipgloss.Left,
-					styles.ErrorText.UnsetWidth().Render("Try"),
-					styles.Program.Flag.Render(" --help "),
-					styles.ErrorText.UnsetWidth().UnsetMargins().UnsetTransform().Render("for usage."),
-				))
-				_, _ = fmt.Fprintln(w)
-			}
-
-		})); err != nil {
+			})); err != nil {
 		// fang logs returned errors for us
 		os.Exit(1)
 	}
