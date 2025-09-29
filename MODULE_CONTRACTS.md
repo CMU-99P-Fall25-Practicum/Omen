@@ -11,8 +11,23 @@ As it says on the tin, Input Validation modules consume a configuration file and
 - arg1: Json file (path taken as argument) to be validated. This file contains a topology, at least one test to execute against the topology, environmental conditions to apply to the topology’s links and nodes, and all required metadata (ssh information & credentials, test name, backend, OSM connection information, etc).
 
 *Out*: 
-- stderr: warnings and errors related to the validity of the given input file.
+- stdout: warnings and errors related to the validity of the given input file.
 
+example:
+
+```json
+{
+  "ok": false,
+  "errors": [
+    {
+      "loc": "root",
+      "code": "<>",
+      "msg": "<>"
+    }
+  ],
+  "warnings": []
+}
+```
 ## Terrain Data 
 
 (currently projected to be satisfied by an OSM module)
