@@ -1,8 +1,0 @@
-{
-    "0-input": {
-        "path": "../modules/0_input/inputvalidator.py"
-    },
-    "1-frame_generation":{
-        "path":"cat"
-    }
-}
