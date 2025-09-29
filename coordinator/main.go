@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -106,8 +108,18 @@ func collectJSONPaths(argPaths []string) ([]string, error) {
 	return inputPaths, nil
 }
 
+type invalidInput struct {
+	Ok     bool `json:"ok"`
+	Errors []struct {
+		Loc  string `json:"loc"`
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"errors"`
+	Warnings []any `json:"warnings"`
+}
+
 // Executes the input validator against each input path.
-// Expected the input validator to be
+// Files that pass are moved to validatedDir/ and have their token prefixed.
 func runInputValidationModule(inputPaths []string) (string, error) {
 	tDir := path.Join(os.TempDir(), validatedDir)
 	// destroy the directory
@@ -120,6 +132,10 @@ func runInputValidationModule(inputPaths []string) (string, error) {
 			return "", err
 		}
 	}
+	// create a directory to place validated files
+	if err := os.Mkdir(validatedDir, 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		return "", err
+	}
 	log.Debug().Str("path", tDir).Msg("created directory for validated inputs")
 	var (
 		wg               sync.WaitGroup
@@ -128,38 +144,7 @@ func runInputValidationModule(inputPaths []string) (string, error) {
 	)
 	for i := range inputPaths {
 		// as each file completes, write it into the temp directory
-		wg.Go(func() {
-			iPath := inputPaths[i]
-			iFile := path.Base(iPath)
-			if !path.IsAbs(iPath) { // DOcker requires paths to be prefixed with ./ or be absolute
-				// path.Join will not prefix a ./, but we need one so goodbye Windows compatibility
-				iPath = "./" + iPath
-			}
-			// assign a token to this file
-			var token uint64
-			for { // claim an unused token
-				token = rand.Uint64()
-				if _, loaded := tokens.LoadOrStore(token, iPath); !loaded {
-					break
-				}
-			}
-			log.Info().Str("filename", iFile).Msgf("assigned token '%v' to input file %v", token, iPath)
-
-			// execute input validation against each json file
-			cmd := exec.Command("docker", "run", "--rm", "-v", iPath+":/input/"+path.Base(iFile), inputValidatorImage+":"+inputValidatorImageTag, "/input/"+iFile)
-			out, sbErr := strings.Builder{}, strings.Builder{}
-			cmd.Stdout = &out
-			cmd.Stderr = &sbErr
-
-			log.Debug().Strs("args", cmd.Args).Msg("executing validator script")
-
-			if err := cmd.Run(); err != nil {
-				log.Error().Str("stderr", sbErr.String()).Err(err).Msg("failed to run input validation module")
-			}
-
-			// copy the validated file into our validated directory and attack a token to it for identification
-			// TODO
-		})
+		wg.Go(validateIn(inputPaths[i], &tokens))
 	}
 	wg.Wait()
 
@@ -169,6 +154,73 @@ func runInputValidationModule(inputPaths []string) (string, error) {
 	}
 
 	return tDir, nil
+}
+
+// helper function intended to be called in a separate goroutine.
+// Executes the input validator docker image against the given input file.
+// Generates a unique token for this run, storing that token in the sync.Map.
+// Validated files are placed into validatedDir.
+func validateIn(iPath string, tokens *sync.Map) func() {
+	return func() {
+		iFile := path.Base(iPath)
+		if !path.IsAbs(iPath) { // Docker requires paths to be prefixed with ./ or be absolute
+			// path.Join will not prefix a ./, but we need one so goodbye Windows compatibility
+			iPath = "./" + iPath
+		}
+		// assign a token to this file
+		var token uint64
+		for { // claim an unused token
+			token = rand.Uint64()
+			if _, loaded := tokens.LoadOrStore(token, iPath); !loaded {
+				break
+			}
+		}
+		log.Info().Str("filename", iFile).Uint64("token", token).Msgf("assigned token '%v' to input file %v", token, iPath)
+
+		// execute input validation
+		cmd := exec.Command("docker", "run", "--rm", "-v", iPath+":/input/"+path.Base(iFile), inputValidatorImage+":"+inputValidatorImageTag, "/input/"+iFile)
+
+		log.Debug().Strs("args", cmd.Args).Msg("executing validator script")
+
+		if stdout, err := cmd.Output(); err != nil {
+			ee, ok := err.(*exec.ExitError)
+			if ok && ee.ExitCode() == 1 { // the script ran successfully but the file isn't valid
+				// unmarshal the data so we can present it well
+				inv := invalidInput{}
+				if err := json.Unmarshal(stdout, &inv); err != nil {
+					log.Error().Err(err).Msg("failed to unmarshal script output as json")
+					return
+				}
+				out := strings.Builder{}
+				fmt.Fprintf(&out, "File %v is invalid:\n", iPath)
+				for _, e := range inv.Errors {
+					fmt.Fprintf(&out, "---%s: %s\n", e.Loc, e.Msg)
+				}
+				fmt.Println(out.String())
+			} else {
+				log.Error().Str("stdout", string(stdout)).Err(err).Msg("failed to run input validation module")
+			}
+			return
+		}
+		// file is valid
+		vPath := path.Join(validatedDir, strconv.FormatUint(token, 10)+"_"+iFile)
+		log.Debug().Str("original path", iPath).Str("destination", vPath).Msg("copying file to validated directory")
+		// copy the validated file into our validated directory and attack a token to it for identification
+		rd, err := os.Open(iPath)
+		if err != nil {
+			log.Warn().Err(err).Str("original path", iPath).Msg("failed to read file")
+			return
+		}
+		wr, err := os.Create(vPath)
+		if err != nil {
+			log.Warn().Err(err).Str("original path", iPath).Str("write path", vPath).Msg("failed to write validated file")
+			return
+		}
+		if _, err := io.Copy(wr, rd); err != nil {
+			log.Warn().Err(err).Str("original path", iPath).Str("write path", vPath).Msg("failed to write validated file")
+			return
+		}
+	}
 }
 
 func main() {
