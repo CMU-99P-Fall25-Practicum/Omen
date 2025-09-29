@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math/rand/v2"
 	"os"
 	"os/exec"
 	"path"
@@ -26,8 +27,10 @@ import (
 // Hardcoded module names and paths.
 // For this to be actually modular, these should be fed in via config or env, ideally with enumerations to prevent executing arbitrary shell commands.
 const (
-	appName      string = "Omen"
-	validatedDir string = "validated_input" // intermediary directory hosting files that have been run through the validator
+	appName                string = "Omen"
+	validatedDir           string = "validated_input" // intermediary directory hosting files that have been run through the validator
+	inputValidatorImage    string = "omen-input-validator"
+	inputValidatorImageTag string = "latest"
 )
 
 var (
@@ -56,37 +59,13 @@ func run(cmd *cobra.Command, args []string) error {
 	inputPaths, err := collectJSONPaths(args)
 	if err != nil {
 		return err
+	} else if len(inputPaths) == 0 {
+		return errors.New("no .json file where found in the given paths")
 	}
-	log.Info().Strs("input paths", inputPaths).Msg("collected input file paths")
+	log.Info().Strs("files", inputPaths).Msg("collected input file paths")
 
-	// capture and validate module configuration
-	var modules modules
-	{
-		modulesCfgPath, err := cmd.Flags().GetString("modules")
-		if err != nil {
-			return fmt.Errorf("failed to fetch module switch: %w", err)
-		}
-		f, err := os.Open(modulesCfgPath)
-		if err != nil {
-			return err
-		}
-		if m, errs := ReadModuleConfig(f); len(errs) != 0 {
-			// compose the errors into a clean list:
-			var sb strings.Builder
-			sb.WriteString("failed to generate module configuration from " + modulesCfgPath + ":\n")
-			for i, err := range errs {
-				fmt.Fprintf(&sb, "[%d] %s\n", i, err)
-			}
-			// chomp the newline
-			return errors.New(sb.String()[:sb.Len()-1])
-		} else {
-			modules = m
-		}
-	}
-	log.Debug().Any("modules", modules).Msg("constructed module set")
-
-	// run each validated file through spawn topo
-	_, err = runInputValidationModule(modules.ZeroInput.Path, inputPaths)
+	// run each validated file through validation
+	_, err = runInputValidationModule(inputPaths)
 	if err != nil {
 		return err
 	}
@@ -127,24 +106,56 @@ func collectJSONPaths(argPaths []string) ([]string, error) {
 	return inputPaths, nil
 }
 
-// Executes the input validator module against each given path, in parallel.
-// The files that pass validation are written to a temp directory; the path to this directory is returned.
-// Only returns an error if we failed to create the temporary directory or no files passed validation.
-func runInputValidationModule(modulePath string, inputPaths []string) (string, error) {
+// Executes the input validator against each input path.
+// Expected the input validator to be
+func runInputValidationModule(inputPaths []string) (string, error) {
 	tDir := path.Join(os.TempDir(), validatedDir)
-	if err := os.Mkdir(tDir, 0755); err != nil {
+	// destroy the directory
+	if err := os.RemoveAll(tDir); err != nil {
 		return "", err
 	}
+	if err := os.Mkdir(tDir, 0755); err != nil {
+		// if the directory already exists, no problem, just empty it out
+		if !errors.Is(err, fs.ErrExist) {
+			return "", err
+		}
+	}
+	log.Debug().Str("path", tDir).Msg("created directory for validated inputs")
 	var (
 		wg               sync.WaitGroup
 		passedValidation atomic.Uint32
+		tokens           sync.Map // token -> input path
 	)
-	for _, ip := range inputPaths {
+	for i := range inputPaths {
 		// as each file completes, write it into the temp directory
 		wg.Go(func() {
+			iPath := inputPaths[i]
+			iFile := path.Base(iPath)
+			if !path.IsAbs(iPath) { // DOcker requires paths to be prefixed with ./ or be absolute
+				// path.Join will not prefix a ./, but we need one so goodbye Windows compatibility
+				iPath = "./" + iPath
+			}
+			// assign a token to this file
+			var token uint64
+			for { // claim an unused token
+				token = rand.Uint64()
+				if _, loaded := tokens.LoadOrStore(token, iPath); !loaded {
+					break
+				}
+			}
+			log.Info().Str("filename", iFile).Msgf("assigned token '%v' to input file %v", token, iPath)
+
 			// execute input validation against each json file
-			exec.Command(modulePath, ip)
-			// TODO capture stdout and stderr pipes
+			cmd := exec.Command("docker", "run", "--rm", "-v", iPath+":/input/"+path.Base(iFile), inputValidatorImage+":"+inputValidatorImageTag, "/input/"+iFile)
+			out, sbErr := strings.Builder{}, strings.Builder{}
+			cmd.Stdout = &out
+			cmd.Stderr = &sbErr
+
+			log.Debug().Strs("args", cmd.Args).Msg("executing validator script")
+
+			if err := cmd.Run(); err != nil {
+				log.Error().Str("stderr", sbErr.String()).Err(err).Msg("failed to run input validation module")
+			}
 
 			// copy the validated file into our validated directory and attack a token to it for identification
 			// TODO
