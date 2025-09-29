@@ -101,12 +101,15 @@ type Constraints struct {
 type Test struct {
 	Name      string `json:"name"`
 	Type      string `json:"type"`
-	Src       string `json:"src"`
-	Dst       string `json:"dst"`
+	Src       string `json:"src,omitempty"`
+	Dst       string `json:"dst,omitempty"`
 	Count     int    `json:"count,omitempty"`
 	DeadlineS int    `json:"deadline_s,omitempty"`
 	DurationS int    `json:"duration_s,omitempty"`
 	RateMbps  int    `json:"rate_mbps,omitempty"`
+	MoveNode  string `json:"node,omitempty"`     // MoveNode is the ID of the node to move (for "node movements" test type)
+	Position  string `json:"position,omitempty"` // Position is a string representing coordinates, e.g., "x,y,z"
+	CMD       string `json:"cmd,omitempty"`      // CMD is the command to run (for "iw" test type)
 }
 
 // Input Config from user to setup ssh connection to VM

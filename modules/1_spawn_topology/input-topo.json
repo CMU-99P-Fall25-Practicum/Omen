@@ -6,32 +6,85 @@
     "duration_s": 60
   },
   "topo": {
-    "hosts": [
-      { "id": "h1","tx_dbm": 20, "rx_sensitivity_dbm": -82 }
-    ],
-    "switches":[
-      { "id": "s1", "tx_dbm": 21, "rx_sensitivity_dbm": -82 }
-    ],
+    "nets": {
+      "noise_th": -91,
+      "propagation_model":{
+        "model": "logDistance",
+        "exp": 4
+      }
+    },
     "aps": [
-      { "id": "ap1", "tx_dbm": 23, "rx_sensitivity_dbm": -82 }
-    ],
-    "links": [
       {
-        "node_id_a": "h1",
-        "node_id_b": "s1",
-        "constraints": {
-          "loss_pkt": 1.0,
-          "throughput_mbps": 100,
-          "mtu": 1500,
-          "delay_ms": 10
-        }
+        "id": "ap1",
+        "mode": "a",
+        "channel": 36,
+        "ssid": "test-ssid",
+        "position": "0,0,0"
+      }
+    ],
+    "stations": [
+      {
+        "id": "sta1",
+        "position": "10,0,0"
+      },
+      {
+        "id": "sta2",
+        "position": "-10,0,0"
       }
     ]
   },
   "tests": [
-    { "name": "ping_h1_ap1", "type": "ping",       "src": "h1", "dst": "ap1", "count": 5,  "deadline_s": 5 },
-    { "name": "tcp_bulk",    "type": "iperf_tcp",  "src": "h1", "dst": "ap1", "duration_s": 20 },
-    { "name": "udp_stream",  "type": "iperf_udp",  "src": "h1", "dst": "ap1", "duration_s": 15, "rate_mbps": 10 }
+    {
+      "name": "ping_sta1_sta2",
+      "type": "ping",
+      "src": "sta1",
+      "dst": "sta2",
+      "count": 3
+    },
+    {
+      "name": "iw_link_sta1",
+      "type": "iw",
+      "node": "sta1",
+      "cmd": "iw dev sta1-wlan0 link"
+    },
+    {
+      "name": "move sta1",
+      "type": "node movements",
+      "node": "sta1",
+      "position": "30,0,0"
+    },
+    {
+      "name": "ping_sta1_sta2",
+      "type": "ping",
+      "src": "sta1",
+      "dst": "sta2",
+      "count": 3
+    },
+    {
+      "name": "iw_link_sta1",
+      "type": "iw",
+      "node": "sta1",
+      "cmd": "iw dev sta1-wlan0 link"
+    },
+    {
+      "name": "move sta1",
+      "type": "node movements",
+      "node": "sta1",
+      "position": "70,0,0"
+    },
+    {
+      "name": "ping_sta1_sta2",
+      "type": "ping",
+      "src": "sta1",
+      "dst": "sta2",
+      "count": 3
+    },
+    {
+      "name": "iw_link_sta1",
+      "type": "iw",
+      "node": "sta1",
+      "cmd": "iw dev sta1-wlan0 link"
+    }
   ],
   "username": "",
   "password": "",
