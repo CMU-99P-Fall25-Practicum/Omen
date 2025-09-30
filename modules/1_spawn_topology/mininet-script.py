@@ -96,9 +96,76 @@ def build_from_spec(spec):
 
     return net, sta_objs, ap_objs
 
+def run_pingall_full(all_nodes, count=1, test_name="pingall_full"):
+    """
+    Run a full pairwise ping matrix test between all nodes.
+    Returns the formatted output string with CSV-style results.
+    """
+    msg = f"\n[pingall_full] {test_name}: pairwise matrix (-c {count})\n"
+    info(msg)
+    header = "src,dst,tx,rx,loss_pct,avg_rtt_ms\n"
+    lines = [msg, header]
+    
+    for s in all_nodes:
+        for d in all_nodes:
+            if s is d:
+                continue
+            raw = s.cmd(f"ping -c {count} {d.IP()} | tail -n 2")
+            tx = rx = loss = "?"
+            avg = "?"
+            for line in raw.splitlines():
+                if "packets transmitted" in line:
+                    # "X packets transmitted, Y received, Z% packet loss"
+                    parts = [p.strip() for p in line.split(',')]
+                    try:
+                        tx = int(parts[0].split()[0])
+                        rx = int(parts[1].split()[0])
+                        loss = parts[2].split('%')[0]
+                    except Exception:
+                        pass
+                if "min/avg/max" in line or "round-trip" in line:
+                    try:
+                        avg = line.split('=')[1].split('/')[1].strip()
+                    except Exception:
+                        pass
+            lines.append(f"{s.name},{d.name},{tx},{rx},{loss},{avg}\n")
+    
+    return "".join(lines)
+
+def run_iw_stations(sta_objs, cmd, test_name="iw_stations"):
+    """
+    Run an iw command on all stations.
+    Returns the formatted output string with results from all stations.
+    """
+    msg = f"\n[iw_stations] {test_name}: running '{cmd}' on all stations\n"
+    info(msg)
+    lines = [msg]
+    lines.append("=" * 60 + "\n")
+    
+    for station in sta_objs.values():
+        station_msg = f"\n--- Station {station.name} ---\n"
+        lines.append(station_msg)
+        
+        # Replace any placeholder in the command with actual station interface
+        actual_cmd = cmd.replace("{station}", station.name)
+        actual_cmd = actual_cmd.replace("{interface}", f"{station.name}-wlan0")
+        
+        result = station.cmd(actual_cmd)
+        lines.append(f"Command: {actual_cmd}\n")
+        lines.append(f"Output:\n{result}\n")
+    
+    lines.append("=" * 60 + "\n")
+    return "".join(lines)
+
 def run_tests(sta_objs, ap_objs, tests, results_dir):
     info("*** Running tests\n")
     time.sleep(15)
+    
+    # convenience: list of all nodes we consider for full pairwise tests
+    all_nodes = []
+    all_nodes.extend(sta_objs.values())
+    all_nodes.extend(ap_objs.values())
+    
     for idx, t in enumerate(tests, 1):
         ttype = t["type"]
         name = t['name']
@@ -117,12 +184,13 @@ def run_tests(sta_objs, ap_objs, tests, results_dir):
 
             out = msg + src_node.cmd("ping -c {} {}".format(count, target_ip))
 
+        elif ttype == "pingall_full":
+            count = int(t.get("count", 1))
+            out = run_pingall_full(all_nodes, count, name)
+
         elif ttype == "iw":
-            node = sta_objs[t["node"]]
             cmd = t["cmd"]
-            msg = f"\n[iw] {name}: {node.name} {cmd}\n"
-            info(msg)
-            out = msg + node.cmd(cmd)
+            out = run_iw_stations(sta_objs, cmd, name)
 
         elif ttype == "node movements":
             node = sta_objs[t["node"]]
@@ -131,7 +199,16 @@ def run_tests(sta_objs, ap_objs, tests, results_dir):
             info(msg)
             node.setPosition(pos)
             time.sleep(5)
-            out = msg + f"Moved {node.name} to {pos}\n"
+            movement_out = msg + f"Moved {node.name} to {pos}\n"
+            
+            # Automatically run pingall_full after node movement
+            info("*** Running pingall_full after node movement\n")
+            pingall_name = f"{name}_pingall_after_move"
+            pingall_out = run_pingall_full(all_nodes, count=1, test_name=pingall_name)
+            
+            # Combine movement and pingall results in a single output
+            out = movement_out + "\n" + pingall_out
+            
         else:
             msg = f"\n[skip] unsupported test type: {ttype}\n"
             info(msg)

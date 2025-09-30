@@ -18,75 +18,68 @@
         "id": "ap1",
         "mode": "a",
         "channel": 36,
-        "ssid": "test-ssid",
+        "ssid": "test-ssid1",
         "position": "0,0,0"
+      },
+      {
+        "id": "ap2",
+        "mode": "a",
+        "channel": 36,
+        "ssid": "test-ssid2",
+        "position": "70,0,0"
       }
     ],
     "stations": [
       {
         "id": "sta1",
-        "position": "10,0,0"
+        "position": "0,10,0"
       },
       {
         "id": "sta2",
-        "position": "-10,0,0"
+        "position": "0,-10,0"
+      },
+      {
+        "id": "sta3",
+        "position": "70,10,0"
+      },
+      {
+        "id": "sta4",
+        "position": "70,-10,0"
       }
     ]
   },
   "tests": [
     {
-      "name": "ping_sta1_sta2",
-      "type": "ping",
-      "src": "sta1",
-      "dst": "sta2",
-      "count": 3
+        "name":"1: move sta1",
+        "type":"node movements",
+        "node": "sta1",
+        "position": "0,5,0"
+    },    
+    {
+        "name":"2: move sta2",
+        "type":"node movements",
+        "node": "sta2",
+        "position": "0,-15,0"
+    },    
+        {
+        "name":"3: move sta3",
+        "type":"node movements",
+        "node": "sta3",
+        "position": "10,10,0"
+    },    
+    {
+        "name":"4: move sta4",
+        "type":"node movements",
+        "node": "sta4",
+        "position": "80,10,0"
     },
     {
-      "name": "iw_link_sta1",
-      "type": "iw",
-      "node": "sta1",
-      "cmd": "iw dev sta1-wlan0 link"
-    },
-    {
-      "name": "move sta1",
-      "type": "node movements",
-      "node": "sta1",
-      "position": "30,0,0"
-    },
-    {
-      "name": "ping_sta1_sta2",
-      "type": "ping",
-      "src": "sta1",
-      "dst": "sta2",
-      "count": 3
-    },
-    {
-      "name": "iw_link_sta1",
-      "type": "iw",
-      "node": "sta1",
-      "cmd": "iw dev sta1-wlan0 link"
-    },
-    {
-      "name": "move sta1",
-      "type": "node movements",
-      "node": "sta1",
-      "position": "70,0,0"
-    },
-    {
-      "name": "ping_sta1_sta2",
-      "type": "ping",
-      "src": "sta1",
-      "dst": "sta2",
-      "count": 3
-    },
-    {
-      "name": "iw_link_sta1",
-      "type": "iw",
-      "node": "sta1",
-      "cmd": "iw dev sta1-wlan0 link"
+      "name": "check_all_links",
+      "type": "iw", 
+      "cmd": "iw dev {interface} link"
     }
   ],
   "username": "",
   "password": "",
-  "address": ""
+  "address": "172.29.95.98"
 }
