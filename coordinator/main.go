@@ -1,5 +1,8 @@
-/* Package main implements the coordinator, a simple binary for executing each stage as named in the input file.
- */
+/*
+Package main implements the coordinator, a simple binary for sequentially executing each module in the Omen pipeline.
+
+Uses hardcoded paths and commands for module execution.
+*/
 package main
 
 import (
@@ -56,6 +59,15 @@ func init() {
 // run is the primary driver function for the coordinator.
 // It roots the filesystem, finds all required modules, and executes them in order.
 func run(cmd *cobra.Command, args []string) error {
+	// check flags
+	if ll, err := cmd.Flags().GetString("log-level"); err != nil {
+		panic(err)
+	} else if l, err := zerolog.ParseLevel(strings.ToLower(ll)); err != nil {
+		return err
+	} else {
+		log = log.Level(l)
+	}
+
 	// ensure each arg is a valid path and collect the absolute paths of each test to run
 	inputPaths, err := collectJSONPaths(args)
 	if err != nil {
@@ -266,6 +278,8 @@ While modules operate independently and thus do not care about correlating IDs, 
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
 	root.Args = cobra.MinimumNArgs(1)
+	// establish flags
+	root.Flags().String("log-level", "DEBUG", "Set verbosity of the logger. Must be one of {TRACE|DEBUG|INFO|WARN|ERROR|FATAL|PANIC}.")
 
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
 	if err := fang.Execute(context.Background(), root,
