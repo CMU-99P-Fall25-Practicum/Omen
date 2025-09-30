@@ -17,8 +17,8 @@ const buildDir string = "artefacts"
 
 var Default = Build
 
-// DockerizeInput recompiles the input validation docker container.
-func DockerizeInput() error {
+// DockerizeIV recompiles the input validation docker container.
+func DockerizeIV() error {
 	mg.Deps(dockerInPath)
 	return sh.Run("docker", "build", "-t", "omen-input-validator", "modules/0_input/")
 }
@@ -46,5 +46,5 @@ func artefactDirectoryExists() error {
 
 // Build builds all required files and containers.
 func Build() {
-	mg.Deps(DockerizeInput, BuildCoordinator)
+	mg.Deps(DockerizeIV, BuildCoordinator)
 }
