@@ -17,7 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/charmbracelet/fang"
@@ -71,7 +70,26 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// TODO spawn each topology
+	// ensure at least 1 file made it through validation
+	{
+		found := false
+		if err := filepath.WalkDir(validatedDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if filepath.Ext(d.Name()) == ".json" && !d.IsDir() {
+				found = true
+			}
+			return nil
+		}); err != nil {
+			return err
+		} else if !found {
+			return ErrNoFilesValidated
+		}
+	}
+
+	// execute the transport code
+	// TODO
 
 	return nil
 }
@@ -142,20 +160,14 @@ func runInputValidationModule(inputPaths []string) (string, error) {
 	}
 	log.Debug().Str("path", tDir).Msg("created directory for validated inputs")
 	var (
-		wg               sync.WaitGroup
-		passedValidation atomic.Uint32
-		tokens           sync.Map // token -> input path
+		wg     sync.WaitGroup
+		tokens sync.Map // token -> input path
 	)
 	for i := range inputPaths {
 		// as each file completes, write it into the temp directory
 		wg.Go(validateIn(inputPaths[i], &tokens))
 	}
 	wg.Wait()
-
-	// ensure that at least one file passed validation
-	if passedValidation.Load() == 0 {
-		return "", ErrNoFilesValidated
-	}
 
 	return tDir, nil
 }
