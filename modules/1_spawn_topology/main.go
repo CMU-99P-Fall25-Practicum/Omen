@@ -212,6 +212,7 @@ func main() {
 	Remote Python path : %s
 	Remote JSON path   : %s
 	Hosts              : %v
+	Stations           : %v
 	Switches           : %v
 	Aps                : %v
 	Links              : %v`+"\n",
@@ -224,6 +225,7 @@ func main() {
 		config.RemotePathPython,
 		config.RemotePathJSON,
 		inputTopo.Topo.Hosts,
+		inputTopo.Topo.Stations,
 		inputTopo.Topo.Switches,
 		inputTopo.Topo.Aps,
 		inputTopo.Topo.Links)
