@@ -196,8 +196,8 @@ func runMininet(client *ssh.Client, config *models.Config) error {
 		if err != nil && err.Error() != "Process exited with status 130" { // 130 is normal for Ctrl+C
 			return fmt.Errorf("session error: %w", err)
 		}
-	case <-time.After(120 * time.Second): // Longer timeout for interactive sessions
-		fmt.Println("\n[DEBUG] Session timeout")
+		// case <-time.After(120 * time.Second): // Longer timeout for interactive sessions
+		// 	fmt.Println("\n[DEBUG] Session timeout")
 	}
 
 	// Wait for output processing to complete
