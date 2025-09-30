@@ -28,15 +28,6 @@ example:
   "warnings": []
 }
 ```
-## Terrain Data 
-
-(currently projected to be satisfied by an OSM module)
-
-*In*: 
-- arg1: Input file validated by input validation.
-
-*Out*: 
-- stdout: Connection string that can be used by the frame generation module (should already be reflected in the input file; this would just provide confirmation).
 
 ## Test Runner
 
