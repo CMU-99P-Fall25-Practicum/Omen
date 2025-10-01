@@ -1,34 +1,11 @@
 package main
 
 import (
-	"bufio"
-	"encoding/csv"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
-	"strings"
 )
-
-type MovementRecord struct {
-	MovementNumber string
-	NodeName       string
-	Position       string
-	TestFile       string
-}
-
-type PingRecord struct {
-	MovementNumber string
-	TestFile       string
-	Src            string
-	Dst            string
-	Tx             string
-	Rx             string
-	LossPct        string
-	AvgRttMs       string
-}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -56,21 +33,33 @@ func main() {
 	}
 
 	// Process all .txt files
-	movements, pings, err := processFiles(latestDir)
+	movements, pings, stations, aps, err := readFile(latestDir)
 	if err != nil {
 		fmt.Printf("Error processing files: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Write to CSV
-	outputPath := filepath.Join(resultsDir, "pingall_full_data.csv")
-	if err := writeToCSV(outputPath, movements, pings); err != nil {
-		fmt.Printf("Error writing CSV: %v\n", err)
-		os.Exit(1)
+	// Write pingall CSV if we have movement/ping data
+	if len(movements) > 0 || len(pings) > 0 {
+		outputPath := filepath.Join(resultsDir, "pingall_full_data.csv")
+		if err := writeToCSV(outputPath, movements, pings); err != nil {
+			fmt.Printf("Error writing pingall CSV: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("Successfully processed %d movements and %d ping records\n", len(movements), len(pings))
+		fmt.Printf("Pingall results written to: %s\n", outputPath)
 	}
 
-	fmt.Printf("Successfully processed %d movements and %d ping records\n", len(movements), len(pings))
-	fmt.Printf("Results written to: %s\n", outputPath)
+	// Write iw CSV if we have station/AP data
+	if len(stations) > 0 || len(aps) > 0 {
+		iwOutputPath := filepath.Join(resultsDir, "final_iw_data.csv")
+		if err := writeIwToCSV(iwOutputPath, stations, aps); err != nil {
+			fmt.Printf("Error writing iw CSV: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("Successfully processed %d stations and %d access points\n", len(stations), len(aps))
+		fmt.Printf("IW results written to: %s\n", iwOutputPath)
+	}
 }
 
 func findLatestDirectory(basePath string) (string, error) {
@@ -95,165 +84,4 @@ func findLatestDirectory(basePath string) (string, error) {
 	latest := directories[len(directories)-1]
 
 	return filepath.Join(basePath, latest), nil
-}
-
-func processFiles(directory string) ([]MovementRecord, []PingRecord, error) {
-	var movements []MovementRecord
-	var pings []PingRecord
-
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !d.IsDir() && strings.HasSuffix(strings.ToLower(d.Name()), ".txt") {
-			fmt.Printf("Processing file: %s\n", d.Name())
-
-			fileMovements, filePings, err := processFile(path, d.Name())
-			if err != nil {
-				fmt.Printf("Warning: Error processing file %s: %v\n", d.Name(), err)
-				return nil // Continue with other files
-			}
-
-			movements = append(movements, fileMovements...)
-			pings = append(pings, filePings...)
-		}
-		return nil
-	})
-
-	return movements, pings, err
-}
-
-func processFile(filePath, fileName string) ([]MovementRecord, []PingRecord, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer file.Close()
-
-	var movements []MovementRecord
-	var pings []PingRecord
-
-	scanner := bufio.NewScanner(file)
-	var currentMovementNumber string
-	var inPingallSection bool
-
-	// Regex patterns
-	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+([0-9,-]+)`)
-	pingallStartPattern := regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
-	csvHeaderPattern := regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		// Check for node movement
-		if matches := movementPattern.FindStringSubmatch(line); matches != nil {
-			movement := MovementRecord{
-				MovementNumber: matches[1],
-				NodeName:       matches[2],
-				Position:       matches[3],
-				TestFile:       fileName,
-			}
-			movements = append(movements, movement)
-			currentMovementNumber = matches[1]
-			continue
-		}
-
-		// Check for pingall section start
-		if matches := pingallStartPattern.FindStringSubmatch(line); matches != nil {
-			currentMovementNumber = matches[1]
-			inPingallSection = true
-			continue
-		}
-
-		// Skip CSV header line
-		if csvHeaderPattern.MatchString(line) {
-			continue
-		}
-
-		// Process ping data lines
-		if inPingallSection && strings.Contains(line, ",") {
-			parts := strings.Split(line, ",")
-			if len(parts) >= 6 {
-				// Clean up loss_pct: convert "+1 errors" to "100"
-				lossPct := parts[4]
-				if strings.Contains(lossPct, "+1 errors") {
-					lossPct = "100"
-				}
-
-				// Clean up avg_rtt_ms: convert "?" to "0"
-				avgRttMs := parts[5]
-				if avgRttMs == "?" {
-					avgRttMs = "0"
-				}
-
-				ping := PingRecord{
-					MovementNumber: currentMovementNumber,
-					TestFile:       fileName,
-					Src:            parts[0],
-					Dst:            parts[1],
-					Tx:             parts[2],
-					Rx:             parts[3],
-					LossPct:        lossPct,
-					AvgRttMs:       avgRttMs,
-				}
-				pings = append(pings, ping)
-			}
-		}
-
-		// Reset pingall section when we hit an empty line or new section
-		if line == "" || strings.HasPrefix(line, "[") {
-			inPingallSection = false
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, nil, err
-	}
-
-	return movements, pings, nil
-}
-
-func writeToCSV(outputPath string, movements []MovementRecord, pings []PingRecord) error {
-	file, err := os.Create(outputPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	// Write header
-	header := []string{
-		"data_type", "movement_number", "test_file", "node_name", "position",
-		"src", "dst", "tx", "rx", "loss_pct", "avg_rtt_ms",
-	}
-	if err := writer.Write(header); err != nil {
-		return err
-	}
-
-	// Write movement records
-	for _, movement := range movements {
-		record := []string{
-			"movement", movement.MovementNumber, movement.TestFile, movement.NodeName, movement.Position,
-			"", "", "", "", "", "", // Empty ping fields
-		}
-		if err := writer.Write(record); err != nil {
-			return err
-		}
-	}
-
-	// Write ping records
-	for _, ping := range pings {
-		record := []string{
-			"ping", ping.MovementNumber, ping.TestFile, "", "", // Empty movement fields
-			ping.Src, ping.Dst, ping.Tx, ping.Rx, ping.LossPct, ping.AvgRttMs,
-		}
-		if err := writer.Write(record); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
