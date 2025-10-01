@@ -132,7 +132,7 @@ def run_pingall_full(all_nodes, count=1, test_name="pingall_full"):
     
     return "".join(lines)
 
-def run_iw_stations(sta_objs, cmd, test_name="iw_stations"):
+def run_iw_stations(sta_objs, ap_objs, cmd, test_name="iw_stations"):
     """
     Run an iw command on all stations.
     Returns the formatted output string with results from all stations.
@@ -150,10 +150,31 @@ def run_iw_stations(sta_objs, cmd, test_name="iw_stations"):
         actual_cmd = cmd.replace("{station}", station.name)
         actual_cmd = actual_cmd.replace("{interface}", f"{station.name}-wlan0")
         
+
+        # Retry multiple times to avoid "Not connected"
+        retries = 5
         result = station.cmd(actual_cmd)
+        while "Not connected" in result and retries > 0:
+            info(f"Waiting for {station.name} to associate...\n")
+            time.sleep(1)
+            result = station.cmd(actual_cmd)
+            retries -= 1
+
         lines.append(f"Command: {actual_cmd}\n")
         lines.append(f"Output:\n{result}\n")
     
+    # APs
+    for ap in ap_objs.values():
+        ap_msg = f"\n--- Access Point {ap.name} ---\n"
+        lines.append(ap_msg)
+
+        # here we assume wlan1 is the main interface
+        iface = f"{ap.name}-wlan1"
+        cmd = f"ifconfig {iface}"
+        result = ap.cmd(cmd)
+
+        lines.append(f"Command: {ap.name} {cmd}\n")
+        lines.append(f"Output:\n{result}\n")
     lines.append("=" * 60 + "\n")
     return "".join(lines)
 
@@ -190,7 +211,7 @@ def run_tests(sta_objs, ap_objs, tests, results_dir):
 
         elif ttype == "iw":
             cmd = t["cmd"]
-            out = run_iw_stations(sta_objs, cmd, name)
+            out = run_iw_stations(sta_objs, ap_objs, cmd, name)
 
         elif ttype == "node movements":
             node = sta_objs[t["node"]]

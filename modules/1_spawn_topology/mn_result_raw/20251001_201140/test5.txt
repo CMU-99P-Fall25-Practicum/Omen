@@ -1,0 +1,92 @@
+
+[iw_stations] check_all_links: running 'iw dev {interface} link' on all stations
+============================================================
+
+--- Station sta1 ---
+Command: iw dev sta1-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta1-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 343809 bytes (8714 packets)
+	TX: 4898 bytes (68 packets)
+	signal: -51 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 6.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Station sta2 ---
+Command: iw dev sta2-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta2-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 343749 bytes (8713 packets)
+	TX: 4874 bytes (67 packets)
+	signal: -69 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 6.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Station sta3 ---
+Command: iw dev sta3-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta3-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 159971 bytes (4070 packets)
+	TX: 2090 bytes (30 packets)
+	signal: -69 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 6.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Station sta4 ---
+Command: iw dev sta4-wlan0 link
+Output:
+Connected to 02:00:00:00:05:00 (on sta4-wlan0)
+	SSID: test-ssid2
+	freq: 5180.0
+	RX: 341425 bytes (8684 packets)
+	TX: 4310 bytes (65 packets)
+	signal: -69 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 6.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Access Point ap1 ---
+Command: ap1 ifconfig ap1-wlan1
+Output:
+ap1-wlan1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether 02:00:00:00:04:00  txqueuelen 1000  (Ethernet)
+        RX packets 137  bytes 8598 (8.5 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 137  bytes 11064 (11.0 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+--- Access Point ap2 ---
+Command: ap2 ifconfig ap2-wlan1
+Output:
+ap2-wlan1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether 02:00:00:00:05:00  txqueuelen 1000  (Ethernet)
+        RX packets 84  bytes 5116 (5.1 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 84  bytes 6628 (6.6 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+============================================================
