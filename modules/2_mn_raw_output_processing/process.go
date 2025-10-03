@@ -157,6 +157,14 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 		if inPingallSection && strings.Contains(line, ",") {
 			parts := strings.Split(line, ",")
 			if len(parts) >= 6 {
+				src := parts[0]
+				dst := parts[1]
+
+				// Skip station-to-station communication
+				if strings.HasPrefix(src, "sta") && strings.HasPrefix(dst, "sta") {
+					continue
+				}
+
 				// Clean up loss_pct: convert "+1 errors" to "100"
 				lossPct := parts[4]
 				if strings.Contains(lossPct, "+1 errors") {
@@ -172,8 +180,8 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 				ping := models.PingRecord{
 					MovementNumber: currentMovementNumber,
 					TestFile:       fileName,
-					Src:            parts[0],
-					Dst:            parts[1],
+					Src:            src,
+					Dst:            dst,
 					Tx:             parts[2],
 					Rx:             parts[3],
 					LossPct:        lossPct,
