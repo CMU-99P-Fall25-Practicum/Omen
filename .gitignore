@@ -18,3 +18,5 @@ artefacts
 
 *.log
 .vscode/**
+
+.DS_Store
