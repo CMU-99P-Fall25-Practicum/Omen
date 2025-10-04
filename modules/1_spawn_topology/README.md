@@ -4,8 +4,7 @@
 2. Make sure the input topo.json file contains sufficient information (see below for more details)
 3. Execute ```$ go run .``` in the terminal
 4. The script should establish ssh connection and run automatically
-5. <font style="color : lightskyblue">[Optional]</font> Add ```--cli``` flag to enable manual Mininet control (run ```exit``` to end the script)
-6. <font style="color : lightskyblue">[Optional]</font> Run with the ```-h``` flag to see more information of how to use the flags
+5. <font style="color : lightskyblue">[Optional]</font> Run with the ```-h``` flag to see more information of how to use the flags
 
 ## Workflow
 1. Read Mininet topology and input param from JSON file.
@@ -13,29 +12,60 @@
 ```json
 // JSON example
 {
-  "hosts":    ["h1", "h2", "h3"],
-  "switches": ["s1", "s2"],
-  "links":    [["h1","s1"], ["h2","s1"], ["h3","s2"], ["s1","s2"]],
+  "schemaVersion": "1.0",
+  "meta": {
+    "backend": "mininet" ,
+    "name": "campus-demo",  
+    "duration_s": 60
+  },
+  "topo": {
+    "nets": {
+      "noise_th": -91,
+      "propagation_model":{
+        "model": "logDistance",
+        "exp": 4
+      }
+    },
+    "aps": [
+      {
+        "id": "ap1",
+        "mode": "a",
+        "channel": 36,
+        "ssid": "test-ssid1",
+        "position": "0,0,0"
+      }
+    ],
+    "stations": [
+      {
+        "id": "sta1",
+        "position": "0,10,0"
+      },
+    ]
+  },
+  "tests": [
+    {
+        "name":"1: move sta1",
+        "type":"node movements",
+        "node": "sta1",
+        "position": "0,5,0"
+    }
+  ],
   "username": "<vm_username>",
   "password": "<ssh/sudo_password>",
   "host": "<vm_ip_address>" // ssh into <username>@<host>
 }
 ```
 
-2. Generate a Python file that establish topology in mininet.
-3. Upload that file to the remote VM (default remote path: /tmp/topo_from_json.py).
-4. Run Mininet on the VM with either:
+2. Upload our [Mininet-WiFi Python script](./mininet-script.py) and the [input JSON file](./input-topo.json) to the VM.
+3. The files are all under the ```/tmp``` directory.
+4. Run the script with the following command:
 ```c
-// Default (pingAll)
-
-$ sudo mn --custom /tmp/topo_from_json.py --topo fromjson --test pingall
+$ sudo python3 /tmp/mininet-script.py /tmp/input-topo.json
 ```
-```c
-// Mininet CLI (run interactively with -cli flag)
 
-$ sudo mn --custom /tmp/topo_from_json.py --topo fromjson
-```
-5.	Cleanup: attempt to delete the remote Python file (rm -f /tmp/topo_from_json.py) before exiting.
+5. Download the raw output files for further processing in the next module ([mn_raw_output_processing](../2_mn_raw_output_processing/)).
+
+
 ## Requirements
 - Local machine
   - Go (1.20+ recommended)
@@ -53,4 +83,4 @@ $ sudo mn --custom /tmp/topo_from_json.py --topo fromjson
 
 ## TODO
 - This is currently a stand-alone runner
-- No custom test script yet (cannot feed a .cli file automatically)
+- No test script customization yet (cannot feed a .cli file automatically)

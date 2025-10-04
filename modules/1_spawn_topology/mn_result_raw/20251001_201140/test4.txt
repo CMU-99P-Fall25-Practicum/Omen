@@ -1,0 +1,37 @@
+
+[node movements] 4: move sta4: moving sta4 -> 80,10,0
+Moved sta4 to 80,10,0
+
+
+[pingall_full] 4: move sta4_pingall_after_move: pairwise matrix (-c 1)
+src,dst,tx,rx,loss_pct,avg_rtt_ms
+sta1,sta2,1,1,0,1.740
+sta1,sta3,1,1,0,1.099
+sta1,sta4,1,0,+1 errors,?
+sta1,ap1,1,1,0,0.104
+sta1,ap2,1,1,0,0.103
+sta2,sta1,1,1,0,0.842
+sta2,sta3,1,1,0,2.464
+sta2,sta4,1,0,+1 errors,?
+sta2,ap1,1,1,0,0.058
+sta2,ap2,1,1,0,0.079
+sta3,sta1,1,1,0,1.276
+sta3,sta2,1,1,0,0.960
+sta3,sta4,1,0,+1 errors,?
+sta3,ap1,1,1,0,0.134
+sta3,ap2,1,1,0,0.137
+sta4,sta1,1,0,+1 errors,?
+sta4,sta2,1,0,+1 errors,?
+sta4,sta3,1,0,+1 errors,?
+sta4,ap1,1,1,0,0.352
+sta4,ap2,1,1,0,0.123
+ap1,sta1,1,0,100,?
+ap1,sta2,1,0,100,?
+ap1,sta3,1,0,100,?
+ap1,sta4,1,0,100,?
+ap1,ap2,1,1,0,0.128
+ap2,sta1,1,0,100,?
+ap2,sta2,1,0,100,?
+ap2,sta3,1,0,100,?
+ap2,sta4,1,0,100,?
+ap2,ap1,1,1,0,0.093

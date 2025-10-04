@@ -71,7 +71,19 @@ type Topo struct {
 	Hosts    []Node `json:"hosts"`
 	Switches []Node `json:"switches"`
 	Aps      []Node `json:"aps"`
+	Stations []Node `json:"stations"`
+	Nets     Nets   `json:"nets"`
 	Links    []Link `json:"links"`
+}
+
+type Nets struct {
+	NoiseThreashold  int       `json:"noise_th"`
+	PropagationModel Propmodel `json:"propagation_model"`
+}
+
+type Propmodel struct {
+	Model string `json:"model"`
+	Exp   int    `json:"exp"`
 }
 
 // Node represents a network node (host, switch, access point, etc.)
@@ -80,6 +92,11 @@ type Node struct {
 	ID               string `json:"id"`
 	TxDBM            int    `json:"tx_dbm,omitempty"`
 	RxSensitivityDBM int    `json:"rx_sensitivity_dbm,omitempty"`
+	// WiFi-specific fields
+	Mode     string `json:"mode,omitempty"`     // for APs
+	Channel  int    `json:"channel,omitempty"`  // for APs
+	SSID     string `json:"ssid,omitempty"`     // for APs
+	Position string `json:"position,omitempty"` // for APs and stations
 }
 
 // Link represents a connection between two nodes (topo -> links)
@@ -101,20 +118,24 @@ type Constraints struct {
 type Test struct {
 	Name      string `json:"name"`
 	Type      string `json:"type"`
-	Src       string `json:"src"`
-	Dst       string `json:"dst"`
+	Src       string `json:"src,omitempty"`
+	Dst       string `json:"dst,omitempty"`
 	Count     int    `json:"count,omitempty"`
 	DeadlineS int    `json:"deadline_s,omitempty"`
 	DurationS int    `json:"duration_s,omitempty"`
 	RateMbps  int    `json:"rate_mbps,omitempty"`
+	MoveNode  string `json:"node,omitempty"`     // MoveNode is the ID of the node to move (for "node movements" test type)
+	Position  string `json:"position,omitempty"` // Position is a string representing coordinates, e.g., "x,y,z"
+	CMD       string `json:"cmd,omitempty"`      // CMD is the command to run (for "iw" test type)
 }
 
 // Input Config from user to setup ssh connection to VM
 type Config struct {
-	Host       netip.AddrPort
-	Username   string
-	Password   string
-	TopoFile   string
-	UseCLI     bool
-	RemotePath string
+	Host             netip.AddrPort
+	Username         string
+	Password         string
+	TopoFile         string
+	UseCLI           bool
+	RemotePathPython string
+	RemotePathJSON   string
 }
