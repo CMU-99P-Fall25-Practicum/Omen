@@ -38,7 +38,7 @@ func BuildCoordinator() error {
 // DockerizeIV recompiles the input validation docker container.
 func DockerizeIV() error {
 	mg.Deps(dockerInPath)
-	return sh.Run("docker", "build", "-t", "omen-input-validator", "modules/0_input/")
+	return sh.Run("docker", "build", "-t", "0_omen-input-validator", "modules/0_input/")
 }
 
 // BuildSpawnTopo builds the binary for the glue module.
