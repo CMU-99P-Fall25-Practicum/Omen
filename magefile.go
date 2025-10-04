@@ -59,6 +59,12 @@ func BuildOutputProcessing() error {
 	return err
 }
 
+// DockerizeOV recompiles the output visualization docker container.
+func DockerizeOV() error {
+	mg.Deps(dockerInPath)
+	return sh.Run("docker", "build", "-t", "3_omen-output-visualizer", "modules/3_output_visualization")
+}
+
 //#endregion module building
 
 // Build builds all required files and containers.
