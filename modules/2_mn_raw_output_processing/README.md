@@ -107,7 +107,7 @@ $ go run . <raw_file_directory>
 
 Given the following directory structure:
 ```
-cur/
+./
 ├─ raw_output/
 │  ├─ 20251001_201140
 │  ├─ 20250908_090142
@@ -118,7 +118,7 @@ cur/
 Running `go run . ./raw_output` from within `cur/` will result in:
 
 ```
-cur/
+./
 ├─ results/
 │  ├─ pingall_full_data.csv
 │  ├─ final_iw_data.csv
