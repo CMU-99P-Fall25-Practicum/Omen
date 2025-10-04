@@ -13,6 +13,7 @@ INPUT OPTIONS: \
   3. Two explicit CSV files: nodes.csv and edges.csv \
 "
 
+RUN mkdir /input
 
 WORKDIR /app
 COPY loader.py .
