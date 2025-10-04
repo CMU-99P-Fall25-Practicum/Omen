@@ -13,22 +13,21 @@ As it says on the tin, Input Validation modules consume a configuration file and
 
 *Out*: 
 - stdout: warnings and errors related to the validity of the given input file.
-- exit code: 1 if errors were printed to stdout
-example:
-
-```json
-{
-  "ok": false,
-  "errors": [
+  - example:
+    ```json
     {
-      "loc": "root",
-      "code": "<>",
-      "msg": "<>"
+      "ok": false,
+      "errors": [
+        {
+          "loc": "root",
+          "code": "<>",
+          "msg": "<>"
+        }
+      ],
+      "warnings": []
     }
-  ],
-  "warnings": []
-}
-```
+    ```
+- exit code: 1 if errors were printed to stdout
 
 ### Running Manually
 
