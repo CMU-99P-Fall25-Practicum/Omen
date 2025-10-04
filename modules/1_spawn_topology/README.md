@@ -61,11 +61,15 @@
 
 ## Module Workflow
 
+The internal logic of the module is as follows:
+
 1. Slurp input json, using the ssh info to connect to the mininet vm.
 
-2. Upload our [Mininet-WiFi Python script](./mininet-script.py) and the [input JSON file](./input-topo.json) to the VM, placing them in `/tmp`.
-3. Run the script: `sudo python3 /tmp/mininet-script.py /tmp/input-topo.json`
-4. Download the raw output files for further processing in the next module ([mn_raw_output_processing](../2_mn_raw_output_processing/)).
+2. Upload the driver script and input json files to the vm.
+
+3. Run the script via `sudo python3 /tmp/mininet-script.py /tmp/input-topo.json`.
+
+4. Download the raw output files for further processing in the [next (output handler)](../2_mn_raw_output_processing) module.
 
 
 ## Requirements
