@@ -9,6 +9,7 @@ As it says on the tin, Input Validation modules consume a configuration file and
 
 *In*:
 - arg1: Json file (path taken as argument) to be validated. This file contains a topology, at least one test to execute against the topology, environmental conditions to apply to the topology’s links and nodes, and all required metadata (ssh information & credentials, test name, backend, OSM connection information, etc).
+  - [Example](example_files/test_run.json).
 
 *Out*: 
 - stdout: warnings and errors related to the validity of the given input file.
@@ -29,9 +30,15 @@ example:
 }
 ```
 
+### Running Manually
+
+`docker run --rm -v ./modules/0_input/good.json:/input/good.json 0_omen-input-validator:latest /input/good.json`
+
 ## Test Runner
 
-*In*: ???
+*In*:
+- arg1: the json file validated by the prior input validation module execution.
+  - [Example](example_files/test_run.json).
 
 *Out*: 
 - stdout: path to a directory containing raw output from the result of each test as it was printed/redirected. The exact format of the files is as-of-yet undetermined.
@@ -55,6 +62,7 @@ example:
     │  │  ├─ test2.txt
     ...
     ```
+
 *Out*: 
 - `./results` directory containing two files: `pingall_full_data.csv` (containing reachability results at each step in the test) and `final_iw_data.csv` (containing the results of running `iw` against node as the final test concludes).
   - Example:
