@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/magefile/mage/mg"
@@ -62,8 +63,11 @@ func BuildOutputProcessing() error {
 //#endregion module building
 
 // Build builds all required files and containers.
-func Build() {
+func Build() error {
 	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing)
+
+	// copy the driver script into the artefacts directory so it can be passed by spawn topology
+	return sh.Copy(path.Join(buildDir, "mininet-script.py"), "modules/1_spawn_topology/mininet-script.py")
 }
 
 // Clean deletes the build directory and everything in it.
