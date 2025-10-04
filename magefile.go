@@ -69,7 +69,7 @@ func DockerizeOV() error {
 
 // Build builds all required files and containers.
 func Build() {
-	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing)
+	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing, DockerizeOV)
 }
 
 // Clean deletes the build directory and everything in it.
