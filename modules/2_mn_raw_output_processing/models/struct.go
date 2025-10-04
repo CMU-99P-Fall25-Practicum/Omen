@@ -1,5 +1,7 @@
+// Package models contains structs to serve as intermediate formats while transforming raw test output into well-formed data points to be visualized.
 package models
 
+// A MovementRecord represents a single move action performed on a node during the last run.
 type MovementRecord struct {
 	MovementNumber string
 	NodeName       string
