@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/magefile/mage/mg"
@@ -37,7 +38,7 @@ func BuildCoordinator() error {
 // DockerizeIV recompiles the input validation docker container.
 func DockerizeIV() error {
 	mg.Deps(dockerInPath)
-	return sh.Run("docker", "build", "-t", "omen-input-validator", "modules/0_input/")
+	return sh.Run("docker", "build", "-t", "0_omen-input-validator", "modules/0_input/")
 }
 
 // BuildSpawnTopo builds the binary for the glue module.
@@ -68,8 +69,11 @@ func DockerizeOV() error {
 //#endregion module building
 
 // Build builds all required files and containers.
-func Build() {
-	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing, DockerizeOV)
+func Build() error {
+	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing)
+
+	// copy the driver script into the artefacts directory so it can be passed by spawn topology
+	return sh.Copy(path.Join(buildDir, "mininet-script.py"), "modules/1_spawn_topology/mininet-script.py")
 }
 
 // Clean deletes the build directory and everything in it.

@@ -65,16 +65,47 @@ Arguments:
 
 JSON Format example:
   {
-    "topo": {
-      "nets":{},
-	  "aps":{}
+  "schemaVersion": "1.0",
+  "meta": {
+    "backend": "mininet" ,
+    "name": "campus-demo",  
+    "duration_s": 60
+  },
+  "topo": {
+    "nets": {
+      "noise_th": -91,
+      "propagation_model":{
+        "model": "logDistance",
+        "exp": 4
+      }
     },
-    "tests": [
-	  { <testing info> }
+    "aps": [
+      {
+        "id": "ap1",
+        "mode": "a",
+        "channel": 36,
+        "ssid": "test-ssid1",
+        "position": "0,0,0"
+      }
     ],
-    "username": "gavinliao89",    // Optional: SSH username
-    "password": "mypassword",    // Optional: SSH/sudo password
-    "host":     "192.168.1.100"  // Optional: VM IP address
+    "stations": [
+      {
+        "id": "sta1",
+        "position": "0,10,0"
+      },
+    ]
+  },
+  "tests": [
+    {
+        "name":"1: move sta1",
+        "type":"node movements",
+        "node": "sta1",
+        "position": "0,5,0"
+    }
+  ],
+  "username": "<vm_username>",
+  "password": "<ssh/sudo_password>",
+  "host": "<vm_ip_address>" // ssh into <username>@<host>
   }
 
 Examples:

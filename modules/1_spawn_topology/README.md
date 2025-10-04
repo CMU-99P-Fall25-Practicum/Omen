@@ -1,69 +1,75 @@
 # Spawn Mininet Topology over SSH
-## How to start
-1. Navigate to the "/1_spawn_topology" directory
-2. Make sure the input topo.json file contains sufficient information (see below for more details)
-3. Execute ```$ go run .``` in the terminal
-4. The script should establish ssh connection and run automatically
-5. <font style="color : lightskyblue">[Optional]</font> Run with the ```-h``` flag to see more information of how to use the flags
 
-## Workflow
-1. Read Mininet topology and input param from JSON file.
+## Usage
 
-```json
-// JSON example
-{
-  "schemaVersion": "1.0",
-  "meta": {
-    "backend": "mininet" ,
-    "name": "campus-demo",  
-    "duration_s": 60
-  },
-  "topo": {
-    "nets": {
-      "noise_th": -91,
-      "propagation_model":{
-        "model": "logDistance",
-        "exp": 4
-      }
-    },
-    "aps": [
-      {
-        "id": "ap1",
-        "mode": "a",
-        "channel": 36,
-        "ssid": "test-ssid1",
-        "position": "0,0,0"
-      }
-    ],
-    "stations": [
-      {
-        "id": "sta1",
-        "position": "0,10,0"
-      },
-    ]
-  },
-  "tests": [
+1. Create input json file.
+  - Example:
+    ```json
     {
-        "name":"1: move sta1",
-        "type":"node movements",
-        "node": "sta1",
-        "position": "0,5,0"
+      "schemaVersion": "1.0",
+      "meta": {
+        "backend": "mininet" ,
+        "name": "campus-demo",  
+        "duration_s": 60
+      },
+      "topo": {
+        "nets": {
+          "noise_th": -91,
+          "propagation_model":{
+            "model": "logDistance",
+            "exp": 4
+          }
+        },
+        "aps": [
+          {
+            "id": "ap1",
+            "mode": "a",
+            "channel": 36,
+            "ssid": "test-ssid1",
+            "position": "0,0,0"
+          }
+        ],
+        "stations": [
+          {
+            "id": "sta1",
+            "position": "0,10,0"
+          },
+        ]
+      },
+      "tests": [
+        {
+            "name":"1: move sta1",
+            "type":"node movements",
+            "node": "sta1",
+            "position": "0,5,0"
+        }
+      ],
+      "username": "<vm_username>",
+      "password": "<ssh/sudo_password>",
+      "host": "<vm_ip_address>" // ssh into <username>@<host>
     }
-  ],
-  "username": "<vm_username>",
-  "password": "<ssh/sudo_password>",
-  "host": "<vm_ip_address>" // ssh into <username>@<host>
-}
-```
+    ```
+2. Build the binary. From the top level `omen/` directory call `mage`. A binary will be placed in `Omen/artefacts/`.
+  - You can also build just this binary with `go build -C modules/1_spawn_topology/ -o ../../artefacts/2_output_processing`
+3. Run the binary, providing the path to the input json.
+  - Pass `-h` or usage details.
+  - `artefacts/2_output_processing path/to/input.json`
 
-2. Upload our [Mininet-WiFi Python script](./mininet-script.py) and the [input JSON file](./input-topo.json) to the VM.
-3. The files are all under the ```/tmp``` directory.
-4. Run the script with the following command:
-```c
-$ sudo python3 /tmp/mininet-script.py /tmp/input-topo.json
-```
 
-5. Download the raw output files for further processing in the next module ([mn_raw_output_processing](../2_mn_raw_output_processing/)).
+4. The script should establish ssh connection and run automatically
+5. <font style="color : lightskyblue">[Optional]</font> Run with the ```-h``` flag to see more information of how to use the flags.
+
+## Module Workflow
+
+The internal logic of the module is as follows:
+
+1. Slurp input json, using the ssh info to connect to the mininet vm.
+
+2. Upload the driver script and input json files to the vm.
+
+3. Run the script via `sudo python3 /tmp/mininet-script.py /tmp/input-topo.json`.
+
+4. Download the raw output files for further processing in the [next (output handler)](../2_mn_raw_output_processing) module.
 
 
 ## Requirements
