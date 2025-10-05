@@ -1,0 +1,14 @@
+{
+    "nodes": [
+      { "id": "h1", "title": "Host h1", "subTitle": "10.0.0.1", "mainStat": 50, "severity": "ok" },
+      { "id": "h2", "title": "Host h2", "subTitle": "10.0.0.2", "mainStat": 48, "severity": "ok" },
+      { "id": "s1", "title": "Switch s1", "subTitle": "core switch", "mainStat": 75, "severity": "ok" }
+    ],
+    "edges": [
+      { "id": "h1-s1", "source": "h1", "target": "s1", "mainStat": 10, "status": "up" },
+      { "id": "s1-h1", "source": "s1", "target": "h1", "mainStat": 10, "status": "up" },
+      { "id": "h2-s1", "source": "h2", "target": "s1", "mainStat": 12, "status": "up" },
+      { "id": "s1-h2", "source": "s1", "target": "h2", "mainStat": 12, "status": "up" }
+    ]
+  }
+  
