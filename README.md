@@ -52,9 +52,9 @@ Run the validator: `docker run --rm -v path/to/user/input.json:/input/in.json 0_
 
 Run the test driver: `./1_spawn path/to/validated/in.json`
 
-TODO
-
 #### Output Coercion
+
+Run output coercion: `./2_output_processing path/to/raw/results/directory/`
 
 TODO
 

@@ -102,6 +102,9 @@ As it says on the tin, Input Validation modules consume a configuration file and
     │  ├─ pingall_full_data.csv
     │  ├─ final_iw_data.csv
     ```
+    - [pingall_full_data.csv](example_files/2_output-pingall_full_data.csv).
+    - [final_iw_data.csv](example_files/2_output-final_iw_data.csv)
+      
 
 See [the module's README](modules/2_mn_raw_output_processing/README.md) for more information.
 
