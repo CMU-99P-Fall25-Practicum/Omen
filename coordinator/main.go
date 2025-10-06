@@ -133,34 +133,8 @@ While modules operate independently and thus do not care about correlating IDs, 
 			}
 			return nil
 		},
-		RunE: run,
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			defer dCLI.Close()
-			// check if our visualization containers are still running and note their IDs if they are
-			runningContainers, err := dCLI.ContainerList(context.TODO(), container.ListOptions{})
-			if err != nil {
-				return err
-			}
-			// find the containers with our cached IDs
-			stillRunning := []string{} // array of IDs of containers we spun up that are still spinning
-
-			for _, cntr := range runningContainers {
-				if _, found := containers[cntr.ID]; found {
-					stillRunning = append(stillRunning, cntr.ID)
-				}
-			}
-			var sb strings.Builder
-			sb.WriteString("Pipeline has completed.\n")
-			if len(stillRunning) > 0 {
-				fmt.Fprintf(&sb, "The following %d containers were left running.\n"+
-					"Remember to stop them when you are done.", len(stillRunning))
-				for _, id := range stillRunning {
-					sb.WriteString(id + " - " + containers[id] + "\n")
-				}
-			}
-			fmt.Print(sb.String())
-			return nil
-		},
+		RunE:     run,
+		PostRunE: cleanup,
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
 	root.Args = cobra.MinimumNArgs(1)
@@ -191,6 +165,36 @@ While modules operate independently and thus do not care about correlating IDs, 
 		// fang logs returned errors for us
 		os.Exit(1)
 	}
+}
+
+// Intended to be run as a PostRunE.
+// cleanup closes the connection to docker and spits out a message about what containers are still running.
+func cleanup(cmd *cobra.Command, args []string) error {
+	defer dCLI.Close()
+	// check if our visualization containers are still running and note their IDs if they are
+	runningContainers, err := dCLI.ContainerList(context.TODO(), container.ListOptions{})
+	if err != nil {
+		return err
+	}
+	// find the containers with our cached IDs
+	stillRunning := []string{} // array of IDs of containers we spun up that are still spinning
+
+	for _, cntr := range runningContainers {
+		if _, found := containers[cntr.ID]; found {
+			stillRunning = append(stillRunning, cntr.ID)
+		}
+	}
+	var sb strings.Builder
+	sb.WriteString("Pipeline has completed.\n")
+	if len(stillRunning) > 0 {
+		fmt.Fprintf(&sb, "The following %d containers were left running.\n"+
+			"Remember to stop them when you are done.\n", len(stillRunning))
+		for _, id := range stillRunning {
+			sb.WriteString(id + " - " + containers[id] + "\n")
+		}
+	}
+	fmt.Print(sb.String())
+	return nil
 }
 
 // Borrowed from fang.go's DefaultErrorHandling.
