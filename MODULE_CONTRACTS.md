@@ -13,7 +13,7 @@ As it says on the tin, Input Validation modules consume a configuration file and
 
 *Out*: 
 - stdout: warnings and errors related to the validity of the given input file.
-  - example:
+  - example of malformed input:
     ```json
     {
       "ok": false,
@@ -24,6 +24,14 @@ As it says on the tin, Input Validation modules consume a configuration file and
           "msg": "<>"
         }
       ],
+      "warnings": []
+    }
+    ```
+  - example of passing input:
+    ```json
+    {
+      "ok": true,
+      "errors": [],
       "warnings": []
     }
     ```
