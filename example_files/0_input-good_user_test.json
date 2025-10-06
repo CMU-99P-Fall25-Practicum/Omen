@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "meta": {
-    "backend": "mininet" ,
+    "backend": "mininet-wifi" ,
     "name": "campus-demo",  
     "duration_s": 60
   },
