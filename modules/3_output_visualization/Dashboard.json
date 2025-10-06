@@ -39,7 +39,7 @@
           "format": "table",
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT\n  id,\n  title,\n  sub_title   AS subTitle,\n  main_stat   AS mainStat,\n  severity,\n  detail__tx,\n  detail__rx,\n  detail__avg_rtt_ms,\n  detail__loss_pct,\n  /* Arc fields (must be numeric) */\n  (100 - detail__loss_pct) AS arc__success,\n  detail__loss_pct         AS arc__errors\nFROM test.nodes\nLIMIT 100;"
+          "rawSql": "SELECT id, title, subTitle, mainStat, severity, `detail__rx_bytes`, `detail__rx_packets`, `detail__tx_bytes`, `detail__tx_packets`, `detail__success_rate`, `arc__success`, `arc__errors` FROM test.nodes;"
         },
         {
           "refId": "B",
@@ -47,7 +47,7 @@
           "format": "table",
           "editorMode": "code",
           "rawQuery": true,
-          "rawSql": "SELECT\n  id,\n  source,\n  target,\n  status,\n  main_stat,\n  detail__tx,\n  detail__rx,\n  detail__avg_rtt_ms,\n  detail__loss_pct,\n  /* Arc fields (optional for edges) */\n  (100 - detail__loss_pct) AS arc__success\nFROM test.edges\nLIMIT 200;"
+          "rawSql": "SELECT id, source, target, status FROM test.edges;"
         }
       ]
     }
