@@ -1,3 +1,31 @@
+/*
+Package main implements the test runner module, capable of executing topologies and tests against a remote mininet host.
+
+# Workflow
+
+The internal logic of the module is as follows:
+
+1. Slurp input json, using the ssh info to connect to the mininet vm.
+
+2. Upload the driver script and input json files to the vm.
+
+3. Run the script via `sudo python3 /tmp/mininet-script.py /tmp/input-topo.json`.
+
+4. Download the raw output files for further processing in the [next (output handler)](../2_mn_raw_output_processing) module.
+
+# Dependencies
+
+- Go 1.24.4+
+
+- ssh and scp in client PATH
+
+- Remote vm with the following items in their path:
+Mininet
+Python (3.11+)
+Sudo (required to run mininet)
+
+- Remote vm must also have an ssh server available for connection and superuser permissions (to run mininet).
+*/
 package main
 
 import (
@@ -10,6 +38,11 @@ import (
 
 	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/models"
 )
+
+/* TODO
+- This is currently a stand-alone runner
+- No test script customization yet (cannot feed a .cli file automatically)
+*/
 
 // Configuration - Set these to hardcode values, leave empty for prompting
 var (
