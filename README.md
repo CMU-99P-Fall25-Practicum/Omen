@@ -103,6 +103,10 @@ Install the Grafana dashboard used for node visualization:
 - Copy the [Dashboard JSON](modules/3_output_visualization/Dashboard.json) and replace all 3 instances of 'YOUR_DS_UID_HERE' with the id of the MySQL datasource.
 
 
-# Architectural Diagram
+# Architectural Diagrams
 
-![pipeline diagram](img/Pipeline.drawio.png)
+![original pipeline diagram](img/Pipeline.drawio.png)
+
+## Milestone 2 Overview
+
+![simplified milestone 2](img/milestone2.drawio.png)
