@@ -36,7 +36,7 @@ Omen uses [mage](https://magefile.org/) as its build system, Go as the primary d
 
 The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module and the I/O each module expected and returns.
 
-### Manual Execution
+### Manual Execution & Module Descriptions
 
 You can also run each step manually, if preferred. This assumes that each binary has been compiled and placed into `./artefacts/` and each docker image built.
 
@@ -53,6 +53,8 @@ Run the validator: `docker run --rm -v path/to/user/input.json:/input/in.json 0_
 Run the test driver: `./1_spawn path/to/validated/in.json`
 
 #### Output Coercion
+
+The Raw Output module is responsible for transforming the the raw results from the test driver into usable input for the visualization module. Given a directory, this module will find the latest batch of results in the given path (by reading the timestamped subdirectories of the form YYYYMMDD_HHMMSS). It will coalesce the results into two files, placing them in a local `./results` directory.
 
 Run output coercion: `./2_output_processing path/to/raw/results/directory/`
 
@@ -73,15 +75,25 @@ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' Ome
 
 (Optional) manually connect to the database: `mysql -h <OmenVizSQL ip address> -u root -p`
 
+Grafana now must also be configured to connect to the SQL server. Access the Grafana server at `localhost:3000`, navigate to "connections/add new connection", select mySQL, and enter the following details:
+- **Host URL**: <OmenVizSQL_IP>:3306
+- **Database name**: test
+- **Username**: root
+- **Password**: mypass
+
+*TODO: this really should all be handled automatically, via configuration files installed into the container.*
+
 Run the loader:
 ```bash
 docker run  --rm -it /
-    -e DB_HOST=172.17.0.2 /
-    -e DB_PASS=mypass <OmenVizSQL ip address> /
-    -v ./modules/3_output_visualization/nodes.csv:/input/nodes.csv /
-    -v ./modules/3_output_visualization/edges.csv:/input/edges.csv /
+    -e DB_HOST=<OmenVizSQL ip address> /
+    -e DB_PASS=mypass /
+    -v ./path/to/nodes.csv:/input/nodes.csv /
+    -v ./path/to/edges.csv:/input/edges.csv /
     3_omen-output-visualizer /input/nodes.csv /input/edges.csv
 ```
+
+*TODO: how do we initialize Grafana's dashboard. Ideally, we want this to be automated*
 
 # Architectural Diagram
 

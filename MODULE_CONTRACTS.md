@@ -80,8 +80,6 @@ As it says on the tin, Input Validation modules consume a configuration file and
 
 ## [Coalesce Output](modules/2_mn_raw_output_processing)
 
-The Raw Output module is responsible for transforming the the raw results from the test driver into usable input for the visualization module. Given a directory, this module will find the latest batch of results in the given path (by reading the timestamped subdirectories of the form YYYYMMDD_HHMMSS). It will coalesce the results into two files, placing them in a local `./results` directory.
-
 *In*: 
 - arg1: path to a directory containing at least one timestamped subdirectory with raw test output files.
   - Example:
@@ -101,6 +99,7 @@ The Raw Output module is responsible for transforming the the raw results from t
     ```
 
 *Out*: 
+
 - `./results` directory containing two files: `pingall_full_data.csv` (containing reachability results at each step in the test) and `final_iw_data.csv` (containing the results of running `iw` against node as the final test concludes).
   - Example:
     ```
