@@ -71,7 +71,12 @@ As it says on the tin, Input Validation modules consume a configuration file and
       
 
 *Out*: 
-- stdout: path to a directory containing raw output from the result of each test as it was printed/redirected. The exact format of the files is as-of-yet undetermined.
+- stdout: path to a directory containing at least one timestamped subdirectory with raw output files.
+  - The directory will contain one subdirectory for each run of the pipeline.
+  - Each subdirectory will be named with the timestamp of that run's execution, of the form YYYYMMDD-HHMMSS.
+    - There will be one file per test within a given subdirectory.
+      - Each file will contain different data depending on the test run.
+  - [Example](example_files/1_output-raw_results)
 
 ## [Coalesce Output](modules/2_mn_raw_output_processing)
 
