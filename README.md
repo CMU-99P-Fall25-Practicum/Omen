@@ -110,3 +110,7 @@ Install the Grafana dashboard used for node visualization:
 ## Milestone 2 Overview
 
 ![simplified milestone 2](img/milestone2.drawio.png)
+
+## Milestone 3 Updated Test Driver Flow
+
+![proposed milestone 3 upgrade](img/milestone3_script_flow.drawio.png)
