@@ -24,6 +24,9 @@ import (
 
 	"github.com/charmbracelet/fang"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +41,8 @@ const (
 )
 
 var (
-	log zerolog.Logger // primary output mechanism.
+	log  zerolog.Logger // primary output mechanism
+	dCLI *client.Client // our docker client
 )
 
 func init() {
@@ -274,7 +278,64 @@ Because Omen is a set of disparate module run in sequence, this binary (the Coor
 
 When a run starts, it is assigned a random identifier.
 While modules operate independently and thus do not care about correlating IDs, IDs can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			var err error
+			dCLI, err = client.NewClientWithOpts(client.FromEnv)
+			if err != nil {
+				return err
+			}
+			// TODO make this robust enough to check for existing (correctly configured) containers we can reuse.
+			// spin up the containers required for visualization
+
+			// Grafana
+			if cr, err := dCLI.ContainerCreate(context.TODO(),
+				&container.Config{
+					ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
+					Image:        "grafana/grafana",
+				},
+				&container.HostConfig{
+					PortBindings: nat.PortMap{nat.Port("3000/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3000"}}},
+				},
+				nil,
+				nil,
+				"OmenVizGrafana",
+			); err != nil {
+				return fmt.Errorf("failed to start grafana container: %w", err)
+			} else if len(cr.Warnings) > 0 {
+				log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("spun up grafana container with warnings")
+			} else {
+				log.Info().Str("container ID", cr.ID).Msg("spun up grafana container")
+			}
+			// MySQL
+			if cr, err := dCLI.ContainerCreate(context.TODO(),
+				&container.Config{
+					ExposedPorts: nat.PortSet{nat.Port("3306/tcp"): struct{}{}},
+					Env:          []string{"MYSQL_DATABASE=test", "MYSQL_ROOT_PASSWORD=mypass"},
+					Image:        "mysql",
+				},
+				&container.HostConfig{
+					PortBindings: nat.PortMap{nat.Port("33306/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3306"}}},
+				},
+				nil,
+				nil,
+				"OmenVizSQL",
+			); err != nil {
+				return fmt.Errorf("failed to start mysql container: %w", err)
+			} else if len(cr.Warnings) > 0 {
+				log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("spun up mysql container with warnings")
+			} else {
+				log.Info().Str("container ID", cr.ID).Msg("spun up mysql container")
+			}
+
+			return nil
+		},
 		RunE: run,
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			// spit out instructions on shutting down the visualization containers
+			// TODO
+
+			return dCLI.Close()
+		},
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
 	root.Args = cobra.MinimumNArgs(1)
