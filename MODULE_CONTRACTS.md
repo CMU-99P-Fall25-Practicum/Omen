@@ -52,6 +52,22 @@ As it says on the tin, Input Validation modules consume a configuration file and
         - **ssid**: name of the ssid this ap is broadcasting.
           - currently, only a single SSID is supported
         - **position**: Coordinate offset in the 3D space. Used to determine distance from other nodes (in meters).
+      - **topo.stations**: [array] wireless hosts in the topology
+        - **id**: unique identifier for this node. Must have a unique number in it (this is used by Mininet to set a datapath-id).
+        - **position**: Coordinate offset in the 3D space. Used to determine distance from other nodes (in meters).
+      - **topo.tests**: [array] tests to run over the course of the run. Executed sequentially.
+        - **name**: name to use for this test, to distinguish it from other tests. Has no impact on logic.
+        - **type**: enumeration of possible actions. Each **type** has its own set of required and optional parameters.
+          - Supported types:
+            - "node movements": move a node to the given location. Parameters:
+              - **node**: id of the node to move
+              - **position**: x,y,z coordinate to move the node to.
+            - "iw": execute iw on the named node
+              - **node**: id of the node to run iw on. If left empty, this test will be run on every node.
+      - **username**: username of the ssh-enabled user on the virtual machine that hosts mininet
+      - **password**: password of the ssh-enabled user on the virtual machine that hosts mininet
+      - **address**: ssh target. Must have the form <host>:<port>.
+
       
 
 *Out*: 
