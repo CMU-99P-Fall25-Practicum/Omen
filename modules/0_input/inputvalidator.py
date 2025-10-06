@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
-# Network Config Validator
-# This script validates a JSON spec describing network topologies
-# before it is handed off to Mininet through the Controller. 
-# The goal: Catch errors early (bad IDs, broken references, 
-# impossible values) and normalize the config into a predictable 
-# structure for the rest of the pipeline. 
+# Network Config Validator (Wi-Fi schema)
+# Validates a JSON spec before handing it to the runner.
 
-import sys, json, argparse, hashlib
-from typing import Literal, Optional, List, Dict
-from pydantic import BaseModel, Field, ValidationError, model_validator
+import sys, json, argparse, hashlib, re
+from pathlib import Path
+from typing import Literal, Optional, List, Dict, Tuple
+from pydantic import BaseModel, Field, ValidationError, model_validator, field_validator
 
 # ---------------- Pydantic Models ----------------
-#Defines what a 'valid' spec looks like and complains if the user feeds 
-#wrong information.
+
 class Meta(BaseModel):
     backend: Literal["mininet", "mininet-wifi"]
     name: str = Field(min_length=1, max_length=64)
@@ -55,77 +51,12 @@ class Station(BaseModel):
     def _pos_ok(cls, v: str) -> str:
         return _validate_position_str(v)
 
-# class Node(BaseModel):
-#     id: str = Field(min_length=1)
-#     role: Literal["ap", "sta", "host", "switch"]
-#     tx_dbm: Optional[float] = Field(default=None)
-#     rx_sensitivity_dbm: Optional[float] = Field(default=None)
+class Topology(BaseModel):
+    nets: Nets
+    aps: List[AP] = Field(default_factory=list)
+    stations: List[Station] = Field(default_factory=list)
 
-    #@field_validator("tx_dbm")
-    #def tx_range(cls, v):
-    #    if v is None:
-    #        return v
-    #    if not (-10 <= v <= 10): 
-    #        raise ValueError("tx_dbm expected between -10...30 dbm for wifi")
-    #    return v
-    
-    #@field_validator("rx_sensitivity_dbm")
-    #def rx_range(cls, v):
-    #    if v is None:
-    #        return v
-    #    if not(-110 <= v <= -40):
-    #        raise ValueError("rx_sensitivity_dbm expected between -110 and -40 dbm for wifi")
-    #    return v 
-
-# class Constraints(BaseModel):
-#     loss_pkt: Optional[float] = Field(default=0.0, ge=0.0, le=100.0)
-#     throughput_mbps: Optional[float] = Field(default=None, gt=0.0)
-#     mtu: Optional[int] = Field(default=1500, ge=256, le=65000)
-#     delay_ms: Optional[float] = Field(default=0.0, ge=0.0)
-
-# class Link(BaseModel):
-#     node_id_a: str
-#     node_id_b: str
-#     constraints: Constraints = Field(default_factory=Constraints)
-
-#     @model_validator(mode="after")
-#     def check_nodes(self):
-#         if self.node_id_a == self.node_id_b:
-#             raise ValueError("A link must connect a node to a different node")
-#         return self
-
-# class Topology(BaseModel):
-#     nodes: List[Node]
-#     links: List[Link] = Field(default_factory=list)
-
-# class TestPing(BaseModel):
-#     name: str
-#     type: Literal["ping"]
-#     src: str
-#     dst: str
-#     count: Optional[int] = Field(default=5, ge=1)
-#     deadline_s: Optional[int] = Field(default=5, ge=1)
-
-# class TestPingall(BaseModel):
-#     name: str
-#     type: Literal["pingall"]
-
-# class TestTCPiperf(BaseModel):
-#     name: str
-#     type: Literal["iperf_tcp"]
-#     src: str
-#     dst: str
-#     duration_s: int = Field(gt=0)
-
-# class TestUDPiperf(BaseModel):
-#     name: str
-#     type: Literal["iperf_udp"]
-#     src: str
-#     dst: str
-#     duration_s: int = Field(gt=0)
-#     rate_mbps: float = Field(gt=0)
-
-# TestVariant = TestPing | TestPingall | TestTCPiperf | TestUDPiperf
+# ----- Tests -----
 
 class TestMove(BaseModel):
     name: str
@@ -141,7 +72,7 @@ class TestMove(BaseModel):
 class TestIw(BaseModel):
     name: str
     type: Literal["iw"]
-    cmd: str  # should contain {interface}
+    cmd: str  # should ideally contain {interface}
 
 TestVariant = TestMove | TestIw
 
@@ -151,7 +82,7 @@ class Spec(BaseModel):
     topo: Topology
     tests: List[TestVariant]
 
-# ----------------Validate Semantics ----------------
+# ---------------- Validate Semantics ----------------
 
 def _spec_hash(spec_dict: dict) -> str:
     raw = json.dumps(spec_dict, sort_keys=True).encode()
@@ -166,99 +97,91 @@ def validate_semantics(spec: Spec) -> Dict[str, List[dict]]:
     errors: List[dict] = []
     warnings: List[dict] = []
 
-    # There must be unique node IDs
-    # ids = [n.id for n in spec.topo.nodes]
     # Unique IDs across APs + Stations
     ap_ids = [a.id for a in spec.topo.aps]
     sta_ids = [s.id for s in spec.topo.stations]
     all_ids = ap_ids + sta_ids
-    if len(ids) != len(set(ids)):
-        errors.append({"loc": "topo.nodes[*].id", "code": "duplicate_id",
-                       "msg": "duplicate node IDs found"})
+    if len(all_ids) != len(set(all_ids)):
+        errors.append({
+            "loc": "topo.[aps|stations].id",
+            "code": "duplicate_id",
+            "msg": "duplicate node IDs across APs and Stations"
+        })
 
-    # node_set = set(ids)
     sta_set = set(sta_ids)
-    ap_set = set(ap_ids)
 
     # Basic plausibility checks
     for i, ap in enumerate(spec.topo.aps):
-        # parse position (already validated format)
         try:
             _positions_tuple(ap.position)
         except Exception:
-            errors.append({"loc": f"topo.aps[{i}].position", "code": "bad_position",
-                           "msg": "cannot parse 'x,y,z' as floats"})
+            errors.append({
+                "loc": f"topo.aps[{i}].position",
+                "code": "bad_position",
+                "msg": "cannot parse 'x,y,z' as floats"
+            })
         if ap.mode == "a" and ap.channel <= 0:
-            errors.append({"loc": f"topo.aps[{i}].channel", "code": "bad_channel",
-                           "msg": "5GHz channel must be a positive integer (e.g., 36)"})
+            errors.append({
+                "loc": f"topo.aps[{i}].channel",
+                "code": "bad_channel",
+                "msg": "5GHz channel must be a positive integer (e.g., 36)"
+            })
 
     for i, sta in enumerate(spec.topo.stations):
         try:
             _positions_tuple(sta.position)
         except Exception:
-            errors.append({"loc": f"topo.stations[{i}].position", "code": "bad_position",
-                           "msg": "cannot parse 'x,y,z' as floats"})
+            errors.append({
+                "loc": f"topo.stations[{i}].position",
+                "code": "bad_position",
+                "msg": "cannot parse 'x,y,z' as floats"
+            })
 
     # Tests
     for i, t in enumerate(spec.tests):
         if isinstance(t, TestMove):
             if t.node not in sta_set:
-                errors.append({"loc": f"tests[{i}].node", "code": "unknown_station",
-                               "msg": f"'{t.node}' is not a known station id"})
-            # position format already checked via field validator
+                errors.append({
+                    "loc": f"tests[{i}].node",
+                    "code": "unknown_station",
+                    "msg": f"'{t.node}' is not a known station id"
+                })
         elif isinstance(t, TestIw):
             if "{interface}" not in t.cmd:
-                warnings.append({"loc": f"tests[{i}].cmd", "code": "missing_placeholder",
-                                 "msg": "cmd does not include '{interface}' placeholder"})
+                warnings.append({
+                    "loc": f"tests[{i}].cmd",
+                    "code": "missing_placeholder",
+                    "msg": "cmd does not include '{interface}' placeholder"
+                })
 
     # Backend mismatch (Wi-Fi entities under plain mininet)
     if spec.meta.backend == "mininet" and (spec.topo.aps or spec.topo.stations):
-        warnings.append({"loc": "meta.backend", "code": "backend_role_mismatch",
-                         "msg": "APs/stations present but backend='mininet'. Use 'mininet-wifi' for Wi-Fi behavior."})
+        warnings.append({
+            "loc": "meta.backend",
+            "code": "backend_role_mismatch",
+            "msg": "APs/stations present but backend='mininet'. Use 'mininet-wifi' for Wi-Fi behavior."
+        })
 
     # Nets sanity
     if spec.topo.nets.noise_th > -30:
-        warnings.append({"loc": "topo.nets.noise_th", "code": "suspicious_noise_th",
-                         "msg": f"noise_th {spec.topo.nets.noise_th} dBm is unusually high (less negative)"})
+        warnings.append({
+            "loc": "topo.nets.noise_th",
+            "code": "suspicious_noise_th",
+            "msg": f"noise_th {spec.topo.nets.noise_th} dBm is unusually high (less negative)"
+        })
 
     return {"errors": errors, "warnings": warnings}
-
-    # # Links reference valid nodes
-    # for i, link in enumerate(spec.topo.links):
-    #     if link.node_id_a not in node_set:
-    #         errors.append({"loc": f"topo.links[{i}].node_id_a", "code": "unknown_node",
-    #                        "msg": f"'{link.node_id_a}' not found"})
-    #     if link.node_id_b not in node_set:
-    #         errors.append({"loc": f"topo.links[{i}].node_id_b", "code": "unknown_node",
-    #                        "msg": f"'{link.node_id_b}' not found"})
-    #     c = link.constraints
-    #     if c.loss_pkt is not None and c.loss_pkt > 50:
-    #         warnings.append({"loc": f"topo.links[{i}].constraints.loss_pkt",
-    #                          "code": "suspicious_loss",
-    #                          "msg": f"loss {c.loss_pkt}% is very high"})
-
-    # # Tests reference valid nodes
-    # for i, t in enumerate(spec.tests):
-    #     if hasattr(t, "src") and getattr(t, "src") not in node_set:
-    #         errors.append({"loc": f"tests[{i}].src", "code": "unknown_node",
-    #                        "msg": f"src '{getattr(t, 'src')}' not found in topo.nodes"})
-    #     if hasattr(t, "dst") and getattr(t, "dst") not in node_set:
-    #         errors.append({"loc": f"tests[{i}].dst", "code": "unknown_node",
-    #                        "msg": f"dst '{getattr(t, 'dst')}' not found in topo.nodes"})
-
-    # # Backend/role mismatch hint
-    # if spec.meta.backend == "mininet":
-    #     if any(n.role in ("ap", "sta") for n in spec.topo.nodes):
-    #         warnings.append({"loc": "meta.backend", "code": "backend_role_mismatch",
-    #                          "msg": "roles 'ap/sta' suggest WiFi; backend is 'mininet'. Downstream may map to host/switch."})
-
-    # return {"errors": errors, "warnings": warnings}
 
 # ---------------- CLI ----------------
 
 def parse_args():
-    ap = argparse.ArgumentParser(description="Validate and normalize network spec")
-    ap.add_argument("config", help="input config JSON")
+    ap = argparse.ArgumentParser(description="Validate and normalize network spec (Wi-Fi schema)")
+    ap.add_argument(
+        "config",
+        nargs="?",
+        default="input.json",
+        help="input config JSON (default: input.json next to this script)",
+    )
     ap.add_argument("--emit-spec", help="path to write normalized spec.json")
     ap.add_argument("--include-spec", action="store_true",
                     help="include normalized spec in stdout summary")
@@ -272,14 +195,26 @@ def _print_stderr(prefix: str, items: List[dict]):
         msg = it.get("msg", "")
         print(f" - {loc} [{code}]: {msg}", file=sys.stderr)
 
-
-# CLI Entrypoint 
 def main():
     args = parse_args()
 
+    # Resolve config relative to this script's directory if not absolute
+    script_dir = Path(__file__).resolve().parent
+    cfg_path = Path(args.config)
+    if not cfg_path.is_absolute():
+        cfg_path = script_dir / cfg_path
+
+    if not cfg_path.exists():
+        err = f"Config file not found: {cfg_path}"
+        out = {"ok": False, "errors": [{"loc": "config", "code": "not_found", "msg": err}], "warnings": []}
+        print(json.dumps(out, indent=2))
+        print(f"VALIDATION_ERROR: {err}", file=sys.stderr)
+        sys.exit(1)
+
     # Load + structural validation
     try:
-        data = json.load(open(args.config))
+        with open(cfg_path) as f:
+            data = json.load(f)
         spec = Spec(**data)
     except ValidationError as ve:
         out = {
@@ -289,10 +224,12 @@ def main():
             "warnings": []
         }
         print(json.dumps(out, indent=2))
+        _print_stderr("VALIDATION_ERROR: schema validation failed", out["errors"])
         sys.exit(1)
     except Exception as e:
         out = {"ok": False, "errors": [{"loc": "root", "code": "load_error", "msg": str(e)}], "warnings": []}
         print(json.dumps(out, indent=2))
+        _print_stderr("VALIDATION_ERROR: load error", out["errors"])
         sys.exit(1)
 
     # Semantic checks
@@ -313,7 +250,6 @@ def main():
     if args.include_spec and ok:
         out["spec"] = norm
     print(json.dumps(out, indent=2))
-    # sys.exit(0 if ok else 1)
 
     if not ok:
         _print_stderr("VALIDATION_ERROR: semantic validation failed", res["errors"])
