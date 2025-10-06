@@ -34,7 +34,7 @@ Execute coordinator with a list of json files or directories containing json fil
 
 Omen uses [mage](https://magefile.org/) as its build system, Go as the primary driver language, and dockerized Python scripts for some modules.
 
-The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for information about what I/O each module expected and returns.
+The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module and the I/O each module expected and returns.
 
 ### Manual Execution
 
