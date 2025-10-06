@@ -32,10 +32,11 @@ const (
 )
 
 var (
-	log                zerolog.Logger // primary output mechanism
-	dCLI               *client.Client // our docker client
-	ContainerIDGrafana string         // unique container ID for the grafana instance
-	ContainerIDMySQL   string         // unique container ID for the MySQL instance
+	log  zerolog.Logger // primary output mechanism
+	dCLI *client.Client // our docker client
+	// hosts information about containers we spin up and down as part of the pipeline.
+	// container ID -> container name/purpose
+	containers map[string]string = make(map[string]string)
 )
 
 func init() {
@@ -77,62 +78,88 @@ While modules operate independently and thus do not care about correlating IDs, 
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO make this robust enough to check for existing (correctly configured) containers we can reuse.
 			// spin up the containers required for visualization
-
-			// Grafana
-			if cr, err := dCLI.ContainerCreate(context.TODO(),
-				&container.Config{
-					ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
-					Image:        "grafana/grafana",
-				},
-				&container.HostConfig{
-					PortBindings: nat.PortMap{nat.Port("3000/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3000"}}},
-				},
-				nil,
-				nil,
-				"OmenVizGrafana",
-			); err != nil {
-				return fmt.Errorf("failed to start grafana container: %w", err)
-			} else {
+			{ // Grafana
+				cr, err := dCLI.ContainerCreate(context.TODO(),
+					&container.Config{
+						ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
+						Image:        "grafana/grafana",
+					},
+					&container.HostConfig{
+						PortBindings: nat.PortMap{nat.Port("3000/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3000"}}},
+					},
+					nil,
+					nil,
+					"OmenVizGrafana")
+				if err != nil {
+					return fmt.Errorf("failed to start grafana container: %w", err)
+				}
 				if len(cr.Warnings) > 0 {
 					log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("spun up grafana container with warnings")
 				} else {
 					log.Info().Str("container ID", cr.ID).Msg("spun up grafana container")
 				}
-				ContainerIDGrafana = cr.ID
+				containers[cr.ID] = "grafana"
+				if err := dCLI.ContainerStart(context.TODO(), cr.ID, container.StartOptions{}); err != nil {
+					return err
+				}
 			}
-			// MySQL
-			if cr, err := dCLI.ContainerCreate(context.TODO(),
-				&container.Config{
-					ExposedPorts: nat.PortSet{nat.Port("3306/tcp"): struct{}{}},
-					Env:          []string{"MYSQL_DATABASE=test", "MYSQL_ROOT_PASSWORD=mypass"},
-					Image:        "mysql",
-				},
-				&container.HostConfig{
-					PortBindings: nat.PortMap{nat.Port("33306/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3306"}}},
-				},
-				nil,
-				nil,
-				"OmenVizSQL",
-			); err != nil {
-				return fmt.Errorf("failed to start mysql container: %w", err)
-			} else {
+			{ // MySQL
+				cr, err := dCLI.ContainerCreate(context.TODO(),
+					&container.Config{
+						ExposedPorts: nat.PortSet{nat.Port("3306/tcp"): struct{}{}},
+						Env:          []string{"MYSQL_DATABASE=test", "MYSQL_ROOT_PASSWORD=mypass"},
+						Image:        "mysql",
+					},
+					&container.HostConfig{
+						PortBindings: nat.PortMap{nat.Port("33306/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3306"}}},
+					},
+					nil,
+					nil,
+					"OmenVizSQL",
+				)
+				if err != nil {
+					return fmt.Errorf("failed to start mysql container: %w", err)
+				}
 				if len(cr.Warnings) > 0 {
 					log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("spun up mysql container with warnings")
 				} else {
 					log.Info().Str("container ID", cr.ID).Msg("spun up mysql container")
 				}
-				ContainerIDMySQL = cr.ID
-			}
+				containers[cr.ID] = "sql"
 
+				if err := dCLI.ContainerStart(context.TODO(), cr.ID, container.StartOptions{}); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 		RunE: run,
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			// spit out instructions on shutting down the visualization containers
-			fmt.Printf("Pipeline has completed.\n"+
-				"The visualization instance has two docker containers still running: %s (Grafana) & %s (MySQL)\n"+
-				"Remember to stop them when you are done!\n", ContainerIDGrafana, ContainerIDMySQL)
-			return dCLI.Close()
+			defer dCLI.Close()
+			// check if our visualization containers are still running and note their IDs if they are
+			runningContainers, err := dCLI.ContainerList(context.TODO(), container.ListOptions{})
+			if err != nil {
+				return err
+			}
+			// find the containers with our cached IDs
+			stillRunning := []string{} // array of IDs of containers we spun up that are still spinning
+
+			for _, cntr := range runningContainers {
+				if _, found := containers[cntr.ID]; found {
+					stillRunning = append(stillRunning, cntr.ID)
+				}
+			}
+			var sb strings.Builder
+			sb.WriteString("Pipeline has completed.\n")
+			if len(stillRunning) > 0 {
+				fmt.Fprintf(&sb, "The following %d containers were left running.\n"+
+					"Remember to stop them when you are done.", len(stillRunning))
+				for _, id := range stillRunning {
+					sb.WriteString(id + " - " + containers[id] + "\n")
+				}
+			}
+			fmt.Print(sb.String())
+			return nil
 		},
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
