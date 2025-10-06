@@ -206,7 +206,7 @@ func validateIn(iPath string, tokens *sync.Map) func() {
 			return
 		}
 		// file is valid
-		vPath := path.Join(validatedDir, strconv.FormatUint(token, 10)+"_"+iFile)
+		vPath := path.Join(validatedDir, strconv.FormatUint(token, 10)+"_"+iFile+".json")
 		log.Debug().Str("original path", iPath).Str("destination", vPath).Msg("copying file to validated directory")
 		// copy the validated file into our validated directory and attack a token to it for identification
 		rd, err := os.Open(iPath)
