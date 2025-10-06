@@ -359,3 +359,100 @@ func updateAPField(ap *models.AccessPointRecord, line string) {
 		}
 	}
 }
+
+func processNodesOutput(stations []models.StationRecord, aps []models.AccessPointRecord, pings []models.PingRecord, resultsDir string) (map[string]float64, error) {
+	// Calculate success rate for each node
+	successRates := calculateSuccessRates(pings)
+
+	// Create node records
+	var nodes []models.NodeRecord
+
+	// Add stations
+	for _, station := range stations {
+		successRate := successRates[station.StationName]
+		node := models.NodeRecord{
+			ID:             station.StationName,
+			Title:          station.StationName,
+			RXBytes:        station.RXBytes,
+			RXPackets:      station.RXPackets,
+			TXBytes:        station.TXBytes,
+			TXPackets:      station.TXPackets,
+			SuccessPctRate: fmt.Sprintf("%.2f", successRate),
+		}
+		nodes = append(nodes, node)
+	}
+
+	// Add access points
+	for _, ap := range aps {
+		successRate := successRates[ap.APName]
+		node := models.NodeRecord{
+			ID:             ap.APName,
+			Title:          ap.APName,
+			RXBytes:        ap.RXBytes,
+			RXPackets:      ap.RXPackets,
+			TXBytes:        ap.TXBytes,
+			TXPackets:      ap.TXPackets,
+			SuccessPctRate: fmt.Sprintf("%.2f", successRate),
+		}
+		nodes = append(nodes, node)
+	}
+
+	// Write nodes CSV
+	if err := writeNodesCSV(filepath.Join(resultsDir, "nodes.csv"), nodes); err != nil {
+		return nil, err
+	}
+
+	return successRates, nil
+}
+
+func processEdgesOutput(pings []models.PingRecord, resultsDir string) error {
+	var edges []models.EdgeRecord
+	edgeSet := make(map[string]bool) // To avoid duplicates
+
+	for _, ping := range pings {
+		edgeID := ping.Src + "-" + ping.Dst
+		if !edgeSet[edgeID] {
+			edge := models.EdgeRecord{
+				ID:     edgeID,
+				Source: ping.Src,
+				Target: ping.Dst,
+			}
+			edges = append(edges, edge)
+			edgeSet[edgeID] = true
+		}
+	}
+
+	// Write edges CSV
+	return writeEdgesCSV(filepath.Join(resultsDir, "edges.csv"), edges)
+}
+
+func calculateSuccessRates(pings []models.PingRecord) map[string]float64 {
+	successRates := make(map[string]float64)
+	nodeCounts := make(map[string]int)
+	nodeSuccesses := make(map[string]int)
+
+	for _, ping := range pings {
+		// Count for destination node
+		nodeCounts[ping.Dst]++
+		if ping.LossPct == "0" {
+			nodeSuccesses[ping.Dst]++
+		}
+
+		// Count for source node
+		nodeCounts[ping.Src]++
+		if ping.LossPct == "0" {
+			nodeSuccesses[ping.Src]++
+		}
+	}
+
+	// Calculate success rates
+	for node, totalCount := range nodeCounts {
+		if totalCount > 0 {
+			successRates[node] = (float64(nodeSuccesses[node]) / float64(totalCount))
+		} else {
+			successRates[node] = 0.0
+		}
+	}
+
+	return successRates
+}
