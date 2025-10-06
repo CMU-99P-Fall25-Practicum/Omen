@@ -23,8 +23,8 @@ A modular pipeline for instrumenting network simulations and producing real, usa
 
 ## Quick Start
 
->[!NOTE]
-> All commands executed from the top level directory.
+>[!WARNING]
+> Coordinator is not complete for MS2. The above instruction will be fully supported by MS3.
 
 Build all components: `mage`.
 
@@ -34,23 +34,27 @@ Execute coordinator with a list of json files or directories containing json fil
 
 Omen uses [mage](https://magefile.org/) as its build system, Go as the primary driver language, and dockerized Python scripts for some modules.
 
-The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module and the I/O each module expected and returns.
+The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module's I/O expectations and results.
 
-### Manual Execution & Module Descriptions
+You can also run each step manually, if preferred.
 
-You can also run each step manually, if preferred. This assumes that each binary has been compiled and placed into `./artefacts/` and each docker image built.
+Start by running `mage` from the top-level `./Omen` directory, then `cd` into `./artefacts/` (artefacts is where all build objects reside).
 
 Each module strictly follows its [I/O contract](MODULE_CONTRACTS.md) to ensure proper cooperation.
 
-Start by entering the artefacts directory: `cd artefacts`.
-
 #### Input Validation
 
-Run the validator: `docker run --rm -v path/to/user/input.json:/input/in.json 0_omen-input-validator:latest /input/in.json`
+Run the validator: `docker run --rm -v /path/to/user/input.json:/input/in.json 0_omen-input-validator:latest /input/in.json`
+
+If this passes, the given file can be considered validated and ready for the rest of the pipeline.
 
 #### Execute Test
 
-Run the test driver: `./1_spawn path/to/validated/in.json`
+This module is responsible for connecting to mininet, executing the test script, and collecting results for later processing.
+
+Ensure your mininet vm is spinning and accessible via the u/p and address listed in the validated json.
+
+Run the test driver: `./1_spawn /path/to/validated/in.json`
 
 #### Output Coercion
 
@@ -58,9 +62,11 @@ The Raw Output module is responsible for transforming the the raw results from t
 
 Run output coercion: `./2_output_processing path/to/raw/results/directory/`
 
-TODO
+Example: `./2_output_processing ./mn_result_raw/`
 
 #### Visualization
+
+*TODO: all of these steps should really be automated. The Python loader can install expected configuration or that can be included in the docker image's build process. Spooling up the docker containers (and finding MySQL's IP) will be handled by Coordinator, as it has direct access to Docker via the client library.*
 
 As of Milestone 2, each run of the visualizer expects a clean environment; as such, Docker containers are started fresh each run.
 
@@ -81,8 +87,6 @@ Grafana now must also be configured to connect to the SQL server. Access the Gra
 - **Username**: root
 - **Password**: mypass
 
-*TODO: this really should all be handled automatically, via configuration files installed into the container.*
-
 Run the loader:
 ```bash
 docker run  --rm -it /
@@ -93,7 +97,11 @@ docker run  --rm -it /
     3_omen-output-visualizer /input/nodes.csv /input/edges.csv
 ```
 
-*TODO: how do we initialize Grafana's dashboard. Ideally, we want this to be automated*
+Install the Grafana dashboard used for node visualization:
+- Navigate to Dashboards and click "new"
+- Click "Import"
+- Copy the [Dashboard JSON](modules/3_output_visualization/Dashboard.json) and replace all 3 instances of 'YOUR_DS_UID_HERE' with the id of the MySQL datasource.
+
 
 # Architectural Diagram
 
