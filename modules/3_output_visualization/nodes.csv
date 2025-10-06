@@ -1,7 +1,7 @@
-id,title,sub_title,main_stat,detail__tx,detail__rx,detail__loss_pct,detail__avg_rtt_ms,severity
-ap1,ap1,ping,,20.0,8.0,60.0,0.894,ok
-ap2,ap2,ping,,20.0,8.0,60.0,0.91,ok
-sta1,sta1,ping,,20.0,8.0,60.0,0.034,ok
-sta2,sta2,ping,,20.0,8.0,60.0,0.04,ok
-sta3,sta3,ping,,20.0,8.0,60.0,0.027,ok
-sta4,sta4,ping,,20.0,8.0,60.0,0.027,ok
+id,title,main_stat,detail__tx,detail__rx,detail__loss_pct,detail__avg_rtt_ms,severity
+ap1,ap1,,20.0,8.0,60.0,0.894,ok
+ap2,ap2,,20.0,8.0,60.0,0.91,ok
+sta1,sta1,,20.0,8.0,60.0,0.034,ok
+sta2,sta2,,20.0,8.0,60.0,0.04,ok
+sta3,sta3,,20.0,8.0,60.0,0.027,ok
+sta4,sta4,,20.0,8.0,60.0,0.027,ok
