@@ -86,7 +86,7 @@ As it says on the tin, Input Validation modules consume a configuration file and
     ```
     ./
     ├─ raw_output/
-    │  ├─ 20251001_201140
+    │  ├─ 20251001_201140 <-- this one will be used
     │  │  ├─ test1.txt
     │  │  ├─ test2.txt
     │  │  ├─ test3.txt
