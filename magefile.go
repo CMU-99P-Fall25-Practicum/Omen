@@ -31,7 +31,11 @@ var Default = Build
 // BuildCoordinator generates the coordinator binary and sits it in ./artefacts/
 func BuildCoordinator() error {
 	mg.Deps(artefactDirectoryExists)
-	_, err := sh.Exec(nil, nil, nil, "go", "build", "-o", "artefacts/"+coordinatorBin, "./coordinator")
+	var sbErr strings.Builder
+	_, err := sh.Exec(nil, nil, &sbErr, "go", "build", "-o", "artefacts/"+coordinatorBin, "./coordinator")
+	if err != nil {
+		fmt.Fprintln(&sbErr)
+	}
 	return err
 }
 
@@ -77,8 +81,8 @@ func Build() error {
 }
 
 // Clean deletes the build directory and everything in it.
-func Clean() {
-	sh.Rm(buildDir)
+func Clean() error {
+	return sh.Rm(buildDir)
 }
 
 //#region helper functions
