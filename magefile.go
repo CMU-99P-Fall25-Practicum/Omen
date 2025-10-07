@@ -74,7 +74,7 @@ func DockerizeOV() error {
 
 // Build builds all required files and containers.
 func Build() error {
-	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing)
+	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing, DockerizeOV)
 
 	// copy the driver script into the artefacts directory so it can be passed by spawn topology
 	return sh.Copy(path.Join(buildDir, "mininet-script.py"), "modules/1_spawn_topology/mininet-script.py")
