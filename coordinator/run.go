@@ -65,9 +65,10 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 		// execute the test runner module
 		log.Info().Uint64("token", token).Str("path", validatedPath).Msg("executing topology tests")
-		//var sbOut, sbErr strings.Builder
-		if _, err := sh.Exec(nil, nil, nil, "./"+_1TestRunnerModuleBinary); err != nil {
-			rangeErr = fmt.Errorf("failed to run transport module '%v': %w", "./"+_1TestRunnerModuleBinary, err)
+		var _, sbErr strings.Builder
+		if _, err := sh.Exec(nil, nil, &sbErr, "./"+_1TestRunnerModuleBinary); err != nil {
+			log.Error().Str("stderr", sbErr.String()).Msg("failed to run test runner module")
+			rangeErr = fmt.Errorf("failed to run test runner module '%v': %w", "./"+_1TestRunnerModuleBinary, err)
 			return false
 		}
 		// coalesce output
