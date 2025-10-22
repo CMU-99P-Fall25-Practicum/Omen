@@ -25,10 +25,11 @@ import (
 // Hardcoded module names and paths.
 // For this to be actually modular, these should be fed in via config or env, ideally with enumerations to prevent executing arbitrary shell commands.
 const (
-	appName                string = "Omen"
-	validatedDir           string = "validated_input" // intermediary directory hosting files that have been run through the validator
-	inputValidatorImage    string = "0_omen-input-validator"
-	inputValidatorImageTag string = "latest"
+	appName                  string = "Omen"
+	validatedDir             string = "validated_input" // intermediary directory hosting files that have been run through the validator
+	inputValidatorImage      string = "0_omen-input-validator"
+	inputValidatorImageTag   string = "latest"
+	_1TestRunnerModuleBinary string = "1_spawn"
 )
 
 var (
