@@ -42,8 +42,8 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	log.Info().Strs("files", inputPaths).Msg("collected input file paths")
 
-	// run each validated file through validation
-	_, err = runInputValidationModule(inputPaths)
+	// run each path through validation
+	_, paths, err := runInputValidationModule(inputPaths)
 	if err != nil {
 		return err
 	}
@@ -119,57 +119,52 @@ type invalidInput struct {
 
 // Executes the input validator against each input path.
 // Files that pass are moved to validatedDir/ and have their token prefixed.
-func runInputValidationModule(inputPaths []string) (string, error) {
+func runInputValidationModule(inputPaths []string) (string, *sync.Map, error) {
 	tDir := path.Join(os.TempDir(), validatedDir)
 	// destroy the directory
 	if err := os.RemoveAll(tDir); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if err := os.Mkdir(tDir, 0755); err != nil {
 		// if the directory already exists, no problem, just empty it out
 		if !errors.Is(err, fs.ErrExist) {
-			return "", err
+			return "", nil, err
 		}
 	}
 	// create a directory to place validated files
 	if err := os.Mkdir(validatedDir, 0755); err != nil && !errors.Is(err, fs.ErrExist) {
-		return "", err
+		return "", nil, err
 	}
 	log.Debug().Str("path", tDir).Msg("created directory for validated inputs")
 	var (
-		wg     sync.WaitGroup
-		tokens sync.Map // token -> input path
+		wg          sync.WaitGroup
+		resultPaths sync.Map      // unique token -> input path (map guarantees uniqueness)
+		passed      atomic.Uint64 // # of files that passed validation
 	)
 	for i := range inputPaths {
-		// as each file completes, write it into the temp directory
-		wg.Go(validateIn(inputPaths[i], &tokens))
+		// as each file completes, write it into the temp directory and add it to the list of validated files
+		wg.Go(validateIn(inputPaths[i], &resultPaths, &passed))
 	}
 	wg.Wait()
 
-	return tDir, nil
+	if passed.Load() == 0 {
+		return tDir, nil, ErrNoFilesValidated
+	}
+
+	return tDir, &resultPaths, nil
 }
 
 // helper function intended to be called in a separate goroutine.
 // Executes the input validator docker image against the given input file.
 // Generates a unique token for this run, storing that token in the sync.Map.
 // Validated files are placed into validatedDir.
-func validateIn(iPath string, tokens *sync.Map) func() {
+func validateIn(iPath string, result *sync.Map, passed *atomic.Uint64) func() {
 	return func() {
 		iFile := path.Base(iPath)
 		if !path.IsAbs(iPath) { // Docker requires paths to be prefixed with ./ or be absolute
 			// path.Join will not prefix a ./, but we need one so goodbye Windows compatibility
 			iPath = "./" + iPath
 		}
-		// assign a token to this file
-		var token uint64
-		for { // claim an unused token
-			token = rand.Uint64()
-			if _, loaded := tokens.LoadOrStore(token, iPath); !loaded {
-				break
-			}
-		}
-		log.Info().Str("filename", iFile).Uint64("token", token).Msgf("assigned token '%v' to input file %v", token, iPath)
-
 		// execute input validation
 		cmd := exec.Command("docker", "run", "--rm", "-v", iPath+":/input/"+path.Base(iFile), inputValidatorImage+":"+inputValidatorImageTag, "/input/"+iFile)
 
@@ -206,9 +201,18 @@ func validateIn(iPath string, tokens *sync.Map) func() {
 			return
 		}
 		// file is valid
+
+		// assign a token to this file
+		var token uint64
+		for { // claim an unused token
+			token = rand.Uint64()
+			if _, loaded := result.LoadOrStore(token, iPath); !loaded {
+				break
+			}
+		}
 		vPath := path.Join(validatedDir, strconv.FormatUint(token, 10)+"_"+iFile+".json")
-		log.Debug().Str("original path", iPath).Str("destination", vPath).Msg("copying file to validated directory")
-		// copy the validated file into our validated directory and attack a token to it for identification
+		log.Debug().Str("original path", iPath).Str("destination", vPath).Uint64("token", token).Msg("copying file to validated directory")
+		// copy the validated file into our validated directory and attach a token to it for identification
 		rd, err := os.Open(iPath)
 		if err != nil {
 			log.Warn().Err(err).Str("original path", iPath).Msg("failed to read file")
@@ -223,5 +227,10 @@ func validateIn(iPath string, tokens *sync.Map) func() {
 			log.Warn().Err(err).Str("original path", iPath).Str("write path", vPath).Msg("failed to write validated file")
 			return
 		}
+		// replace the path in the map with validated path
+		if swapped := result.CompareAndSwap(token, iPath, vPath); !swapped {
+			log.Error().Err(err).Str("input path", iPath).Str("validated path", vPath).Uint64("token", token).Msg("failed to replace input path with validated path")
+		}
+		passed.Add(1)
 	}
 }
