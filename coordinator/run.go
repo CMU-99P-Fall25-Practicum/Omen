@@ -14,7 +14,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
+	"github.com/magefile/mage/sh"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -47,26 +49,34 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// ensure at least 1 file made it through validation
-	{
-		found := false
-		if err := filepath.WalkDir(validatedDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if filepath.Ext(d.Name()) == ".json" && !d.IsDir() {
-				found = true
-			}
-			return nil
-		}); err != nil {
-			return err
-		} else if !found {
-			return ErrNoFilesValidated
-		}
-	}
 
-	// execute the transport code
-	// TODO
+	// for each validated file, execute its tests and coalesce its output
+	var rangeErr error
+	paths.Range(func(key, value any) bool {
+		token, ok := key.(uint64)
+		if !ok {
+			log.Warn().Any("key", key).Msg("failed to cast key to a uint64")
+			return true
+		}
+		validatedPath, ok := value.(string)
+		if !ok {
+			log.Warn().Any("value", value).Msg("failed to cast value to a string")
+			return true
+		}
+		// execute the test runner module
+		log.Info().Uint64("token", token).Str("path", validatedPath).Msg("executing topology tests")
+		//var sbOut, sbErr strings.Builder
+		if _, err := sh.Exec(nil, nil, nil, "./"+_1TestRunnerModuleBinary); err != nil {
+			rangeErr = fmt.Errorf("failed to run transport module '%v': %w", "./"+_1TestRunnerModuleBinary, err)
+			return false
+		}
+		// coalesce output
+		// TODO
+		return true
+	})
+	if rangeErr != nil {
+		return rangeErr
+	}
 
 	return nil
 }
