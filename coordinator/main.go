@@ -72,7 +72,7 @@ func main() {
 Each bare argument is treated as a separate input file and thus separate run.
 If a directory is given as an argument, ` + appName + ` will run all json files at the top level; it will NOT recur into subdirectories to look for json files.
 
-Because Omen is a set of disparate module run in sequence, this binary (the Coordinator) just serves to invoke each module and ensure its input/output are prepared.
+Because Omen is a set of disparate modules run in sequence, this binary (the Coordinator) just serves to invoke each module and ensure its input/output are prepared.
 
 When a run starts, it is assigned a random identifier.
 While modules operate independently and thus do not care about correlating IDs, IDs can be useful for examining intermediary data structures or continuing a run if it was interrupted.`,
@@ -134,13 +134,15 @@ While modules operate independently and thus do not care about correlating IDs, 
 			}
 			return nil
 		},
-		RunE:     run,
-		PostRunE: cleanup,
+		RunE: run,
+		//PostRunE: cleanup, // does not run if RunE returns an error; OnFinalize is used instead
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
 	root.Args = cobra.MinimumNArgs(1)
 	// establish flags
 	root.Flags().String("log-level", "DEBUG", "Set verbosity of the logger. Must be one of {TRACE|DEBUG|INFO|WARN|ERROR|FATAL|PANIC}.")
+	// TODO add flags to override local binaries
+	cobra.OnFinalize(cleanup)
 
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
 	if err := fang.Execute(context.Background(), root,
@@ -170,12 +172,13 @@ While modules operate independently and thus do not care about correlating IDs, 
 
 // Intended to be run as a PostRunE.
 // cleanup closes the connection to docker and spits out a message about what containers are still running.
-func cleanup(cmd *cobra.Command, args []string) error {
+func cleanup() {
 	defer dCLI.Close()
 	// check if our visualization containers are still running and note their IDs if they are
 	runningContainers, err := dCLI.ContainerList(context.TODO(), container.ListOptions{})
 	if err != nil {
-		return err
+		log.Error().Err(err).Msg("failed to fetch list of containers")
+		return
 	}
 	// find the containers with our cached IDs
 	stillRunning := []string{} // array of IDs of containers we spun up that are still spinning
@@ -195,7 +198,6 @@ func cleanup(cmd *cobra.Command, args []string) error {
 		}
 	}
 	fmt.Print(sb.String())
-	return nil
 }
 
 // Borrowed from fang.go's DefaultErrorHandling.
