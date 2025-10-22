@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +28,6 @@ import (
 // For this to be actually modular, these should be fed in via config or env, ideally with enumerations to prevent executing arbitrary shell commands.
 const (
 	appName                  string = "Omen"
-	validatedDir             string = "validated_input" // intermediary directory hosting files that have been run through the validator
 	inputValidatorImage      string = "0_omen-input-validator"
 	inputValidatorImageTag   string = "latest"
 	_1TestRunnerModuleBinary string = "1_spawn"
@@ -38,6 +39,8 @@ var (
 	// hosts information about containers we spin up and down as part of the pipeline.
 	// container ID -> container name/purpose
 	containers map[string]string = make(map[string]string)
+	// intermediary directory hosting files that have been run through the validator
+	validatedDir string = path.Join(os.TempDir(), "validated_input"+strconv.FormatInt(time.Now().Unix(), 10))
 )
 
 func init() {

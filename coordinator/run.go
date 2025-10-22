@@ -45,7 +45,7 @@ func run(cmd *cobra.Command, args []string) error {
 	log.Info().Strs("files", inputPaths).Msg("collected input file paths")
 
 	// run each path through validation
-	_, paths, err := runInputValidationModule(inputPaths)
+	paths, err := runInputValidationModule(inputPaths)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func run(cmd *cobra.Command, args []string) error {
 		// execute the test runner module
 		log.Info().Uint64("token", token).Str("path", validatedPath).Msg("executing topology tests")
 		var _, sbErr strings.Builder
-		if _, err := sh.Exec(nil, nil, &sbErr, "./"+_1TestRunnerModuleBinary); err != nil {
+		if _, err := sh.Exec(nil, nil, &sbErr, "./"+_1TestRunnerModuleBinary, validatedPath); err != nil {
 			log.Error().Str("stderr", sbErr.String()).Msg("failed to run test runner module")
 			rangeErr = fmt.Errorf("failed to run test runner module '%v': %w", "./"+_1TestRunnerModuleBinary, err)
 			return false
@@ -129,24 +129,14 @@ type invalidInput struct {
 }
 
 // Executes the input validator against each input path.
-// Files that pass are moved to validatedDir/ and have their token prefixed.
-func runInputValidationModule(inputPaths []string) (string, *sync.Map, error) {
-	tDir := path.Join(os.TempDir(), validatedDir)
-	// destroy the directory
-	if err := os.RemoveAll(tDir); err != nil {
-		return "", nil, err
-	}
-	if err := os.Mkdir(tDir, 0755); err != nil {
-		// if the directory already exists, no problem, just empty it out
-		if !errors.Is(err, fs.ErrExist) {
-			return "", nil, err
-		}
-	}
+// Files that pass are moved to validatedDir with their tokens prefixed.
+//
+// Returns a sync.Map of (token -> validated file) and an error.
+func runInputValidationModule(inputPaths []string) (*sync.Map, error) {
 	// create a directory to place validated files
 	if err := os.Mkdir(validatedDir, 0755); err != nil && !errors.Is(err, fs.ErrExist) {
-		return "", nil, err
+		return nil, err
 	}
-	log.Debug().Str("path", tDir).Msg("created directory for validated inputs")
 	var (
 		wg          sync.WaitGroup
 		resultPaths sync.Map      // unique token -> input path (map guarantees uniqueness)
@@ -159,10 +149,10 @@ func runInputValidationModule(inputPaths []string) (string, *sync.Map, error) {
 	wg.Wait()
 
 	if passed.Load() == 0 {
-		return tDir, nil, ErrNoFilesValidated
+		return nil, ErrNoFilesValidated
 	}
 
-	return tDir, &resultPaths, nil
+	return &resultPaths, nil
 }
 
 // helper function intended to be called in a separate goroutine.
@@ -221,7 +211,7 @@ func validateIn(iPath string, result *sync.Map, passed *atomic.Uint64) func() {
 				break
 			}
 		}
-		vPath := path.Join(validatedDir, strconv.FormatUint(token, 10)+"_"+iFile+".json")
+		vPath := path.Join(validatedDir, strconv.FormatUint(token, 10)+"_"+iFile)
 		log.Debug().Str("original path", iPath).Str("destination", vPath).Uint64("token", token).Msg("copying file to validated directory")
 		// copy the validated file into our validated directory and attach a token to it for identification
 		rd, err := os.Open(iPath)
