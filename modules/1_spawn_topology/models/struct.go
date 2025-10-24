@@ -118,6 +118,7 @@ type Constraints struct {
 type Test struct {
 	Name      string `json:"name"`
 	Type      string `json:"type"`
+	Timeframe int    `json:"timeframe"`
 	Src       string `json:"src,omitempty"`
 	Dst       string `json:"dst,omitempty"`
 	Count     int    `json:"count,omitempty"`
