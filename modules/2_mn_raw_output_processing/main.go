@@ -60,22 +60,20 @@ func main() {
 		fmt.Printf("Successfully processed %d stations and %d access points\n", len(stations), len(aps))
 		fmt.Printf("IW results written to: %s\n", iwOutputPath)
 
-		// Process nodes and edges output
-		successRates, err := processNodesOutput(stations, aps, pings, resultsDir)
+		// Process nodes output (per test file)
+		fmt.Println("\nGenerating per-test-file nodes CSV files:")
+		_, err := processNodesOutput(stations, aps, pings, resultsDir)
 		if err != nil {
 			fmt.Printf("Error processing nodes output: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Nodes CSV written to: %s\n", filepath.Join(resultsDir, "nodes.csv"))
 
+		// Process edges output (per test file)
+		fmt.Println("\nGenerating per-test-file edges CSV files:")
 		if err := processEdgesOutput(pings, resultsDir); err != nil {
 			fmt.Printf("Error processing edges output: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Edges CSV written to: %s\n", filepath.Join(resultsDir, "edges.csv"))
-
-		// Print success rates for debugging
-		fmt.Printf("Success rates calculated for %d nodes\n", len(successRates))
 	}
 }
 
