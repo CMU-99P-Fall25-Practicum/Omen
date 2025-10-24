@@ -160,11 +160,6 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 				src := parts[0]
 				dst := parts[1]
 
-				// Skip station-to-station communication
-				if strings.HasPrefix(src, "sta") && strings.HasPrefix(dst, "sta") {
-					continue
-				}
-
 				// Clean up loss_pct: convert "+1 errors" to "100"
 				lossPct := parts[4]
 				if strings.Contains(lossPct, "+1 errors") {

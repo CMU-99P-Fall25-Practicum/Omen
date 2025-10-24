@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"os"
+	"strings"
 
 	"mn_raw_output_processing/models"
 )
@@ -155,6 +156,10 @@ func writeEdgesCSV(outputPath string, edges []models.EdgeRecord) error {
 
 	// Write edge records
 	for _, edge := range edges {
+		// Skip station-to-station communication
+		if strings.HasPrefix(edge.Source, "sta") && strings.HasPrefix(edge.Target, "sta") {
+			continue
+		}
 		record := []string{
 			edge.ID,
 			edge.Source,
