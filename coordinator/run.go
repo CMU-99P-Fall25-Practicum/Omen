@@ -66,8 +66,13 @@ func run(cmd *cobra.Command, args []string) error {
 			rangeErr = fmt.Errorf("failed to run test runner module '%v': %w", "./"+_1TestRunnerModuleBinary, err)
 			return false
 		}
+		sbErr.Reset()
 		// coalesce output
-		// TODO
+		if _, err := sh.Exec(nil, nil, &sbErr, "./"+_2CoalesceOutputBinary, "mn_result_raw"); err != nil {
+			log.Error().Str("stderr", sbErr.String()).Msg("failed to run coalesce output module")
+			rangeErr = fmt.Errorf("failed to run coalesce output module '%v':%w", "./"+_2CoalesceOutputBinary, err)
+			return false
+		}
 		return true
 	})
 	if rangeErr != nil {
@@ -107,18 +112,4 @@ func collectJSONPaths(argPaths []string) ([]string, error) {
 		}
 	}
 	return inputPaths, nil
-}
-
-type invalidInput struct {
-	Ok     bool `json:"ok"`
-	Errors []struct {
-		Loc  string `json:"loc"`
-		Code string `json:"code"`
-		Msg  string `json:"msg"`
-	} `json:"errors"`
-	Warnings []struct {
-		Loc  string `json:"loc"`
-		Code string `json:"code"`
-		Msg  string `json:"msg"`
-	} `json:"warnings"`
 }
