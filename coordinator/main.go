@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +29,7 @@ const (
 	inputValidatorImage      string = "0_omen-input-validator"
 	inputValidatorImageTag   string = "latest"
 	_1TestRunnerModuleBinary string = "1_spawn"
-	_2CoalesceOutputBinary   string = "_spawn"
+	_2CoalesceOutputBinary   string = "2_output_processing"
 )
 
 var (
@@ -40,8 +38,6 @@ var (
 	// hosts information about containers we spin up and down as part of the pipeline.
 	// container ID -> container name/purpose
 	containers map[string]string = make(map[string]string)
-	// intermediary directory hosting files that have been run through the validator
-	validatedDir string = path.Join(os.TempDir(), "validated_input"+strconv.FormatInt(time.Now().Unix(), 10))
 )
 
 func init() {
@@ -138,15 +134,13 @@ While modules operate independently and thus do not care about correlating IDs, 
 			}
 			return nil
 		},
-		RunE: run,
-		//PostRunE: cleanup, // does not run if RunE returns an error; OnFinalize is used instead
+		RunE: runWrapped,
 	}
 	root.Example = appName + " topology1.json " + " topologies/"
-	root.Args = cobra.MinimumNArgs(1)
+	root.Args = cobra.ExactArgs(1) // for the time being, allow only 1 file
 	// establish flags
 	root.Flags().String("log-level", "DEBUG", "Set verbosity of the logger. Must be one of {TRACE|DEBUG|INFO|WARN|ERROR|FATAL|PANIC}.")
 	// TODO add flags to override local binaries
-	cobra.OnFinalize(cleanup)
 
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
 	if err := fang.Execute(context.Background(), root,
@@ -175,8 +169,9 @@ While modules operate independently and thus do not care about correlating IDs, 
 }
 
 // Intended to be run as a PostRunE.
-// cleanup closes the connection to docker and spits out a message about what containers are still running.
-func cleanup() {
+// cleanup shutters the docker containers it spun up if the pipeline failed.
+// Leaves a message about still-spinning containers otherwise.
+func cleanup(errored bool) {
 	defer dCLI.Close()
 	// check if our visualization containers are still running and note their IDs if they are
 	runningContainers, err := dCLI.ContainerList(context.TODO(), container.ListOptions{})
@@ -188,12 +183,29 @@ func cleanup() {
 	stillRunning := []string{} // array of IDs of containers we spun up that are still spinning
 
 	for _, cntr := range runningContainers {
-		if _, found := containers[cntr.ID]; found {
-			stillRunning = append(stillRunning, cntr.ID)
+		// check if any of the names contain our prefix
+		for _, name := range cntr.Names {
+			if strings.Contains(strings.ToLower(name), "omen") {
+				stillRunning = append(stillRunning, cntr.ID)
+				break
+			}
 		}
 	}
+
+	if errored { // shutter all containers
+		for _, cntrID := range stillRunning {
+			if err := dCLI.ContainerStop(context.Background(), cntrID, container.StopOptions{}); err != nil {
+				log.Error().Err(err).Msgf("failed to stop container %v", cntrID)
+			}
+
+			if err := dCLI.ContainerRemove(context.TODO(), cntrID, container.RemoveOptions{}); err != nil {
+				log.Error().Err(err).Msgf("failed to remove container %v", cntrID)
+			}
+		}
+		return
+	}
+	// notify about still runnning containers
 	var sb strings.Builder
-	sb.WriteString("Pipeline has completed.\n")
 	if len(stillRunning) > 0 {
 		fmt.Fprintf(&sb, "The following %d containers were left running.\n"+
 			"Remember to stop them when you are done.\n", len(stillRunning))

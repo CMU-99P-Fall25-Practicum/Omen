@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/magefile/mage/sh"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +17,13 @@ import (
 
 // ErrNoFilesValidated returns an error as it says on the tin
 var ErrNoFilesValidated = errors.New("no files passed validation")
+
+// runWrapped allows us to wrap the run command in an error check to ensure the proper clean up is executed
+func runWrapped(cmd *cobra.Command, args []string) error {
+	err := run(cmd, args)
+	cleanup(err != nil)
+	return err
+}
 
 // run is the primary driver function for the coordinator.
 // It roots the filesystem, finds all required modules, and executes them in order.
@@ -44,40 +51,50 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	var erred bool // an error occurred at some point
+	for _, path := range paths {
+		var sbErr strings.Builder
 
-	// for each validated file, execute its tests and coalesce its output
-	var rangeErr error
-	paths.Range(func(key, value any) bool {
-		token, ok := key.(uint64)
-		if !ok {
-			log.Warn().Any("key", key).Msg("failed to cast key to a uint64")
-			return true
-		}
-		validatedPath, ok := value.(string)
-		if !ok {
-			log.Warn().Any("value", value).Msg("failed to cast value to a string")
-			return true
-		}
 		// execute the test runner module
-		log.Info().Uint64("token", token).Str("path", validatedPath).Msg("executing topology tests")
-		var _, sbErr strings.Builder
-		if _, err := sh.Exec(nil, nil, &sbErr, "./"+_1TestRunnerModuleBinary, validatedPath); err != nil {
-			log.Error().Str("stderr", sbErr.String()).Msg("failed to run test runner module")
-			rangeErr = fmt.Errorf("failed to run test runner module '%v': %w", "./"+_1TestRunnerModuleBinary, err)
-			return false
+		log.Info().Str("path", path).Msg("executing topology tests")
+		cmd := exec.Command("./"+_1TestRunnerModuleBinary, path)
+		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing test runner binary")
+		cmd.Stderr = &sbErr
+		if _, err := cmd.Output(); err != nil {
+			log.Error().Err(err).Str("path", cmd.Path).Str("stderr", sbErr.String()).Msg("failed to run test runner binary")
+			erred = true
+			continue
 		}
+
 		sbErr.Reset()
-		// coalesce output
-		if _, err := sh.Exec(nil, nil, &sbErr, "./"+_2CoalesceOutputBinary, "mn_result_raw"); err != nil {
-			log.Error().Str("stderr", sbErr.String()).Msg("failed to run coalesce output module")
-			rangeErr = fmt.Errorf("failed to run coalesce output module '%v':%w", "./"+_2CoalesceOutputBinary, err)
-			return false
+
+		// execute coalesce output module
+		log.Info().Str("path", path).Msg("coalescing raw test output")
+		cmd = exec.Command("./"+_2CoalesceOutputBinary, "mn_result_raw/")
+		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing coalesce output binary")
+		cmd.Stderr = &sbErr
+		if out, err := cmd.Output(); err != nil {
+			log.Error().Err(err).Str("path", cmd.Path).Str("stdout", string(out)).Str("stderr", sbErr.String()).Msg("failed to run coalesce output binary")
+			erred = true
+			continue
 		}
-		return true
-	})
-	if rangeErr != nil {
-		return rangeErr
 	}
+	if erred {
+		return errors.New("an error occurred")
+	}
+
+	var sbErr strings.Builder
+	// load visualization
+	vizLoaderCmd := exec.Command("docker", "run", "--rm", "-v", "./result/nodes.csv:/input/nodes.csv", "-v", "./result/edges.csv:/input/edges.csv", "3_omen-output-visualizer", "/input/nodes.csv", "/input/edges.csv")
+	log.Debug().Strs("args", vizLoaderCmd.Args).Msg("executing test runner binary")
+	vizLoaderCmd.Stderr = &sbErr
+	if _, err := vizLoaderCmd.Output(); err != nil {
+		log.Error().Err(err).Str("path", vizLoaderCmd.Path).Str("stderr", sbErr.String()).Msg("failed to run test runner binary")
+		return err
+	}
+	// -it -e DB_HOST=172.17.0.3 -e DB_PASS=mypass -v ./result/nodes.csv:/input/nodes.csv -v ./result/edges.csv:/input/edges.csv 3_omen-output-visualizer /input/nodes.csv /input/edges.csv
+
+	fmt.Printf("Results are available @ ???")
 
 	return nil
 }
