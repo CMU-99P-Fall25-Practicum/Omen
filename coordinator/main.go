@@ -31,6 +31,7 @@ const (
 	inputValidatorImage      string = "0_omen-input-validator"
 	inputValidatorImageTag   string = "latest"
 	_1TestRunnerModuleBinary string = "1_spawn"
+	_2CoalesceOutputBinary   string = "_spawn"
 )
 
 var (

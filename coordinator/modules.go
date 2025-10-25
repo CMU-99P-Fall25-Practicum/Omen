@@ -18,6 +18,21 @@ import (
 
 // #region input validation
 
+// InvalidInput maps to the JSON spit out after a run of input validation.
+type invalidInput struct {
+	Ok     bool `json:"ok"`
+	Errors []struct {
+		Loc  string `json:"loc"`
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"errors"`
+	Warnings []struct {
+		Loc  string `json:"loc"`
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"warnings"`
+}
+
 // Executes the input validator against each input path.
 // Files that pass are moved to validatedDir with their tokens prefixed.
 //
