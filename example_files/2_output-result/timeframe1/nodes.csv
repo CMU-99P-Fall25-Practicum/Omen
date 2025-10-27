@@ -1,0 +1,7 @@
+id,title,rx_bytes,rx_packets,tx_bytes,tx_packets,success_pct_rate
+sta1,sta1,157231,3920,3522,41,0.80
+sta2,sta2,157171,3919,3522,41,0.80
+sta3,sta3,157111,3918,3546,42,0.80
+sta4,sta4,156973,3915,3522,41,0.80
+ap1,ap1,10848,144,13440,144,0.60
+ap2,ap2,0,0,0,0,0.60
