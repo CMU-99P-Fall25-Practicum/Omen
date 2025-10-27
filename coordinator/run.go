@@ -10,6 +10,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
@@ -107,6 +108,8 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 	// NOTE(rlandau): as we only accept a single file atn, `paths` should be at most 1 element
 	// Further, dies on first error
 	for _, path := range paths {
+		log.Info().Str("path", path).Msg("validated file")
+
 		var sbOut, sbErr strings.Builder
 
 		// execute the test runner module
@@ -115,16 +118,49 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing test runner binary")
 		cmd.Stdout = &sbOut
 		cmd.Stderr = &sbErr
-		if err := cmd.Run(); err != nil {
-			log.Error().Err(err).Str("path", cmd.Path).Msg("failed to run test runner binary")
-			// write the binary's outputs to files
-			if err := os.WriteFile(testRunnerStdoutLog, []byte(sbOut.String()), 0644); err != nil {
-				log.Error().Err(err).Msgf("failed to write %v's stdout to %v", cmd.Path, testRunnerStdoutLog)
+		result := make(chan error)
+		go func() {
+			if err := cmd.Run(); err != nil {
+				log.Error().Err(err).Str("path", cmd.Path).Msg("failed to run test runner binary")
+				// write the binary's outputs to files
+				if err := os.WriteFile(testRunnerStdoutLog, []byte(sbOut.String()), 0644); err != nil {
+					log.Error().Err(err).Msgf("failed to write %v's stdout to %v", cmd.Path, testRunnerStdoutLog)
+				}
+				if err := os.WriteFile(testRunnerStderrLog, []byte(sbErr.String()), 0644); err != nil {
+					log.Error().Err(err).Msgf("failed to write %v's stderr to %v", cmd.Path, testRunnerStderrLog)
+				}
+				result <- fmt.Errorf("failed to run test runner binary (%s): %w.\nSee '%v' and `%v` for details", cmd.Path, err, testRunnerStdoutLog, testRunnerStderrLog)
+				return
 			}
-			if err := os.WriteFile(testRunnerStderrLog, []byte(sbErr.String()), 0644); err != nil {
-				log.Error().Err(err).Msgf("failed to write %v's stderr to %v", cmd.Path, testRunnerStderrLog)
+			log.Debug().Msg("finished processing successfully")
+			result <- nil
+		}()
+
+		{ // wait for the command to complete
+			onScreen := 0
+			char1, char2 := '.', ':'
+			curChar := char1
+		DoneLoop:
+			for {
+				select {
+				case <-result:
+					break DoneLoop
+				case <-time.After(3 * time.Second):
+					if onScreen > 4 { // reset and flip
+						fmt.Printf("\r")
+						onScreen = 0
+						if curChar == char1 {
+							curChar = char2
+						} else {
+							curChar = char1
+						}
+					} else {
+						fmt.Printf("%c", curChar)
+						onScreen += 1
+					}
+
+				}
 			}
-			return fmt.Errorf("failed to run test runner binary (%s): %w.\nSee '%v' and `%v` for details", cmd.Path, err, testRunnerStdoutLog, testRunnerStderrLog)
 		}
 
 		sbOut.Reset()
