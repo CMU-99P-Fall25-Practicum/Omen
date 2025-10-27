@@ -59,14 +59,12 @@ func run(cmd *cobra.Command, args []string) error {
 	{
 		cr, err := dCLI.ContainerCreate(context.TODO(),
 			&container.Config{
-				ExposedPorts: nat.PortSet{nat.Port(grafanaPortStr + "/tcp"): struct{}{}},
+				ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
 				Image:        "grafana/grafana",
 			},
 			&container.HostConfig{
 				PortBindings: nat.PortMap{
-					nat.Port(grafanaPortStr + "/tcp"): []nat.PortBinding{
-						{HostIP: "0.0.0.0", HostPort: grafanaPortStr},
-					},
+					nat.Port("3000/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: grafanaPortStr}},
 				},
 			},
 			nil,
