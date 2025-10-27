@@ -16,7 +16,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// This file contains Coordinator's driver function and its helper functions.
+const (
+	testRunnerStdoutLog     string = "test_runner.out.log"
+	testRunnerStderrLog     string = "test_runner.err.log"
+	coalesceOutputStdoutLog string = "test_runner.out.log"
+	coalesceOutputStderrLog string = "test_runner.err.log"
+)
 
 // ErrNoFilesValidated returns an error as it says on the tin
 var ErrNoFilesValidated = errors.New("no files passed validation")
@@ -100,37 +105,48 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 	}
 
 	// NOTE(rlandau): as we only accept a single file atn, `paths` should be at most 1 element
-
-	var erred bool // an error occurred at some point
+	// Further, dies on first error
 	for _, path := range paths {
-		var sbErr strings.Builder
+		var sbOut, sbErr strings.Builder
 
 		// execute the test runner module
 		log.Info().Str("path", path).Msg("executing topology tests")
 		cmd := exec.Command(testRunnerBinaryPath, path)
 		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing test runner binary")
+		cmd.Stdout = &sbOut
 		cmd.Stderr = &sbErr
-		if _, err := cmd.Output(); err != nil {
-			log.Error().Err(err).Str("path", cmd.Path).Str("stderr", sbErr.String()).Msg("failed to run test runner binary")
-			erred = true
-			continue
+		if err := cmd.Run(); err != nil {
+			log.Error().Err(err).Str("path", cmd.Path).Msg("failed to run test runner binary")
+			// write the binary's outputs to files
+			if err := os.WriteFile(testRunnerStdoutLog, []byte(sbOut.String()), 0644); err != nil {
+				log.Error().Err(err).Msgf("failed to write %v's stdout to %v", cmd.Path, testRunnerStdoutLog)
+			}
+			if err := os.WriteFile(testRunnerStderrLog, []byte(sbErr.String()), 0644); err != nil {
+				log.Error().Err(err).Msgf("failed to write %v's stderr to %v", cmd.Path, testRunnerStderrLog)
+			}
+			return fmt.Errorf("failed to run test runner binary (%s): %w.\nSee '%v' and `%v` for details", cmd.Path, err, testRunnerStdoutLog, testRunnerStderrLog)
 		}
 
+		sbOut.Reset()
 		sbErr.Reset()
 
 		// execute coalesce output module
 		log.Info().Str("path", path).Msg("coalescing raw test output")
 		cmd = exec.Command(coalesceOutputBinaryPath, "mn_result_raw/")
 		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing coalesce output binary")
+		cmd.Stdout = &sbOut
 		cmd.Stderr = &sbErr
-		if out, err := cmd.Output(); err != nil {
-			log.Error().Err(err).Str("path", cmd.Path).Str("stdout", string(out)).Str("stderr", sbErr.String()).Msg("failed to run coalesce output binary")
-			erred = true
-			continue
+		if err := cmd.Run(); err != nil {
+			log.Error().Err(err).Str("path", cmd.Path).Msg("failed to run coalesce output binary")
+			// write the binary's outputs to files
+			if err := os.WriteFile(coalesceOutputStdoutLog, []byte(sbOut.String()), 0644); err != nil {
+				log.Error().Err(err).Msgf("failed to write %v's stdout to %v", cmd.Path, coalesceOutputStdoutLog)
+			}
+			if err := os.WriteFile(coalesceOutputStderrLog, []byte(sbErr.String()), 0644); err != nil {
+				log.Error().Err(err).Msgf("failed to write %v's stderr to %v", cmd.Path, coalesceOutputStderrLog)
+			}
+			return fmt.Errorf("failed to run coalesce output binary (%s): %w.\nSee '%v' and `%v` for details", cmd.Path, err, coalesceOutputStdoutLog, coalesceOutputStderrLog)
 		}
-	}
-	if erred {
-		return errors.New("an error occurred")
 	}
 
 	var sbErr strings.Builder
