@@ -11,7 +11,7 @@
       "propagation_model":{
         "model": "logNormalShadowing",
         "exp": 2.9,
-        "std_dev": 1.5
+        "s": 1.5
       }
     },
     "aps": [
