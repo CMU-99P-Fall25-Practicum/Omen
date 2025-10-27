@@ -30,6 +30,8 @@ const (
 	inputValidatorImageTag          string = "latest"
 	DefaultTestRunnerBinaryPath     string = "./1_spawn"
 	DefaultCoalesceOutputBinaryPath string = "./2_output_processing"
+
+	version string = "MS3"
 )
 
 var (
@@ -98,7 +100,7 @@ Because Omen is a set of disparate modules run in sequence, this binary (the Coo
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
 	if err := fang.Execute(context.Background(), root,
 		fang.WithoutCompletions(),
-		fang.WithVersion("MS2"),
+		fang.WithVersion(version),
 		fang.WithErrorHandler(
 			func(w io.Writer, styles fang.Styles, err error) {
 				// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
