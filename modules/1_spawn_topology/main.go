@@ -30,6 +30,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net/netip"
@@ -66,6 +67,7 @@ func init() {
 	flag.BoolVar(&config.UseCLI, "cli", false, "enter Mininet CLI instead of running pingall")
 	flag.StringVar(&config.RemotePathPython, "remote-path-python", "/tmp/"+defaultPythonScript, "remote path for the generated Python file")
 	flag.StringVar(&config.RemotePathJSON, "remote-path-json", "/tmp/"+defaultTopoFile, "remote path for the generated JSON file")
+	flag.BoolVar(&config.Interactive, "interactive", true, "enables prompting for missing information. If false, this module will fail out on missing information rather than prompting for it.")
 
 	// set default values
 	config.TopoFile = defaultTopoFile
@@ -183,11 +185,15 @@ func resolveConfig(config *models.Config, js *models.Input) error {
 		} else if defaultUsername != "" {
 			config.Username = defaultUsername
 			fmt.Printf("Using hardcoded username: %s\n", config.Username)
-		} else {
+		} else if config.Interactive {
 			config.Username = getInput("Enter username: ")
 		}
 	} else {
 		fmt.Printf("Using username from --remote flag: %s\n", config.Username)
+	}
+
+	if config.Username == "" {
+		return errors.New("username must be supplied")
 	}
 
 	// Resolve host
@@ -215,14 +221,19 @@ func resolveConfig(config *models.Config, js *models.Input) error {
 			return ap
 		}
 
-		// pull from stdin
-		var ap netip.AddrPort
-		var err error
-		for ap, err = netip.ParseAddrPort(getInput("Enter a valid target of the form '<host>:<port>':")); err != nil; {
+		if config.Interactive {
+			// pull from stdin
+			var ap netip.AddrPort
+			var err error
+			for ap, err = netip.ParseAddrPort(getInput("Enter a valid target of the form '<host>:<port>':")); err != nil; {
+			}
+			return ap
 		}
-		return ap
-
+		return netip.AddrPort{}
 	}()
+	if !config.Host.IsValid() {
+		return errors.New("a valid host/target must be supplied")
+	}
 
 	// Resolve password
 	if config.Password == "" {
@@ -232,7 +243,7 @@ func resolveConfig(config *models.Config, js *models.Input) error {
 		} else if defaultPassword != "" {
 			config.Password = defaultPassword
 			fmt.Println("Using hardcoded password: [hidden]")
-		} else {
+		} else if config.Interactive {
 			config.Password = getInput("Enter password (SSH/sudo): ")
 		}
 	}
