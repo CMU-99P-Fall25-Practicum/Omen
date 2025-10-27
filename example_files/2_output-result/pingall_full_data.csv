@@ -1,103 +1,109 @@
 data_type,movement_number,test_file,node_name,position,src,dst,tx,rx,loss_pct,avg_rtt_ms
-movement,0,timeframe0.txt,sta1,"0,10,0",,,,,,
-movement,0,timeframe0.txt,sta2,"0,-10,0",,,,,,
-movement,0,timeframe0.txt,sta3,"70,10,0",,,,,,
-movement,0,timeframe0.txt,sta4,"70,-10,0",,,,,,
-movement,1,timeframe1.txt,sta1,"0,5,0",,,,,,
-movement,1,timeframe1.txt,sta2,"0,10,0",,,,,,
-movement,1,timeframe1.txt,sta3,"70,5,0",,,,,,
-movement,1,timeframe1.txt,sta4,"70,-5,0",,,,,,
-movement,2,timeframe2.txt,sta1,"0,15,0",,,,,,
-movement,2,timeframe2.txt,sta2,"0,-15,0",,,,,,
-movement,2,timeframe2.txt,sta3,"10,10,0",,,,,,
-movement,2,timeframe2.txt,sta4,"80,10,0",,,,,,
-ping,0,timeframe0.txt,,,sta1,sta2,1,1,0,2.763
-ping,0,timeframe0.txt,,,sta1,sta3,1,1,0,1.816
-ping,0,timeframe0.txt,,,sta1,sta4,1,1,0,1.796
-ping,0,timeframe0.txt,,,sta1,ap1,1,1,0,0.294
-ping,0,timeframe0.txt,,,sta1,ap2,1,1,0,0.012
-ping,0,timeframe0.txt,,,sta2,sta1,1,1,0,0.688
-ping,0,timeframe0.txt,,,sta2,sta3,1,1,0,1.232
-ping,0,timeframe0.txt,,,sta2,sta4,1,1,0,1.292
-ping,0,timeframe0.txt,,,sta2,ap1,1,1,0,0.040
-ping,0,timeframe0.txt,,,sta2,ap2,1,1,0,0.004
-ping,0,timeframe0.txt,,,sta3,sta1,1,1,0,0.766
-ping,0,timeframe0.txt,,,sta3,sta2,1,1,0,0.745
-ping,0,timeframe0.txt,,,sta3,sta4,1,1,0,1.455
-ping,0,timeframe0.txt,,,sta3,ap1,1,1,0,0.023
-ping,0,timeframe0.txt,,,sta3,ap2,1,1,0,0.015
-ping,0,timeframe0.txt,,,sta4,sta1,1,1,0,0.783
-ping,0,timeframe0.txt,,,sta4,sta2,1,1,0,0.717
-ping,0,timeframe0.txt,,,sta4,sta3,1,1,0,0.734
-ping,0,timeframe0.txt,,,sta4,ap1,1,1,0,0.028
-ping,0,timeframe0.txt,,,sta4,ap2,1,1,0,0.004
+movement,0,timeframe0.txt,sta1,"0.0, 10.0, 0.0",,,,,,
+movement,0,timeframe0.txt,sta2,"0.0, -10.0, 0.0",,,,,,
+movement,0,timeframe0.txt,sta3,"70.0, 10.0, 0.0",,,,,,
+movement,0,timeframe0.txt,sta4,"70.0, -10.0, 0.0",,,,,,
+movement,0,timeframe0.txt,ap1,"0.0, 0.0, 0.0",,,,,,
+movement,0,timeframe0.txt,ap2,"70.0, 0.0, 0.0",,,,,,
+movement,1,timeframe1.txt,sta1,"0.0, 5.0, 0.0",,,,,,
+movement,1,timeframe1.txt,sta2,"0.0, 10.0, 0.0",,,,,,
+movement,1,timeframe1.txt,sta3,"70.0, 5.0, 0.0",,,,,,
+movement,1,timeframe1.txt,sta4,"70.0, -5.0, 0.0",,,,,,
+movement,1,timeframe1.txt,ap1,"0.0, 0.0, 0.0",,,,,,
+movement,1,timeframe1.txt,ap2,"70.0, 0.0, 0.0",,,,,,
+movement,2,timeframe2.txt,sta1,"0.0, 15.0, 0.0",,,,,,
+movement,2,timeframe2.txt,sta2,"0.0, -15.0, 0.0",,,,,,
+movement,2,timeframe2.txt,sta3,"10.0, 10.0, 0.0",,,,,,
+movement,2,timeframe2.txt,sta4,"80.0, 10.0, 0.0",,,,,,
+movement,2,timeframe2.txt,ap1,"0.0, 0.0, 0.0",,,,,,
+movement,2,timeframe2.txt,ap2,"70.0, 0.0, 0.0",,,,,,
+ping,0,timeframe0.txt,,,sta1,sta2,1,0,100,0
+ping,0,timeframe0.txt,,,sta1,sta3,1,0,100,0
+ping,0,timeframe0.txt,,,sta1,sta4,1,0,100,0
+ping,0,timeframe0.txt,,,sta1,ap1,1,1,0,0.115
+ping,0,timeframe0.txt,,,sta1,ap2,1,1,0,0.058
+ping,0,timeframe0.txt,,,sta2,sta1,1,0,100,0
+ping,0,timeframe0.txt,,,sta2,sta3,1,0,100,0
+ping,0,timeframe0.txt,,,sta2,sta4,1,0,100,0
+ping,0,timeframe0.txt,,,sta2,ap1,1,1,0,0.107
+ping,0,timeframe0.txt,,,sta2,ap2,1,1,0,0.030
+ping,0,timeframe0.txt,,,sta3,sta1,1,0,100,0
+ping,0,timeframe0.txt,,,sta3,sta2,1,0,100,0
+ping,0,timeframe0.txt,,,sta3,sta4,1,0,100,0
+ping,0,timeframe0.txt,,,sta3,ap1,1,1,0,0.081
+ping,0,timeframe0.txt,,,sta3,ap2,1,1,0,0.039
+ping,0,timeframe0.txt,,,sta4,sta1,1,0,100,0
+ping,0,timeframe0.txt,,,sta4,sta2,1,0,100,0
+ping,0,timeframe0.txt,,,sta4,sta3,1,0,100,0
+ping,0,timeframe0.txt,,,sta4,ap1,1,1,0,0.086
+ping,0,timeframe0.txt,,,sta4,ap2,1,1,0,0.032
 ping,0,timeframe0.txt,,,ap1,sta1,1,0,100,0
 ping,0,timeframe0.txt,,,ap1,sta2,1,0,100,0
 ping,0,timeframe0.txt,,,ap1,sta3,1,0,100,0
 ping,0,timeframe0.txt,,,ap1,sta4,1,0,100,0
-ping,0,timeframe0.txt,,,ap1,ap2,1,1,0,0.066
+ping,0,timeframe0.txt,,,ap1,ap2,1,1,0,0.421
 ping,0,timeframe0.txt,,,ap2,sta1,1,0,100,0
 ping,0,timeframe0.txt,,,ap2,sta2,1,0,100,0
 ping,0,timeframe0.txt,,,ap2,sta3,1,0,100,0
 ping,0,timeframe0.txt,,,ap2,sta4,1,0,100,0
-ping,0,timeframe0.txt,,,ap2,ap1,1,1,0,0.100
-ping,1,timeframe1.txt,,,sta1,sta2,1,1,0,1.441
-ping,1,timeframe1.txt,,,sta1,sta3,1,1,0,1.117
-ping,1,timeframe1.txt,,,sta1,sta4,1,1,0,1.874
-ping,1,timeframe1.txt,,,sta1,ap1,1,1,0,0.053
-ping,1,timeframe1.txt,,,sta1,ap2,1,1,0,0.029
-ping,1,timeframe1.txt,,,sta2,sta1,1,1,0,1.366
-ping,1,timeframe1.txt,,,sta2,sta3,1,1,0,1.365
-ping,1,timeframe1.txt,,,sta2,sta4,1,1,0,1.231
-ping,1,timeframe1.txt,,,sta2,ap1,1,1,0,0.022
-ping,1,timeframe1.txt,,,sta2,ap2,1,1,0,0.014
-ping,1,timeframe1.txt,,,sta3,sta1,1,1,0,0.747
-ping,1,timeframe1.txt,,,sta3,sta2,1,1,0,0.649
-ping,1,timeframe1.txt,,,sta3,sta4,1,1,0,0.759
-ping,1,timeframe1.txt,,,sta3,ap1,1,1,0,0.028
-ping,1,timeframe1.txt,,,sta3,ap2,1,1,0,0.016
-ping,1,timeframe1.txt,,,sta4,sta1,1,1,0,0.919
-ping,1,timeframe1.txt,,,sta4,sta2,1,1,0,0.630
-ping,1,timeframe1.txt,,,sta4,sta3,1,1,0,0.734
-ping,1,timeframe1.txt,,,sta4,ap1,1,1,0,0.009
-ping,1,timeframe1.txt,,,sta4,ap2,1,1,0,0.015
+ping,0,timeframe0.txt,,,ap2,ap1,1,1,0,0.081
+ping,1,timeframe1.txt,,,sta1,sta2,1,0,100,0
+ping,1,timeframe1.txt,,,sta1,sta3,1,0,100,0
+ping,1,timeframe1.txt,,,sta1,sta4,1,0,100,0
+ping,1,timeframe1.txt,,,sta1,ap1,1,1,0,0.090
+ping,1,timeframe1.txt,,,sta1,ap2,1,1,0,0.028
+ping,1,timeframe1.txt,,,sta2,sta1,1,0,100,0
+ping,1,timeframe1.txt,,,sta2,sta3,1,0,100,0
+ping,1,timeframe1.txt,,,sta2,sta4,1,0,100,0
+ping,1,timeframe1.txt,,,sta2,ap1,1,1,0,0.090
+ping,1,timeframe1.txt,,,sta2,ap2,1,1,0,0.032
+ping,1,timeframe1.txt,,,sta3,sta1,1,0,100,0
+ping,1,timeframe1.txt,,,sta3,sta2,1,0,100,0
+ping,1,timeframe1.txt,,,sta3,sta4,1,0,100,0
+ping,1,timeframe1.txt,,,sta3,ap1,1,1,0,0.039
+ping,1,timeframe1.txt,,,sta3,ap2,1,1,0,0.038
+ping,1,timeframe1.txt,,,sta4,sta1,1,0,100,0
+ping,1,timeframe1.txt,,,sta4,sta2,1,0,100,0
+ping,1,timeframe1.txt,,,sta4,sta3,1,0,100,0
+ping,1,timeframe1.txt,,,sta4,ap1,1,1,0,0.044
+ping,1,timeframe1.txt,,,sta4,ap2,1,1,0,0.034
 ping,1,timeframe1.txt,,,ap1,sta1,1,0,100,0
 ping,1,timeframe1.txt,,,ap1,sta2,1,0,100,0
 ping,1,timeframe1.txt,,,ap1,sta3,1,0,100,0
 ping,1,timeframe1.txt,,,ap1,sta4,1,0,100,0
-ping,1,timeframe1.txt,,,ap1,ap2,1,1,0,0.073
+ping,1,timeframe1.txt,,,ap1,ap2,1,1,0,0.088
 ping,1,timeframe1.txt,,,ap2,sta1,1,0,100,0
 ping,1,timeframe1.txt,,,ap2,sta2,1,0,100,0
 ping,1,timeframe1.txt,,,ap2,sta3,1,0,100,0
 ping,1,timeframe1.txt,,,ap2,sta4,1,0,100,0
-ping,1,timeframe1.txt,,,ap2,ap1,1,1,0,0.102
-ping,2,timeframe2.txt,,,sta1,sta2,1,1,0,1.385
-ping,2,timeframe2.txt,,,sta1,sta3,1,1,0,1.250
-ping,2,timeframe2.txt,,,sta1,sta4,1,1,0,0.978
-ping,2,timeframe2.txt,,,sta1,ap1,1,1,0,0.045
-ping,2,timeframe2.txt,,,sta1,ap2,1,1,0,0.119
-ping,2,timeframe2.txt,,,sta2,sta1,1,1,0,0.709
-ping,2,timeframe2.txt,,,sta2,sta3,1,1,0,0.690
-ping,2,timeframe2.txt,,,sta2,sta4,1,1,0,0.740
-ping,2,timeframe2.txt,,,sta2,ap1,1,1,0,0.015
-ping,2,timeframe2.txt,,,sta2,ap2,1,1,0,0.013
-ping,2,timeframe2.txt,,,sta3,sta1,1,1,0,0.750
-ping,2,timeframe2.txt,,,sta3,sta2,1,1,0,0.718
-ping,2,timeframe2.txt,,,sta3,sta4,1,1,0,0.919
-ping,2,timeframe2.txt,,,sta3,ap1,1,1,0,0.034
-ping,2,timeframe2.txt,,,sta3,ap2,1,1,0,0.018
-ping,2,timeframe2.txt,,,sta4,sta1,1,1,0,0.846
-ping,2,timeframe2.txt,,,sta4,sta2,1,1,0,0.813
-ping,2,timeframe2.txt,,,sta4,sta3,1,1,0,0.584
-ping,2,timeframe2.txt,,,sta4,ap1,1,1,0,0.010
-ping,2,timeframe2.txt,,,sta4,ap2,1,1,0,0.007
+ping,1,timeframe1.txt,,,ap2,ap1,1,1,0,0.064
+ping,2,timeframe2.txt,,,sta1,sta2,1,0,100,0
+ping,2,timeframe2.txt,,,sta1,sta3,1,0,100,0
+ping,2,timeframe2.txt,,,sta1,sta4,1,0,100,0
+ping,2,timeframe2.txt,,,sta1,ap1,1,1,0,0.062
+ping,2,timeframe2.txt,,,sta1,ap2,1,1,0,0.023
+ping,2,timeframe2.txt,,,sta2,sta1,1,0,100,0
+ping,2,timeframe2.txt,,,sta2,sta3,1,0,100,0
+ping,2,timeframe2.txt,,,sta2,sta4,1,0,100,0
+ping,2,timeframe2.txt,,,sta2,ap1,1,1,0,0.074
+ping,2,timeframe2.txt,,,sta2,ap2,1,1,0,0.035
+ping,2,timeframe2.txt,,,sta3,sta1,1,0,100,0
+ping,2,timeframe2.txt,,,sta3,sta2,1,0,100,0
+ping,2,timeframe2.txt,,,sta3,sta4,1,0,100,0
+ping,2,timeframe2.txt,,,sta3,ap1,1,1,0,0.048
+ping,2,timeframe2.txt,,,sta3,ap2,1,1,0,0.067
+ping,2,timeframe2.txt,,,sta4,sta1,1,0,100,0
+ping,2,timeframe2.txt,,,sta4,sta2,1,0,100,0
+ping,2,timeframe2.txt,,,sta4,sta3,1,0,100,0
+ping,2,timeframe2.txt,,,sta4,ap1,1,1,0,0.082
+ping,2,timeframe2.txt,,,sta4,ap2,1,1,0,0.047
 ping,2,timeframe2.txt,,,ap1,sta1,1,0,100,0
 ping,2,timeframe2.txt,,,ap1,sta2,1,0,100,0
 ping,2,timeframe2.txt,,,ap1,sta3,1,0,100,0
 ping,2,timeframe2.txt,,,ap1,sta4,1,0,100,0
-ping,2,timeframe2.txt,,,ap1,ap2,1,1,0,0.096
+ping,2,timeframe2.txt,,,ap1,ap2,1,1,0,0.160
 ping,2,timeframe2.txt,,,ap2,sta1,1,0,100,0
 ping,2,timeframe2.txt,,,ap2,sta2,1,0,100,0
 ping,2,timeframe2.txt,,,ap2,sta3,1,0,100,0
 ping,2,timeframe2.txt,,,ap2,sta4,1,0,100,0
-ping,2,timeframe2.txt,,,ap2,ap1,1,1,0,0.105
+ping,2,timeframe2.txt,,,ap2,ap1,1,1,0,0.127

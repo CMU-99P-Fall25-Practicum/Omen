@@ -1,7 +1,7 @@
-id,title,rx_bytes,rx_packets,tx_bytes,tx_packets,success_pct_rate
-sta1,sta1,79539,1948,2330,26,0.80
-sta2,sta2,79479,1947,2330,26,0.80
-sta3,sta3,79419,1946,2330,26,0.80
-sta4,sta4,79281,1943,2330,26,0.80
-ap1,ap1,7208,92,8864,92,0.60
-ap2,ap2,0,0,0,0,0.60
+id,title,position,rx_bytes,rx_packets,tx_bytes,tx_packets,success_pct_rate
+sta1,sta1,"0.0, 10.0, 0.0",,,,,0.20
+sta2,sta2,"0.0, -10.0, 0.0",,,,,0.20
+sta3,sta3,"70.0, 10.0, 0.0",,,,,0.20
+sta4,sta4,"70.0, -10.0, 0.0",,,,,0.20
+ap1,ap1,"0.0, 0.0, 0.0",6928,88,8512,88,0.60
+ap2,ap2,"70.0, 0.0, 0.0",0,0,0,0,0.60

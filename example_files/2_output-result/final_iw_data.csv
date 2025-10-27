@@ -1,19 +1,19 @@
 device_type,test_file,device_name,interface,connected_to,ssid,freq,rx_bytes,rx_packets,tx_bytes,tx_packets,signal,rx_bitrate,tx_bitrate,bss_flags,dtim_period,beacon_int,flags,mtu,ether,tx_queue_len,rx_errors,rx_dropped,rx_overruns,rx_frame,tx_errors,tx_dropped,tx_overruns,tx_carrier,tx_collisions
-station,timeframe0.txt,sta1,,02:00:00:00:04:00,test-ssid1,5180.0,79539,1948,2330,26,-39 dBm,9.0 MBit/s,54.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe0.txt,sta2,,02:00:00:00:04:00,test-ssid1,5180.0,79479,1947,2330,26,-39 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe0.txt,sta3,,02:00:00:00:04:00,test-ssid1,5180.0,79419,1946,2330,26,-62 dBm,24.0 MBit/s,54.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe0.txt,sta4,,02:00:00:00:04:00,test-ssid1,5180.0,79281,1943,2330,26,-62 dBm,9.0 MBit/s,54.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe1.txt,sta1,,02:00:00:00:04:00,test-ssid1,5180.0,157231,3920,3522,41,-31 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe1.txt,sta2,,02:00:00:00:04:00,test-ssid1,5180.0,157171,3919,3522,41,-39 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe1.txt,sta3,,02:00:00:00:04:00,test-ssid1,5180.0,157111,3918,3546,42,-62 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe1.txt,sta4,,02:00:00:00:04:00,test-ssid1,5180.0,156973,3915,3522,41,-62 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe2.txt,sta1,,02:00:00:00:04:00,test-ssid1,5180.0,234923,5892,4738,57,-44 dBm,54.0 MBit/s,54.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe2.txt,sta2,,02:00:00:00:04:00,test-ssid1,5180.0,234863,5891,4738,57,-44 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe2.txt,sta3,,02:00:00:00:04:00,test-ssid1,5180.0,234803,5890,4714,56,-44 dBm,54.0 MBit/s,54.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,timeframe2.txt,sta4,,02:00:00:00:04:00,test-ssid1,5180.0,234665,5887,4714,56,-64 dBm,54.0 MBit/s,54.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-access_point,timeframe0.txt,ap1,ap1-wlan1,,,,7208,92,8864,92,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
+station,timeframe0.txt,sta1,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe0.txt,sta2,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe0.txt,sta3,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe0.txt,sta4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta1,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta2,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta3,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta1,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta2,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta3,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+access_point,timeframe0.txt,ap1,ap1-wlan1,,,,6928,88,8512,88,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
 access_point,timeframe0.txt,ap2,ap2-wlan1,,,,0,0,0,0,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0
-access_point,timeframe1.txt,ap1,ap1-wlan1,,,,10848,144,13440,144,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe1.txt,ap1,ap1-wlan1,,,,6928,88,8512,88,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
 access_point,timeframe1.txt,ap2,ap2-wlan1,,,,0,0,0,0,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0
-access_point,timeframe2.txt,ap1,ap1-wlan1,,,,14488,196,18016,196,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe2.txt,ap1,ap1-wlan1,,,,6928,88,8512,88,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
 access_point,timeframe2.txt,ap2,ap2-wlan1,,,,0,0,0,0,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0
