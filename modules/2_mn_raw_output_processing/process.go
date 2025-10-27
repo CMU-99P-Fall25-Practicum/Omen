@@ -144,8 +144,19 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 				aps = processAPData(aps, line, currentAPName, fileName)
 			}
 
-			// Reset when we hit a new section or end
-			if line == "" {
+			// Reset when we hit a new section or end (station/AP header)
+			if line == "" || strings.HasPrefix(line, "---") {
+				// Before resetting, check if we have a station that wasn't added yet
+				// (this happens when station is "Not connected")
+				if inStationOutput && currentStationName != "" && !stationExists(stations, currentStationName, fileName) {
+					// Create an empty station record for "Not connected" stations
+					station := models.StationRecord{
+						TestFile:    fileName,
+						StationName: currentStationName,
+					}
+					stations = append(stations, station)
+				}
+
 				inStationOutput = false
 				inAPOutput = false
 				currentStationName = ""
@@ -549,4 +560,14 @@ func extractMovementNumber(testFile string) int {
 	var num int
 	fmt.Sscanf(numStr, "%d", &num)
 	return num
+}
+
+// stationExists checks if a station record already exists for the given station name and test file.
+func stationExists(stations []models.StationRecord, stationName, testFile string) bool {
+	for _, station := range stations {
+		if station.StationName == stationName && station.TestFile == testFile {
+			return true
+		}
+	}
+	return false
 }
