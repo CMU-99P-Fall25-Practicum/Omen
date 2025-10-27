@@ -62,7 +62,7 @@ func main() {
 
 		// Process nodes output (per test file)
 		fmt.Println("\nGenerating per-test-file nodes CSV files:")
-		_, err := processNodesOutput(stations, aps, pings, resultsDir)
+		_, err := processNodesOutput(stations, aps, pings, movements, resultsDir)
 		if err != nil {
 			fmt.Printf("Error processing nodes output: %v\n", err)
 			os.Exit(1)

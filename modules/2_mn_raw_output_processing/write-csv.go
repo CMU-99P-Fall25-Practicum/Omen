@@ -114,7 +114,7 @@ func writeNodesCSV(outputPath string, nodes []models.NodeRecord) error {
 	defer writer.Flush()
 
 	// Write header
-	header := []string{"id", "title", "rx_bytes", "rx_packets", "tx_bytes", "tx_packets", "success_pct_rate"}
+	header := []string{"id", "title", "position", "rx_bytes", "rx_packets", "tx_bytes", "tx_packets", "success_pct_rate"}
 	if err := writer.Write(header); err != nil {
 		return err
 	}
@@ -124,6 +124,7 @@ func writeNodesCSV(outputPath string, nodes []models.NodeRecord) error {
 		record := []string{
 			node.ID,
 			node.Title,
+			node.Position,
 			node.RXBytes,
 			node.RXPackets,
 			node.TXBytes,

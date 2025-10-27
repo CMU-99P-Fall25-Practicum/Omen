@@ -65,7 +65,8 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 	var inAPOutput bool
 
 	// Regex patterns
-	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+([0-9,-]+)`)
+	// Updated to handle both old format (70,10,0) and new format ([70.0, 10.0, 0.0])
+	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+\[?([0-9.,\s-]+)\]?`)
 	pingallStartPattern := regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
 	csvHeaderPattern := regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
 	iwStartPattern := regexp.MustCompile(`\[iw_stations\]`)
@@ -366,7 +367,7 @@ func updateAPField(ap *models.AccessPointRecord, line string) {
 	}
 }
 
-func processNodesOutput(stations []models.StationRecord, aps []models.AccessPointRecord, pings []models.PingRecord, resultsDir string) (map[string]float64, error) {
+func processNodesOutput(stations []models.StationRecord, aps []models.AccessPointRecord, pings []models.PingRecord, movements []models.MovementRecord, resultsDir string) (map[string]float64, error) {
 	// Group stations and APs by test file
 	stationsByTest := make(map[string][]models.StationRecord)
 	apsByTest := make(map[string][]models.AccessPointRecord)
@@ -396,6 +397,9 @@ func processNodesOutput(stations []models.StationRecord, aps []models.AccessPoin
 		// Calculate success rates based on cumulative pings
 		successRates := calculateSuccessRates(cumulativePings)
 
+		// Build position map from movements for this test file
+		positionMap := getPositionMap(movements, testFile)
+
 		// Create node records for this test file
 		var nodes []models.NodeRecord
 
@@ -405,6 +409,7 @@ func processNodesOutput(stations []models.StationRecord, aps []models.AccessPoin
 			node := models.NodeRecord{
 				ID:             station.StationName,
 				Title:          station.StationName,
+				Position:       positionMap[station.StationName],
 				RXBytes:        station.RXBytes,
 				RXPackets:      station.RXPackets,
 				TXBytes:        station.TXBytes,
@@ -420,6 +425,7 @@ func processNodesOutput(stations []models.StationRecord, aps []models.AccessPoin
 			node := models.NodeRecord{
 				ID:             ap.APName,
 				Title:          ap.APName,
+				Position:       positionMap[ap.APName],
 				RXBytes:        ap.RXBytes,
 				RXPackets:      ap.RXPackets,
 				TXBytes:        ap.TXBytes,
@@ -570,4 +576,19 @@ func stationExists(stations []models.StationRecord, stationName, testFile string
 		}
 	}
 	return false
+}
+
+// getPositionMap builds a map of node names to their positions from movement records.
+// It returns the position for nodes in the specified test file.
+func getPositionMap(movements []models.MovementRecord, testFile string) map[string]string {
+	positionMap := make(map[string]string)
+
+	// Get all movements from this specific test file
+	for _, movement := range movements {
+		if movement.TestFile == testFile {
+			positionMap[movement.NodeName] = movement.Position
+		}
+	}
+
+	return positionMap
 }
