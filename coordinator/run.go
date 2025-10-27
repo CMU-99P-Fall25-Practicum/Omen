@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"path"
+	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/go-connections/nat"
 	"github.com/spf13/cobra"
 )
 
@@ -18,46 +21,91 @@ import (
 // ErrNoFilesValidated returns an error as it says on the tin
 var ErrNoFilesValidated = errors.New("no files passed validation")
 
-// runWrapped allows us to wrap the run command in an error check to ensure the proper clean up is executed
-func runWrapped(cmd *cobra.Command, args []string) error {
-	err := run(cmd, args)
+// run is the primary driver function.
+// It is responsible for preparing all information, driving the pipeline, and managing docker containers.
+func run(cmd *cobra.Command, args []string) error {
+	var (
+		grafanaPortStr           string
+		testRunnerBinaryPath     string
+		coalesceOutputBinaryPath string
+	)
+	// consume flags
+	{
+		grafanaPort, err := cmd.Flags().GetUint16("grafana-port")
+		if err != nil {
+			return err
+		}
+		grafanaPortStr = strconv.FormatUint(uint64(grafanaPort), 10)
+
+		if testRunnerBinaryPath, err = cmd.Flags().GetString("test-runner"); err != nil {
+			return err
+		}
+		if coalesceOutputBinaryPath, err = cmd.Flags().GetString("coalesce-output"); err != nil {
+			return err
+		}
+
+	}
+	// validate input file
+	inputPath := strings.TrimSpace(args[0])
+	if inputPath == "" {
+		return errors.New("input path cannot be empty")
+	} else if inf, err := os.Stat(inputPath); err != nil {
+		return err
+	} else if inf.IsDir() {
+		return fmt.Errorf("input json cannot be a directory")
+	}
+
+	// spin up Grafana container for visualizer
+	{
+		cr, err := dCLI.ContainerCreate(context.TODO(),
+			&container.Config{
+				ExposedPorts: nat.PortSet{nat.Port(grafanaPortStr + "/tcp"): struct{}{}},
+				Image:        "grafana/grafana",
+			},
+			&container.HostConfig{
+				PortBindings: nat.PortMap{
+					nat.Port(grafanaPortStr + "/tcp"): []nat.PortBinding{
+						{HostIP: "0.0.0.0", HostPort: grafanaPortStr},
+					},
+				},
+			},
+			nil,
+			nil,
+			"OmenVizGrafana_p"+grafanaPortStr)
+		if err != nil {
+			return fmt.Errorf("failed to create grafana container: %w", err)
+		}
+		if len(cr.Warnings) > 0 {
+			log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("spun up grafana container with warnings")
+		} else {
+			log.Info().Str("container ID", cr.ID).Msg("spun up grafana container")
+		}
+
+		if err := dCLI.ContainerStart(context.TODO(), cr.ID, container.StartOptions{}); err != nil {
+			return fmt.Errorf("failed to start grafana container: %w", err)
+		}
+	}
+
+	err := executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath)
 	cleanup(err != nil)
 	return err
 }
 
-// run is the primary driver function for the coordinator.
-// It roots the filesystem, finds all required modules, and executes them in order.
-func run(cmd *cobra.Command, args []string) error {
-	// check flags
-	if ll, err := cmd.Flags().GetString("log-level"); err != nil {
-		panic(err)
-	} else if l, err := zerolog.ParseLevel(strings.ToLower(ll)); err != nil {
-		return err
-	} else {
-		log = log.Level(l)
-	}
-
-	// ensure each arg is a valid path and collect the absolute paths of each test to run
-	inputPaths, err := collectJSONPaths(args)
-	if err != nil {
-		return err
-	} else if len(inputPaths) == 0 {
-		return errors.New("no .json file where found in the given paths")
-	}
-	log.Info().Strs("files", inputPaths).Msg("collected input file paths")
-
-	// run each path through validation
-	paths, err := runInputValidationModule(inputPaths)
+func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath string) error {
+	paths, err := runInputValidationModule([]string{inputPath})
 	if err != nil {
 		return err
 	}
+
+	// NOTE(rlandau): as we only accept a single file atn, `paths` should be at most 1 element
+
 	var erred bool // an error occurred at some point
 	for _, path := range paths {
 		var sbErr strings.Builder
 
 		// execute the test runner module
 		log.Info().Str("path", path).Msg("executing topology tests")
-		cmd := exec.Command("./"+_1TestRunnerModuleBinary, path)
+		cmd := exec.Command(testRunnerBinaryPath, path)
 		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing test runner binary")
 		cmd.Stderr = &sbErr
 		if _, err := cmd.Output(); err != nil {
@@ -70,7 +118,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 		// execute coalesce output module
 		log.Info().Str("path", path).Msg("coalescing raw test output")
-		cmd = exec.Command("./"+_2CoalesceOutputBinary, "mn_result_raw/")
+		cmd = exec.Command(coalesceOutputBinaryPath, "mn_result_raw/")
 		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing coalesce output binary")
 		cmd.Stderr = &sbErr
 		if out, err := cmd.Output(); err != nil {
@@ -104,7 +152,7 @@ func run(cmd *cobra.Command, args []string) error {
 // For paths that point to a directory, shallowly walks the directory, adding all .json files to the list.
 //
 // Returns a list of absolute paths to input files.
-func collectJSONPaths(argPaths []string) ([]string, error) {
+/*func collectJSONPaths(argPaths []string) ([]string, error) {
 	var inputPaths []string
 	for i, arg := range argPaths {
 		fi, err := os.Stat(arg)
@@ -129,4 +177,86 @@ func collectJSONPaths(argPaths []string) ([]string, error) {
 		}
 	}
 	return inputPaths, nil
+}*/
+
+// #region input validation
+
+// InvalidInput maps to the JSON spit out after a run of input validation.
+type invalidInput struct {
+	Ok     bool `json:"ok"`
+	Errors []struct {
+		Loc  string `json:"loc"`
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"errors"`
+	Warnings []struct {
+		Loc  string `json:"loc"`
+		Code string `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"warnings"`
 }
+
+// Executes the input validator against each input path.
+//
+// Returns an array of paths for files that passed validation.
+//
+// NOTE(rlandau): assumes a unix-like host for path prefixing
+func runInputValidationModule(inputPaths []string) ([]string, error) {
+	var passed []string
+
+	for _, inPath := range inputPaths {
+		if strings.TrimSpace(inPath) == "" {
+			continue
+		}
+		filename := path.Base(inPath)
+		// Docker requires paths to be prefixed with ./ or be absolute
+		if !path.IsAbs(inPath) && !strings.HasPrefix(inPath, "./") {
+			inPath = "./" + inPath
+		}
+		// execute input validation
+		cmd := exec.Command("docker", "run", "--rm", "-v", inPath+":/input/"+path.Base(filename), inputValidatorImage+":"+inputValidatorImageTag, "/input/"+filename)
+		log.Debug().Strs("args", cmd.Args).Msg("executing validator script")
+		if stdout, err := cmd.Output(); err != nil {
+			ee, ok := err.(*exec.ExitError)
+			if !ok || ee.ExitCode() != 1 {
+				log.Error().Str("file path", inPath).Str("stdout", string(stdout)).Err(err).Msg("failed to run input validation module")
+			} else { // the script ran successfully but the file isn't valid
+				// unmarshal the data so we can present it well
+				inv := invalidInput{}
+				if err := json.Unmarshal(stdout, &inv); err != nil {
+					log.Error().Err(err).Msg("failed to unmarshal script output as json")
+					continue
+				}
+				out := strings.Builder{}
+				fmt.Fprintf(&out, "File %v has issues:\n", inPath)
+				if len(inv.Errors) > 0 {
+					fmt.Fprintf(&out, "%v\n", errorHeaderSty.Render("ERRORS"))
+					for _, e := range inv.Errors {
+						fmt.Fprintf(&out, "---%s: %s\n", e.Loc, e.Msg)
+					}
+				}
+				if len(inv.Warnings) > 0 {
+					fmt.Fprintf(&out, "%v\n", warningHeaderSty.Render("WARNINGS"))
+					for _, w := range inv.Warnings {
+						fmt.Fprintf(&out, "---%s: %s\n", w.Loc, w.Msg)
+					}
+				}
+
+				fmt.Println(out.String())
+			}
+			continue
+		}
+
+		// the file is valid, add it to the list
+		passed = append(passed, inPath)
+
+	}
+
+	if len(passed) == 0 {
+		return nil, ErrNoFilesValidated
+	}
+
+	return passed, nil
+}
+
+//#endregion input validation
