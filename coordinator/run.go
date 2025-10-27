@@ -82,6 +82,7 @@ func run(cmd *cobra.Command, args []string) error {
 		if err := dCLI.ContainerStart(context.TODO(), cr.ID, container.StartOptions{}); err != nil {
 			return fmt.Errorf("failed to start grafana container: %w", err)
 		}
+		grafanaContainerID = cr.ID
 	}
 
 	err := executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath)
