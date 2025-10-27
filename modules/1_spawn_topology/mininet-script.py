@@ -201,7 +201,6 @@ def run_tests(sta_objs, ap_objs, spec, tests, results_dir):
         
         if timeframe == 0:
             info("*** Node Init Movement ***\n")
-            print(sta_objs)
             for sta in spec["stations"]:
                 pos = sta['position']
                 msg = f"\n[node movements] {timeframe}: move {sta['id']}: moving {sta['id']} -> {pos}\n"
