@@ -66,8 +66,8 @@ func main() {
 	fs := pflag.FlagSet{}
 	fs.String("log-level", "INFO", "set verbosity of the logger. Must be one of {TRACE|DEBUG|INFO|WARN|ERROR|FATAL|PANIC}.")
 	fs.Uint16("grafana-port", 3000, "set the port the Grafana container should bind to")
-	fs.StringP("test-runner", "2", DefaultTestRunnerBinaryPath, "override the path to the test runner binary")
-	fs.StringP("coalesce-output", "3", DefaultCoalesceOutputBinaryPath, "override the path to the coalesce output binary")
+	fs.StringP("test-runner", "1", DefaultTestRunnerBinaryPath, "override the path to the test runner binary")
+	fs.StringP("coalesce-output", "2", DefaultCoalesceOutputBinaryPath, "override the path to the coalesce output binary")
 
 	// generate the command tree
 	root := &cobra.Command{
