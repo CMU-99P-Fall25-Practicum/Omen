@@ -82,8 +82,9 @@ type Nets struct {
 }
 
 type Propmodel struct {
-	Model string `json:"model"`
-	Exp   int    `json:"exp"`
+	Model string  `json:"model"`
+	Exp   float64 `json:"exp"`
+	S     float64 `json:"s,omitempty"`
 }
 
 // Node represents a network node (host, switch, access point, etc.)

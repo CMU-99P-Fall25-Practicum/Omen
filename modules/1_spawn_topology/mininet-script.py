@@ -11,12 +11,12 @@ Expected JSON:
   "topo": {
     "net": {
       "noise_th": -91,
-      "propagation": {"model": "logDistance", "exp": 4}
+      "propagation": {"model": "logDistance", "exp": 4, "std_dev": 2.0}
     },
     "ap": [
       {"id": "ap1", "ssid": "new-ssid", "mode": "a", "channel": 36, "position": "0,0,0"}
     ],
-    "stationt": [
+    "stations": [
       {"id": "sta1", "position": "10,0,0"},
       {"id": "sta2", "position": "-10,0,0"}
     ],
@@ -178,66 +178,78 @@ def run_iw_stations(sta_objs, ap_objs, cmd, test_name="iw_stations"):
     lines.append("=" * 60 + "\n")
     return "".join(lines)
 
-def run_tests(sta_objs, ap_objs, tests, results_dir):
+def run_tests(sta_objs, ap_objs, spec, tests, results_dir):
     info("*** Running tests\n")
-    time.sleep(15)
+    time.sleep(30)
     
     # convenience: list of all nodes we consider for full pairwise tests
     all_nodes = []
     all_nodes.extend(sta_objs.values())
     all_nodes.extend(ap_objs.values())
-    
-    for idx, t in enumerate(tests, 1):
-        ttype = t["type"]
-        name = t['name']
-        outfile = os.path.join(results_dir, f"test{idx}.txt")
 
-        if ttype == "ping":
-            src = t["src"]
-            dst = t["dst"]
-            count = int(t["count"])
-            msg = f"\n[ping] {name}: {src} -> {dst} (-c {count})\n"
-            info(msg)
+    tests_by_timeframe = [[]]
+    for t in tests:
+        cur_timeframe = t["timeframe"]
+        while len(tests_by_timeframe) <= cur_timeframe:
+            tests_by_timeframe.append([])
+        tests_by_timeframe[cur_timeframe].append(t)
 
-            src_node = sta_objs[src]
-            dst_node = sta_objs.get(dst) or ap_objs.get(dst)
-            target_ip = dst_node.IP()
+    for timeframe, sub_tests in enumerate(tests_by_timeframe):
+        outfile = os.path.join(results_dir, f"timeframe{timeframe}.txt")
+        info(f"Tests in timeframe{timeframe}:\n")
+        out = ""
+        
+        if timeframe == 0:
+            info("*** Node Init Movement ***\n")
+            print(sta_objs)
+            for sta in spec["stations"]:
+                pos = sta['position']
+                msg = f"\n[node movements] {timeframe}: move {sta['id']}: moving {sta['id']} -> {pos}\n"
+                out += msg + f"Moved {sta['id']} to {pos}\n"
 
-            out = msg + src_node.cmd("ping -c {} {}".format(count, target_ip))
+        for sub_t in sub_tests:
+            ttype = sub_t["type"]
+            name = sub_t['name']
 
-        elif ttype == "pingall_full":
-            count = int(t.get("count", 1))
-            out = run_pingall_full(all_nodes, count, name)
+            if ttype == "ping":
+                src = sub_t["src"]
+                dst = sub_t["dst"]
+                count = int(sub_t["count"])
+                msg = f"\n[ping] {name}: {src} -> {dst} (-c {count})\n"
+                info(msg)
 
-        elif ttype == "iw":
-            cmd = t["cmd"]
-            out = run_iw_stations(sta_objs, ap_objs, cmd, name)
+                src_node = sta_objs[src]
+                dst_node = sta_objs.get(dst) or ap_objs.get(dst)
+                target_ip = dst_node.IP()
 
-        elif ttype == "node movements":
-            node = sta_objs[t["node"]]
-            pos = t["position"]
-            msg = f"\n[node movements] {name}: moving {node.name} -> {pos}\n"
-            info(msg)
-            node.setPosition(pos)
-            time.sleep(5)
-            movement_out = msg + f"Moved {node.name} to {pos}\n"
-            
-            # Automatically run pingall_full after node movement
-            info("*** Running pingall_full after node movement\n")
-            pingall_name = f"{name}_pingall_after_move"
-            pingall_out = run_pingall_full(all_nodes, count=1, test_name=pingall_name)
-            
-            # Combine movement and pingall results in a single output
-            out = movement_out + "\n" + pingall_out
-            
-        else:
-            msg = f"\n[skip] unsupported test type: {ttype}\n"
-            info(msg)
-            out = msg
+                out += msg + src_node.cmd("ping -c {} {}".format(count, target_ip))
+
+            elif ttype == "node movements":
+                node = sta_objs[sub_t["node"]]
+                pos = sub_t["position"]
+                msg = f"\n[node movements] {timeframe}: {name}: moving {node.name} -> {pos}\n"
+                info(msg)
+                node.setPosition(pos)
+                time.sleep(5)
+                out += msg + f"Moved {node.name} to {pos}\n"
+                
+            else:
+                msg = f"\n[skip] unsupported test type: {ttype}\n"
+                info(msg)
+                out += msg
+        # Run pinall_full after all tests in one timeframe have finished
+        info("*** Running pingall_full after all the node movements within one timeframe\n")
+        pingall_out = run_pingall_full(all_nodes, count=1, test_name=timeframe)
+        out += "\n" + pingall_out
+
+        # Run iw on all stations and access points after all tests in one timeframe have finished
+        out += run_iw_stations(sta_objs, ap_objs, "iw dev {interface} link", "check_all_links")
+
         # Write output to file
         with open(outfile, "w") as f:
             f.write(out)
     info("\n*** All tests are complete\n")
+
 def main():
 
     with open(sys.argv[1], "r") as f:
@@ -249,7 +261,7 @@ def main():
     net, sta_objs, ap_objs = build_from_spec(spec)
 
     results_dir = make_results_dir()
-    run_tests(sta_objs, ap_objs, tests, results_dir)
+    run_tests(sta_objs, ap_objs, spec, tests, results_dir)
 
     # info("*** CLI\n")
     # CLI(net)
