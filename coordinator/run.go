@@ -85,6 +85,9 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	err := executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath)
+	if err == nil {
+		fmt.Println("Results are available @ localhost:" + grafanaPortStr)
+	}
 	cleanup(err != nil)
 	return err
 }
@@ -139,8 +142,6 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 		return err
 	}
 	// -it -e DB_HOST=172.17.0.3 -e DB_PASS=mypass -v ./result/nodes.csv:/input/nodes.csv -v ./result/edges.csv:/input/edges.csv 3_omen-output-visualizer /input/nodes.csv /input/edges.csv
-
-	fmt.Printf("Results are available @ ???")
 
 	return nil
 }
