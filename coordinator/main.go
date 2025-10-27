@@ -55,11 +55,9 @@ func init() {
 	}
 	{ // connect to the local docker engine
 		var err error
-		dCLI, err = client.NewClientWithOpts(client.FromEnv)
-		if err != nil {
+		if dCLI, err = client.NewClientWithOpts(client.FromEnv); err != nil {
 			log.Fatal().Err(err).Msg("failed to contact docker engine. Is docker installed and in your PATH?")
 		}
-
 	}
 }
 
