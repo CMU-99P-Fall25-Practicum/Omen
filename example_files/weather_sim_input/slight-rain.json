@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "1.0",
+  "meta": {
+    "backend": "mininet" ,
+    "name": "campus-demo",  
+    "duration_s": 60
+  },
+  "topo": {
+    "nets": {
+      "noise_th": -100,
+      "propagation_model":{
+        "model": "logNormalShadowing",
+        "exp": 2.9,
+        "std_dev": 1.5
+      }
+    },
+    "aps": [
+      {
+        "id": "ap1",
+        "mode": "a",
+        "channel": 36,
+        "ssid": "test-ssid1",
+        "position": "0,0,0"
+      },
+      {
+        "id": "ap2",
+        "mode": "a",
+        "channel": 36,
+        "ssid": "test-ssid2",
+        "position": "70,0,0"
+      }
+    ],
+    "stations": [
+      {
+        "id": "sta1",
+        "position": "0,10,0"
+      },
+      {
+        "id": "sta2",
+        "position": "0,-10,0"
+      },
+      {
+        "id": "sta3",
+        "position": "70,10,0"
+      },
+      {
+        "id": "sta4",
+        "position": "70,-10,0"
+      }
+    ]
+  },
+  "tests": [
+    {
+        "name":"move sta1",
+        "type":"node movements",
+        "timeframe": 1,
+        "node": "sta1",
+        "position": "0,5,0"
+    },    
+    {
+        "name":"move sta2",
+        "type":"node movements",
+        "timeframe": 1,
+        "node": "sta2",
+        "position": "0,10,0"
+    },
+    {
+        "name":"move sta3",
+        "type":"node movements",
+        "timeframe": 1,
+        "node": "sta3",
+        "position": "70,5,0"
+    },
+    {
+        "name":"move sta4",
+        "type":"node movements",
+        "timeframe": 1,
+        "node": "sta4",
+        "position": "70,-5,0"
+    },
+    {
+        "name":"move sta1",
+        "type":"node movements",
+        "timeframe": 2,
+        "node": "sta1",
+        "position": "0,15,0"
+    },    
+    {
+        "name":"move sta2",
+        "type":"node movements",
+        "timeframe": 2,
+        "node": "sta2",
+        "position": "0,-15,0"
+    }, 
+    {
+        "name":"move sta3",
+        "type":"node movements",
+        "timeframe": 2,
+        "node": "sta3",
+        "position": "10,10,0"
+    },    
+    {
+        "name":"move sta4",
+        "type":"node movements",
+        "timeframe": 2,
+        "node": "sta4",
+        "position": "80,10,0"
+    }
+  ],
+  "username": "",
+  "password": "",
+  "address": ""
+}
