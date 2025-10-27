@@ -101,7 +101,18 @@ def run_pingall_full(all_nodes, count=1, test_name="pingall_full"):
     Run a full pairwise ping matrix test between all nodes.
     Returns the formatted output string with CSV-style results.
     """
-    msg = f"\n[pingall_full] {test_name}: pairwise matrix (-c {count})\n"
+    msg = ""
+    
+    # Get all positions before ping tests
+    info(f"*** Node Movement output: Timeframe {test_name} ***\n")
+    for node in all_nodes:
+        # Get the position using the position attribute or params dict
+        current_pos = getattr(node, 'position', node.params.get('position', 'unknown'))
+        info(f"Node {node.name} position before pingall_full: {current_pos}\n")
+        msg += f"\n[node movements] {test_name}: move {node.name}: moving {node.name} -> {current_pos}\n"
+        msg += f"Moved {node.name} to {current_pos}\n"
+    
+    msg += f"\n[pingall_full] {test_name}: pairwise matrix (-c {count})\n"
     info(msg)
     header = "src,dst,tx,rx,loss_pct,avg_rtt_ms\n"
     lines = [msg, header]
@@ -198,13 +209,6 @@ def run_tests(sta_objs, ap_objs, spec, tests, results_dir):
         outfile = os.path.join(results_dir, f"timeframe{timeframe}.txt")
         info(f"Tests in timeframe{timeframe}:\n")
         out = ""
-        
-        if timeframe == 0:
-            info("*** Node Init Movement ***\n")
-            for sta in spec["stations"]:
-                pos = sta['position']
-                msg = f"\n[node movements] {timeframe}: move {sta['id']}: moving {sta['id']} -> {pos}\n"
-                out += msg + f"Moved {sta['id']} to {pos}\n"
 
         for sub_t in sub_tests:
             ttype = sub_t["type"]
@@ -226,11 +230,7 @@ def run_tests(sta_objs, ap_objs, spec, tests, results_dir):
             elif ttype == "node movements":
                 node = sta_objs[sub_t["node"]]
                 pos = sub_t["position"]
-                msg = f"\n[node movements] {timeframe}: {name}: moving {node.name} -> {pos}\n"
-                info(msg)
                 node.setPosition(pos)
-                time.sleep(5)
-                out += msg + f"Moved {node.name} to {pos}\n"
                 
             else:
                 msg = f"\n[skip] unsupported test type: {ttype}\n"
