@@ -141,10 +141,11 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 			onScreen := 0
 			char1, char2 := '.', ':'
 			curChar := char1
+			var err error
 		DoneLoop:
 			for {
 				select {
-				case <-result:
+				case err = <-result:
 					break DoneLoop
 				case <-time.After(3 * time.Second):
 					if onScreen > 4 { // reset and flip
@@ -161,6 +162,9 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 					}
 
 				}
+			}
+			if err != nil {
+				return err
 			}
 		}
 
