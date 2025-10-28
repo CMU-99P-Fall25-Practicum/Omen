@@ -196,8 +196,8 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 	log.Debug().Strs("args", vizLoaderCmd.Args).Msg("executing test runner binary")
 	vizLoaderCmd.Stderr = &sbErr
 	if _, err := vizLoaderCmd.Output(); err != nil {
-		log.Error().Err(err).Str("path", vizLoaderCmd.Path).Str("stderr", sbErr.String()).Msg("failed to run test runner binary")
-		return err
+		log.Error().Err(err).Msg("failed to run visualization loader module")
+		return errors.New(sbErr.String())
 	}
 	// -it -e DB_HOST=172.17.0.3 -e DB_PASS=mypass -v ./result/nodes.csv:/input/nodes.csv -v ./result/edges.csv:/input/edges.csv 3_omen-output-visualizer /input/nodes.csv /input/edges.csv
 
