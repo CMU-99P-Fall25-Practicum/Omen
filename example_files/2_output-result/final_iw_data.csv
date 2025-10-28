@@ -1,7 +1,19 @@
 device_type,test_file,device_name,interface,connected_to,ssid,freq,rx_bytes,rx_packets,tx_bytes,tx_packets,signal,rx_bitrate,tx_bitrate,bss_flags,dtim_period,beacon_int,flags,mtu,ether,tx_queue_len,rx_errors,rx_dropped,rx_overruns,rx_frame,tx_errors,tx_dropped,tx_overruns,tx_carrier,tx_collisions
-station,test5.txt,sta1,,02:00:00:00:04:00,test-ssid1,5180.0,343809,8714,4898,68,-51 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,test5.txt,sta2,,02:00:00:00:04:00,test-ssid1,5180.0,343749,8713,4874,67,-69 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,test5.txt,sta3,,02:00:00:00:04:00,test-ssid1,5180.0,159971,4070,2090,30,-69 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-station,test5.txt,sta4,,02:00:00:00:05:00,test-ssid2,5180.0,341425,8684,4310,65,-69 dBm,54.0 MBit/s,6.0 MBit/s,short-slot-time,2,100,,,,,,,,,,,,,
-access_point,test5.txt,ap1,ap1-wlan1,,,,8598,137,11064,137,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
-access_point,test5.txt,ap2,ap2-wlan1,,,,5116,84,6628,84,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0
+station,timeframe0.txt,sta1,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe0.txt,sta2,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe0.txt,sta3,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe0.txt,sta4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta1,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta2,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta3,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe1.txt,sta4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta1,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta2,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta3,,,,,,,,,,,,,,,,,,,,,,,,,,,
+station,timeframe2.txt,sta4,,,,,,,,,,,,,,,,,,,,,,,,,,,
+access_point,timeframe0.txt,ap1,ap1-wlan1,,,,6928,88,8512,88,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe0.txt,ap2,ap2-wlan1,,,,0,0,0,0,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe1.txt,ap1,ap1-wlan1,,,,6928,88,8512,88,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe1.txt,ap2,ap2-wlan1,,,,0,0,0,0,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe2.txt,ap1,ap1-wlan1,,,,6928,88,8512,88,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:04:00,,0,0,0,0,0,0,0,0,0
+access_point,timeframe2.txt,ap2,ap2-wlan1,,,,0,0,0,0,,,,,,,"UP,BROADCAST,RUNNING,MULTICAST",1500,02:00:00:00:05:00,,0,0,0,0,0,0,0,0,0

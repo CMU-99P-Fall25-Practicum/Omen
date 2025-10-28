@@ -1,7 +1,0 @@
-id,title,rx_bytes,rx_packets,tx_bytes,tx_packets,success_pct_rate
-sta1,sta1,343809,8714,4898,68,0.50
-sta2,sta2,343749,8713,4874,67,0.50
-sta3,sta3,159971,4070,2090,30,0.50
-sta4,sta4,341425,8684,4310,65,0.50
-ap1,ap1,8598,137,11064,137,0.60
-ap2,ap2,5116,84,6628,84,0.60
