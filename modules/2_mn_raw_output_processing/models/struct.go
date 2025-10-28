@@ -64,6 +64,7 @@ type AccessPointRecord struct {
 type NodeRecord struct {
 	ID             string
 	Title          string
+	Position       string
 	RXBytes        string
 	RXPackets      string
 	TXBytes        string

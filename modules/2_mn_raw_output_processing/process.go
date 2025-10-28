@@ -65,7 +65,8 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 	var inAPOutput bool
 
 	// Regex patterns
-	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+([0-9,-]+)`)
+	// Updated to handle both old format (70,10,0) and new format ([70.0, 10.0, 0.0])
+	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+\[?([0-9.,\s-]+)\]?`)
 	pingallStartPattern := regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
 	csvHeaderPattern := regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
 	iwStartPattern := regexp.MustCompile(`\[iw_stations\]`)
@@ -144,8 +145,19 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 				aps = processAPData(aps, line, currentAPName, fileName)
 			}
 
-			// Reset when we hit a new section or end
-			if line == "" {
+			// Reset when we hit a new section or end (station/AP header)
+			if line == "" || strings.HasPrefix(line, "---") {
+				// Before resetting, check if we have a station that wasn't added yet
+				// (this happens when station is "Not connected")
+				if inStationOutput && currentStationName != "" && !stationExists(stations, currentStationName, fileName) {
+					// Create an empty station record for "Not connected" stations
+					station := models.StationRecord{
+						TestFile:    fileName,
+						StationName: currentStationName,
+					}
+					stations = append(stations, station)
+				}
+
 				inStationOutput = false
 				inAPOutput = false
 				currentStationName = ""
@@ -159,11 +171,6 @@ func processFile(filePath, fileName string) ([]models.MovementRecord, []models.P
 			if len(parts) >= 6 {
 				src := parts[0]
 				dst := parts[1]
-
-				// Skip station-to-station communication
-				if strings.HasPrefix(src, "sta") && strings.HasPrefix(dst, "sta") {
-					continue
-				}
 
 				// Clean up loss_pct: convert "+1 errors" to "100"
 				lossPct := parts[4]
@@ -360,70 +367,134 @@ func updateAPField(ap *models.AccessPointRecord, line string) {
 	}
 }
 
-func processNodesOutput(stations []models.StationRecord, aps []models.AccessPointRecord, pings []models.PingRecord, resultsDir string) (map[string]float64, error) {
-	// Calculate success rate for each node
-	successRates := calculateSuccessRates(pings)
+func processNodesOutput(stations []models.StationRecord, aps []models.AccessPointRecord, pings []models.PingRecord, movements []models.MovementRecord, resultsDir string) (map[string]float64, error) {
+	// Group stations and APs by test file
+	stationsByTest := make(map[string][]models.StationRecord)
+	apsByTest := make(map[string][]models.AccessPointRecord)
 
-	// Create node records
-	var nodes []models.NodeRecord
-
-	// Add stations
 	for _, station := range stations {
-		successRate := successRates[station.StationName]
-		node := models.NodeRecord{
-			ID:             station.StationName,
-			Title:          station.StationName,
-			RXBytes:        station.RXBytes,
-			RXPackets:      station.RXPackets,
-			TXBytes:        station.TXBytes,
-			TXPackets:      station.TXPackets,
-			SuccessPctRate: fmt.Sprintf("%.2f", successRate),
-		}
-		nodes = append(nodes, node)
+		stationsByTest[station.TestFile] = append(stationsByTest[station.TestFile], station)
 	}
 
-	// Add access points
 	for _, ap := range aps {
-		successRate := successRates[ap.APName]
-		node := models.NodeRecord{
-			ID:             ap.APName,
-			Title:          ap.APName,
-			RXBytes:        ap.RXBytes,
-			RXPackets:      ap.RXPackets,
-			TXBytes:        ap.TXBytes,
-			TXPackets:      ap.TXPackets,
-			SuccessPctRate: fmt.Sprintf("%.2f", successRate),
+		apsByTest[ap.TestFile] = append(apsByTest[ap.TestFile], ap)
+	}
+
+	// Get all unique test files from stations and APs
+	testFiles := make(map[string]bool)
+	for testFile := range stationsByTest {
+		testFiles[testFile] = true
+	}
+	for testFile := range apsByTest {
+		testFiles[testFile] = true
+	}
+
+	// Process each test file
+	for testFile := range testFiles {
+		// Get cumulative pings up to this test file
+		cumulativePings := getCumulativePings(pings, testFile)
+
+		// Calculate success rates based on cumulative pings
+		successRates := calculateSuccessRates(cumulativePings)
+
+		// Build position map from movements for this test file
+		positionMap := getPositionMap(movements, testFile)
+
+		// Create node records for this test file
+		var nodes []models.NodeRecord
+
+		// Add stations from this test file
+		for _, station := range stationsByTest[testFile] {
+			successRate := successRates[station.StationName]
+			node := models.NodeRecord{
+				ID:             station.StationName,
+				Title:          station.StationName,
+				Position:       positionMap[station.StationName],
+				RXBytes:        station.RXBytes,
+				RXPackets:      station.RXPackets,
+				TXBytes:        station.TXBytes,
+				TXPackets:      station.TXPackets,
+				SuccessPctRate: fmt.Sprintf("%.2f", successRate),
+			}
+			nodes = append(nodes, node)
 		}
-		nodes = append(nodes, node)
+
+		// Add access points from this test file
+		for _, ap := range apsByTest[testFile] {
+			successRate := successRates[ap.APName]
+			node := models.NodeRecord{
+				ID:             ap.APName,
+				Title:          ap.APName,
+				Position:       positionMap[ap.APName],
+				RXBytes:        ap.RXBytes,
+				RXPackets:      ap.RXPackets,
+				TXBytes:        ap.TXBytes,
+				TXPackets:      ap.TXPackets,
+				SuccessPctRate: fmt.Sprintf("%.2f", successRate),
+			}
+			nodes = append(nodes, node)
+		}
+
+		// Create subdirectory for this test file
+		testDir := filepath.Join(resultsDir, getTestName(testFile))
+		if err := os.MkdirAll(testDir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create test directory %s: %v", testDir, err)
+		}
+
+		// Write nodes CSV for this test file
+		nodesPath := filepath.Join(testDir, "nodes.csv")
+		if err := writeNodesCSV(nodesPath, nodes); err != nil {
+			return nil, err
+		}
+		fmt.Printf("  Nodes CSV for %s written to: %s\n", testFile, nodesPath)
 	}
 
-	// Write nodes CSV
-	if err := writeNodesCSV(filepath.Join(resultsDir, "nodes.csv"), nodes); err != nil {
-		return nil, err
-	}
-
-	return successRates, nil
+	return nil, nil
 }
 
 func processEdgesOutput(pings []models.PingRecord, resultsDir string) error {
-	var edges []models.EdgeRecord
-	edgeSet := make(map[string]bool) // To avoid duplicates
-
+	// Group pings by test file to get all unique test files
+	testFiles := make(map[string]bool)
 	for _, ping := range pings {
-		edgeID := ping.Src + "-" + ping.Dst
-		if !edgeSet[edgeID] {
-			edge := models.EdgeRecord{
-				ID:     edgeID,
-				Source: ping.Src,
-				Target: ping.Dst,
-			}
-			edges = append(edges, edge)
-			edgeSet[edgeID] = true
-		}
+		testFiles[ping.TestFile] = true
 	}
 
-	// Write edges CSV
-	return writeEdgesCSV(filepath.Join(resultsDir, "edges.csv"), edges)
+	// Process each test file
+	for testFile := range testFiles {
+		// Get cumulative pings up to this test file
+		cumulativePings := getCumulativePings(pings, testFile)
+
+		var edges []models.EdgeRecord
+		edgeSet := make(map[string]bool) // To avoid duplicates
+
+		for _, ping := range cumulativePings {
+			edgeID := ping.Src + "-" + ping.Dst
+			if !edgeSet[edgeID] {
+				edge := models.EdgeRecord{
+					ID:     edgeID,
+					Source: ping.Src,
+					Target: ping.Dst,
+				}
+				edges = append(edges, edge)
+				edgeSet[edgeID] = true
+			}
+		}
+
+		// Create subdirectory for this test file
+		testDir := filepath.Join(resultsDir, getTestName(testFile))
+		if err := os.MkdirAll(testDir, 0755); err != nil {
+			return fmt.Errorf("failed to create test directory %s: %v", testDir, err)
+		}
+
+		// Write edges CSV for this test file
+		edgesPath := filepath.Join(testDir, "edges.csv")
+		if err := writeEdgesCSV(edgesPath, edges); err != nil {
+			return err
+		}
+		fmt.Printf("  Edges CSV for %s written to: %s\n", testFile, edgesPath)
+	}
+
+	return nil
 }
 
 func calculateSuccessRates(pings []models.PingRecord) map[string]float64 {
@@ -455,4 +526,69 @@ func calculateSuccessRates(pings []models.PingRecord) map[string]float64 {
 	}
 
 	return successRates
+}
+
+// getCumulativePings returns all pings from test files up to and including the specified test file.
+// The ordering is based on movement numbers extracted from the file names (e.g., test1.txt -> 1, test2.txt -> 2).
+func getCumulativePings(allPings []models.PingRecord, upToTestFile string) []models.PingRecord {
+	// Extract movement number from the target test file
+	targetMovementNum := extractMovementNumber(upToTestFile)
+
+	var cumulativePings []models.PingRecord
+	for _, ping := range allPings {
+		pingMovementNum := extractMovementNumber(ping.TestFile)
+		if pingMovementNum <= targetMovementNum {
+			cumulativePings = append(cumulativePings, ping)
+		}
+	}
+
+	return cumulativePings
+}
+
+// getTestName extracts the test name from a test file name (e.g., "test1.txt" -> "test1")
+func getTestName(testFile string) string {
+	// Remove the .txt extension
+	name := strings.TrimSuffix(testFile, ".txt")
+	return name
+}
+
+// extractMovementNumber extracts the movement number from a test file name.
+// For example, "test1.txt" -> 1, "test2.txt" -> 2, etc.
+func extractMovementNumber(testFile string) int {
+	// Extract the test name without extension
+	name := getTestName(testFile)
+
+	// Extract the number from the test name (e.g., "test1" -> 1)
+	// This assumes the format is "testN" where N is a number
+	numStr := strings.TrimPrefix(name, "test")
+
+	// Try to parse the number
+	var num int
+	fmt.Sscanf(numStr, "%d", &num)
+	return num
+}
+
+// stationExists checks if a station record already exists for the given station name and test file.
+func stationExists(stations []models.StationRecord, stationName, testFile string) bool {
+	for _, station := range stations {
+		if station.StationName == stationName && station.TestFile == testFile {
+			return true
+		}
+	}
+	return false
+}
+
+// getPositionMap builds a map of node names to their positions from movement records.
+// It returns the position for nodes in the specified test file.
+func getPositionMap(movements []models.MovementRecord, testFile string) map[string]string {
+	positionMap := make(map[string]string)
+
+	// Get all movements from this specific test file
+	for _, movement := range movements {
+		if movement.TestFile == testFile {
+			positionMap[movement.NodeName] = movement.Position
+		}
+	}
+
+	return positionMap
 }
