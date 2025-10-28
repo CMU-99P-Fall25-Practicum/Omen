@@ -94,6 +94,7 @@ Options:
   --remote-path-python=PATH     Remote path for generated Python file (default: /tmp/mininet-script.py)
   --remote-path-json=PATH       Remote path for generated JSON file (default: /tmp/input-topo.json)
   -h, --help                    Show this help message
+  --interactive					Enables prompting for missing information. If --interactive=false, this module will fail out on missing information rather than prompting for it. Default: true.
 
 Arguments:
   topo.json          JSON file containing network topology (default: topo.json)
