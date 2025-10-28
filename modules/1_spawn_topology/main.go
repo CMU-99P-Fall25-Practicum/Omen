@@ -155,8 +155,9 @@ func resolveConfig() error {
 func main() {
 	// define flags
 	fs := pflag.FlagSet{}
+	fs.Bool("help", false, "Tada!")
 	fs.String("remote", "", "remote target to run on, e.g. username@192.168.64.5")
-	fs.BoolVar(&config.UseCLI, "cli", false, "enter Mininet CLI instead of running pingall")
+	fs.BoolVar(&config.UseCLI, "cli", false, "enter Mininet CLI instead of running pingall. Do not use with interactivity is disabled.")
 	fs.StringVar(&config.RemotePathPython, "remote-path-python", "/tmp/"+defaultPythonScript, "remote path for the generated Python file")
 	fs.StringVar(&config.RemotePathJSON, "remote-path-json", "/tmp/"+defaultTopoFile, "remote path for the generated JSON file")
 	fs.BoolVar(&config.Interactive, "interactive", true, "enables prompting for missing information."+
@@ -165,13 +166,14 @@ func main() {
 
 	// generate command "tree"
 	root := &cobra.Command{
-		Use:   appName + " [OPTIONS] <topo>.json",
+		Use:   appName + " <topo>.json",
 		Short: appName + " drives the testing and remote connection functionality of Omen",
 		Long: appName + " creates and runs Mininet topologies from JSON files on remote VMs." +
 			"It handles SSH connections, uploads topology scripts, manages Mininet sessions, and collects raw output." +
 			"If --interactive, " + appName + " will prompt for required inputs not supplied in the topology JSON.",
-		Example: appName + "input.json ",
-		Args:    cobra.ExactArgs(1),
+		Example: appName + " input.json\n" +
+			appName + " --remote=wifi@127.0.0.1 --interactive=false input.json",
+		Args: cobra.ExactArgs(1),
 
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// Sets SSH information if --remote was specified.
@@ -212,6 +214,7 @@ func main() {
 
 	if err := fang.Execute(context.Background(),
 		root,
+		fang.WithoutCompletions(),
 		fang.WithVersion(omen.Version),
 		fang.WithErrorHandler(omen.FangErrorHandler),
 	); err != nil {
