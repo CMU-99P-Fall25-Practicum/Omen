@@ -140,4 +140,5 @@ type Config struct {
 	UseCLI           bool
 	RemotePathPython string
 	RemotePathJSON   string
+	Interactive      bool
 }

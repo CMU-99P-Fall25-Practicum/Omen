@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Omen/modules/1_spawn_topology/models"
 	"bufio"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/models"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -103,11 +103,11 @@ func runMininet(client *ssh.Client, config *models.Config) error {
 	}
 
 	// Handle output and input in goroutines
-	done := make(chan bool)
+	outputsDone := make(chan bool)
 
 	// Output handling goroutine
 	go func() {
-		defer func() { close(done) }()
+		defer func() { close(outputsDone) }()
 
 		reader := io.MultiReader(stdout, stderr)
 		scanner := bufio.NewScanner(reader)
@@ -191,18 +191,14 @@ func runMininet(client *ssh.Client, config *models.Config) error {
 		sessionDone <- session.Wait()
 	}()
 
-	select {
-	case err := <-sessionDone:
-		if err != nil && err.Error() != "Process exited with status 130" { // 130 is normal for Ctrl+C
-			return fmt.Errorf("session error: %w", err)
-		}
-		// case <-time.After(120 * time.Second): // Longer timeout for interactive sessions
-		// 	fmt.Println("\n[DEBUG] Session timeout")
+	err = <-sessionDone
+	if err != nil && err.Error() != "Process exited with status 130" { // 130 is normal for Ctrl+C
+		return fmt.Errorf("session error: %w", err)
 	}
 
-	// Wait for output processing to complete
+	// Give additional time to output processing
 	select {
-	case <-done:
+	case <-outputsDone:
 	case <-time.After(5 * time.Second):
 	}
 
