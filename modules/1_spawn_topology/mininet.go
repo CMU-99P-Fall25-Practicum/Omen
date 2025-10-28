@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Omen/modules/1_spawn_topology/models"
 	"bufio"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CMU-99P-Fall25-Practicum/Omen/modules/spawn_topology/models"
 	"golang.org/x/crypto/ssh"
 )
 
