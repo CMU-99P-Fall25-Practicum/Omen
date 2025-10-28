@@ -1,6 +1,7 @@
 package main
 
 import (
+	omen "Omen"
 	"context"
 	"encoding/json"
 	"errors"
@@ -282,13 +283,13 @@ func runInputValidationModule(inputPaths []string) ([]string, error) {
 				out := strings.Builder{}
 				fmt.Fprintf(&out, "File %v has issues:\n", inPath)
 				if len(inv.Errors) > 0 {
-					fmt.Fprintf(&out, "%v\n", errorHeaderSty.Render("ERRORS"))
+					fmt.Fprintf(&out, "%v\n", omen.ErrorHeaderSty.Render("ERRORS"))
 					for _, e := range inv.Errors {
 						fmt.Fprintf(&out, "---%s: %s\n", e.Loc, e.Msg)
 					}
 				}
 				if len(inv.Warnings) > 0 {
-					fmt.Fprintf(&out, "%v\n", warningHeaderSty.Render("WARNINGS"))
+					fmt.Fprintf(&out, "%v\n", omen.WarningHeaderSty.Render("WARNINGS"))
 					for _, w := range inv.Warnings {
 						fmt.Fprintf(&out, "---%s: %s\n", w.Loc, w.Msg)
 					}

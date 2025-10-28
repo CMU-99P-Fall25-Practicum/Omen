@@ -6,15 +6,14 @@ Uses hardcoded paths and commands for module execution.
 package main
 
 import (
+	omen "Omen"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/fang"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog"
@@ -30,8 +29,6 @@ const (
 	inputValidatorImageTag          string = "latest"
 	DefaultTestRunnerBinaryPath     string = "./1_spawn"
 	DefaultCoalesceOutputBinaryPath string = "./2_output_processing"
-
-	version string = "MS3"
 )
 
 var (
@@ -100,24 +97,8 @@ Because Omen is a set of disparate modules run in sequence, this binary (the Coo
 	// NOTE(rlandau): because of how cobra works, the actual main function is a stub. run() is the real "main" function
 	if err := fang.Execute(context.Background(), root,
 		fang.WithoutCompletions(),
-		fang.WithVersion(version),
-		fang.WithErrorHandler(
-			func(w io.Writer, styles fang.Styles, err error) {
-				// we use a custom error handler as the default one transforms to title case (which collapses newlines and we don't want that)
-				fmt.Fprintln(w, errorHeaderSty.Margin(1).MarginLeft(2).Render("ERROR"))
-				fmt.Fprintln(w, styles.ErrorText.UnsetTransform().Render(err.Error()))
-				fmt.Fprintln(w)
-				if isUsageError(err) {
-					_, _ = fmt.Fprintln(w, lipgloss.JoinHorizontal(
-						lipgloss.Left,
-						styles.ErrorText.UnsetWidth().Render("Try"),
-						styles.Program.Flag.Render(" --help "),
-						styles.ErrorText.UnsetWidth().UnsetMargins().UnsetTransform().Render("for usage."),
-					))
-					_, _ = fmt.Fprintln(w)
-				}
-
-			})); err != nil {
+		fang.WithVersion(omen.Version),
+		fang.WithErrorHandler(omen.FangErrorHandler)); err != nil {
 		// fang logs returned errors for us
 		os.Exit(1)
 	}
@@ -134,24 +115,4 @@ func cleanup(errored bool) {
 	} else { // notify about still running containers
 		fmt.Println("Remember to stop the Grafana container when you are done! ID: " + grafanaContainerID)
 	}
-}
-
-// Borrowed from fang.go's DefaultErrorHandling.
-//
-// XXX: this is a hack to detect usage errors.
-// See: https://github.com/spf13/cobra/pull/2266
-func isUsageError(err error) bool {
-	s := err.Error()
-	for _, prefix := range []string{
-		"flag needs an argument:",
-		"unknown flag:",
-		"unknown shorthand flag:",
-		"unknown command",
-		"invalid argument",
-	} {
-		if strings.HasPrefix(s, prefix) {
-			return true
-		}
-	}
-	return false
 }
