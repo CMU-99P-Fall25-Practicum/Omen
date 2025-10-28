@@ -161,6 +161,7 @@ func main() {
 	fs.StringVar(&config.RemotePathJSON, "remote-path-json", "/tmp/"+defaultTopoFile, "remote path for the generated JSON file")
 	fs.BoolVar(&config.Interactive, "interactive", true, "enables prompting for missing information."+
 		"If false, this module will fail out on missing information rather than prompting for it.")
+	fs.MarkHidden("cli")
 
 	// generate command "tree"
 	root := &cobra.Command{
