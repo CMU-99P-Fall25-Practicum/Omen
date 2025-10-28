@@ -192,8 +192,11 @@ func main() {
 			}
 
 			{ // slurp topology
+				if args[0] = strings.TrimSpace(args[0]); args[0] != "" {
+					config.TopoFile = args[0]
+				}
 				fmt.Printf("Loading topology from: %s\n", config.TopoFile)
-				data, err := os.ReadFile(args[0])
+				data, err := os.ReadFile(config.TopoFile)
 				if err != nil {
 					return fmt.Errorf("read topo file: %w", err)
 				}
