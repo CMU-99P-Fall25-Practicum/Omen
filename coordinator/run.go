@@ -114,7 +114,7 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 
 		// execute the test runner module
 		log.Info().Str("path", path).Msg("executing topology tests")
-		cmd := exec.Command(testRunnerBinaryPath, path)
+		cmd := exec.Command(testRunnerBinaryPath, "--interactive=false", path)
 		log.Debug().Str("path", cmd.Path).Strs("args", cmd.Args).Msg("executing test runner binary")
 		cmd.Stdout = &sbOut
 		cmd.Stderr = &sbErr
