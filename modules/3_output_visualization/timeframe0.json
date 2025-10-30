@@ -1,0 +1,251 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 3,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "YOUR UID HERE"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": ""
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "basemap": {
+          "config": {},
+          "name": "Layer 0",
+          "opacity": 0.8,
+          "type": "default"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": false,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "dark-green"
+                },
+                "opacity": 1,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "Layer 1",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "zero",
+          "lat": 0,
+          "lon": 0,
+          "zoom": 1
+        }
+      },
+      "pluginVersion": "12.1.0-pre",
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "ef1r03o4scef4a"
+          },
+          "queryText": "SELECT\n  id AS node_id,\n  title,\n  latitude,\n  longitude,\n  detail__success_rate AS success_rate\nFROM netA_nodes\nWHERE latitude IS NOT NULL AND longitude IS NOT NULL;\n",
+          "queryType": "table",
+          "rawQueryText": "SELECT\n  id AS node_id,\n  title,\n  latitude,\n  longitude,\n  detail__success_rate AS success_rate\nFROM netA_nodes\nWHERE latitude IS NOT NULL AND longitude IS NOT NULL;\n",
+          "refId": "A",
+          "timeColumns": []
+        },
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "ef1r03o4scef4a"
+          },
+          "hide": false,
+          "queryText": "SELECT\n  e.id,\n  e.source,\n  e.target,\n  ns.latitude  AS source_lat,\n  ns.longitude AS source_lon,\n  nt.latitude  AS target_lat,\n  nt.longitude AS target_lon,\n  e.status\nFROM edges e\nJOIN nodes ns ON ns.id = e.source\nJOIN nodes nt ON nt.id = e.target\nWHERE ns.latitude  IS NOT NULL AND ns.longitude IS NOT NULL\n  AND nt.latitude  IS NOT NULL AND nt.longitude IS NOT NULL;\n",
+          "queryType": "table",
+          "rawQueryText": "SELECT\n  e.id,\n  e.source,\n  e.target,\n  ns.latitude  AS source_lat,\n  ns.longitude AS source_lon,\n  nt.latitude  AS target_lat,\n  nt.longitude AS target_lon,\n  e.status\nFROM edges e\nJOIN nodes ns ON ns.id = e.source\nJOIN nodes nt ON nt.id = e.target\nWHERE ns.latitude  IS NOT NULL AND ns.longitude IS NOT NULL\n  AND nt.latitude  IS NOT NULL AND nt.longitude IS NOT NULL;\n",
+          "refId": "B",
+          "timeColumns": []
+        }
+      ],
+      "title": "Map",
+      "type": "geomap"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "ef1r03o4scef4a"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 2,
+      "options": {
+        "edges": {},
+        "layoutAlgorithm": "layered",
+        "nodes": {
+          "arcs": [
+            {
+              "color": "#73BF69",
+              "field": "arc__success"
+            },
+            {
+              "color": "#F2495C",
+              "field": "arc__errors"
+            }
+          ]
+        },
+        "zoomMode": "cooperative"
+      },
+      "pluginVersion": "12.1.0-pre",
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "ef1r03o4scef4a"
+          },
+          "queryText": "SELECT\n  id,\n  title,\n  subTitle,\n  mainStat,\n  severity,\n  \"detail__rx_bytes\",\n  \"detail__rx_packets\",\n  \"detail__tx_bytes\",\n  \"detail__tx_packets\",\n  \"detail__success_rate\",\n  \"arc__success\",\n  \"arc__errors\"\nFROM netA_nodes\nLIMIT 50;\n\n",
+          "queryType": "table",
+          "rawQueryText": "SELECT\n  id,\n  title,\n  subTitle,\n  mainStat,\n  severity,\n  \"detail__rx_bytes\",\n  \"detail__rx_packets\",\n  \"detail__tx_bytes\",\n  \"detail__tx_packets\",\n  \"detail__success_rate\",\n  \"arc__success\",\n  \"arc__errors\"\nFROM netA_nodes\nLIMIT 50;\n\n",
+          "refId": "A",
+          "timeColumns": []
+        },
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "ef1r03o4scef4a"
+          },
+          "hide": false,
+          "queryText": "SELECT\n  id,      \n  source,    \n  target,    \n  status\nFROM netA_edges;\n",
+          "queryType": "table",
+          "rawQueryText": "SELECT\n  id,      \n  source,    \n  target,    \n  status\nFROM netA_edges;\n",
+          "refId": "B",
+          "timeColumns": []
+        }
+      ],
+      "title": "Topology",
+      "type": "nodeGraph"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Timeframe 0",
+  "uid": "34be8bc3-4288-46eb-9430-026d44f65a5a",
+  "version": 12
+}
