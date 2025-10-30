@@ -7,10 +7,11 @@
   },
   "topo": {
     "nets": {
-      "noise_th": -91,
+      "noise_th": -100,
       "propagation_model":{
-        "model": "logDistance",
-        "exp": 4
+        "model": "logNormalShadowing",
+        "exp": 3.1,
+        "s": 3.0
       }
     },
     "aps": [
@@ -50,33 +51,60 @@
   },
   "tests": [
     {
-        "name":"1: move sta1",
+        "name":"move sta1",
         "type":"node movements",
+        "timeframe": 1,
         "node": "sta1",
         "position": "0,5,0"
     },    
     {
-        "name":"2: move sta2",
+        "name":"move sta2",
         "type":"node movements",
+        "timeframe": 1,
+        "node": "sta2",
+        "position": "0,10,0"
+    },
+    {
+        "name":"move sta3",
+        "type":"node movements",
+        "timeframe": 1,
+        "node": "sta3",
+        "position": "70,5,0"
+    },
+    {
+        "name":"move sta4",
+        "type":"node movements",
+        "timeframe": 1,
+        "node": "sta4",
+        "position": "70,-5,0"
+    },
+    {
+        "name":"move sta1",
+        "type":"node movements",
+        "timeframe": 2,
+        "node": "sta1",
+        "position": "0,15,0"
+    },    
+    {
+        "name":"move sta2",
+        "type":"node movements",
+        "timeframe": 2,
         "node": "sta2",
         "position": "0,-15,0"
-    },    
-        {
-        "name":"3: move sta3",
+    }, 
+    {
+        "name":"move sta3",
         "type":"node movements",
+        "timeframe": 2,
         "node": "sta3",
         "position": "10,10,0"
     },    
     {
-        "name":"4: move sta4",
+        "name":"move sta4",
         "type":"node movements",
+        "timeframe": 2,
         "node": "sta4",
         "position": "80,10,0"
-    },
-    {
-      "name": "check_all_links",
-      "type": "iw", 
-      "cmd": "iw dev {interface} link"
     }
   ],
   "username": "",

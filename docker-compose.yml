@@ -1,0 +1,30 @@
+# This compose file is NOT ready for use.
+# The network between the two container is not yet established.
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: OmenVizSQL
+    environment:
+      MYSQL_ROOT_PASSWORD: secretRootPass
+      MYSQL_DATABASE: dbGrafana
+      MYSQL_USER: uGrafana
+      MYSQL_PASSWORD: averysecret-pw
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: OmenVizGrafana
+    depends_on:
+      - mysql
+    environment:
+      GF_DATABASE_TYPE: mysql
+      GF_DATABASE_HOST: localhost:3306
+      GF_DATABASE_NAME: dbGrafana
+      GF_DATABASE_USER: uGrafana
+      GF_DATABASE_PASSWORD: averysecret-pw
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
