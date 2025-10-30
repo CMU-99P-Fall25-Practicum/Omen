@@ -1,9 +1,11 @@
 FROM grafana/grafana:latest
 
 # Run with: docker run -it --rm -p 3000:3000 3_omen-output-visualizer
+# Expects a populated sqlite3 db to be mounted at /var/lib/grafana/data.db
 
-# Grafana will not create a new db, so we need to have something in place
-RUN touch /var/lib/grafana/data.db
+LABEL ARGS="Mount the database: \
+-v data.db:/var/lib/grafana/data.db \
+-p 3000:3000"
 
 EXPOSE 3000
 
