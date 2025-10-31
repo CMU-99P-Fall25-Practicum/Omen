@@ -5,20 +5,31 @@ omen_loader.py
 One script, two subcommands:
 
 1) graph      -> load up to three (nodes.csv, edges.csv) pairs into SQLite with per-set prefixes
+                 AND (optionally) a per-set timeseries CSV (e.g., ping_data_movement_X.csv)
+                 Tables created per set:
+                   <prefix>_nodes, <prefix>_edges, <prefix>_timeseries
+
 2) timeseries -> load one CSV into SQLite; optional Python aggregation into <table>_agg
 
-Examples:
+Examples (run from: Omen/modules/3_output_visualization):
 
-# GRAPH (recommended portable invocation)
-cd /Omen/modules/3_output_visualization
+# GRAPH (auto-detect ping_data_movement_N.csv when using --setN-dir timeframeN)
 python3 omen_loader.py graph \
   --db /opt/homebrew/var/lib/grafana/omen.db --recreate \
   --root ../../example_files/2_output-result \
   --set1-prefix netA --set1-dir timeframe0 \
   --set2-prefix netB --set2-dir timeframe1 \
-  --set3-prefix netC --set3-dir timeframe0
+  --set3-prefix netC --set3-dir timeframe2
 
-# TIMESERIES
+# GRAPH (explicit files)
+python3 omen_loader.py graph \
+  --db /opt/homebrew/var/lib/grafana/omen.db --recreate \
+  --root ../../example_files/2_output-result \
+  --set1-prefix netA --set1-nodes timeframe0/nodes.csv --set1-edges timeframe0/edges.csv --set1-ts timeframe0/ping_data_movement_0.csv \
+  --set2-prefix netB --set2-nodes timeframe1/nodes.csv --set2-edges timeframe1/edges.csv --set2-ts timeframe1/ping_data_movement_1.csv \
+  --set3-prefix netC --set3-nodes timeframe2/nodes.csv --set3-edges timeframe2/edges.csv --set3-ts timeframe2/ping_data_movement_2.csv
+
+# TIMESERIES (standalone loader)
 python3 omen_loader.py timeseries \
   --root ../../example_files/2_output-result \
   --csv ping_data.csv \
@@ -33,7 +44,7 @@ import csv
 import math
 import sqlite3
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import pandas as pd
 
@@ -51,7 +62,7 @@ def open_db(db_path: Path) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON;")
     return conn
 
-def resolve_path(p: Path, root: Path) -> Path:
+def resolve_path(p: Union[str, Path], root: Path) -> Path:
     p = Path(p)
     return p if p.is_absolute() else (root / p)
 
@@ -267,6 +278,12 @@ def ingest_edges(conn: sqlite3.Connection, prefix: str, csv_path: Path) -> int:
     conn.commit()
     return count
 
+def ingest_timeseries_raw(conn: sqlite3.Connection, table: str, csv_path: Path,
+                          if_exists: str = "replace") -> int:
+    df = pd.read_csv(csv_path)
+    df.to_sql(table, conn, if_exists=if_exists, index=False)
+    return len(df)
+
 # ------------------------ Subcommand: graph ------------------------
 
 def add_graph_args(sp: argparse.ArgumentParser):
@@ -276,11 +293,23 @@ def add_graph_args(sp: argparse.ArgumentParser):
                     help="Base directory to resolve relative CSV paths (default: script folder)")
     for i in (1, 2, 3):
         sp.add_argument(f"--set{i}-prefix", help=f"Table prefix for set {i}")
-        sp.add_argument(f"--set{i}-dir", type=Path, help=f"Directory containing nodes.csv and edges.csv for set {i}")
+        sp.add_argument(f"--set{i}-dir", type=Path, help=f"Directory containing nodes.csv and edges.csv for set {i} (and optionally ping_data_movement_*.csv)")
         sp.add_argument(f"--set{i}-nodes", type=Path, help=f"nodes.csv for set {i}")
         sp.add_argument(f"--set{i}-edges", type=Path, help=f"edges.csv for set {i}")
+        sp.add_argument(f"--set{i}-ts", type=Path, help=f"timeseries CSV for set {i} (e.g., ping_data_movement_0.csv)")
+        sp.add_argument(f"--set{i}-ts-table", help=f"Destination table for set {i} timeseries (default: <prefix>_timeseries)")
         sp.add_argument(f"--set{i}-pos-base-lat", type=float, default=37.4270, help=f"Base latitude for set {i}")
         sp.add_argument(f"--set{i}-pos-base-lon", type=float, default=-122.1690, help=f"Base longitude for set {i}")
+
+def _auto_detect_timeseries(set_dir: Path) -> Optional[Path]:
+    """
+    If a set dir is provided, try to find a ping_data_movement_*.csv inside it.
+    Returns the first match if found, else None.
+    """
+    if not set_dir:
+        return None
+    candidates = sorted(set_dir.glob("ping_data_movement_*.csv"))
+    return candidates[0] if candidates else None
 
 def run_graph(args: argparse.Namespace):
     root = args.root.resolve()
@@ -292,36 +321,55 @@ def run_graph(args: argparse.Namespace):
         set_dir = getattr(args, f"set{idx}_dir")
         nodes = getattr(args, f"set{idx}_nodes")
         edges = getattr(args, f"set{idx}_edges")
+        ts    = getattr(args, f"set{idx}_ts")
+        ts_table = getattr(args, f"set{idx}_ts_table") or (f"{prefix}_timeseries" if prefix else None)
 
+        # Allow dir-driven defaults
         if set_dir and not nodes and not edges:
             nodes = Path(set_dir) / "nodes.csv"
             edges = Path(set_dir) / "edges.csv"
+        if set_dir and not ts:
+            guess = _auto_detect_timeseries(Path(set_dir))
+            if guess:
+                ts = guess
 
-        if not any([prefix, nodes, edges, set_dir]):
+        if not any([prefix, nodes, edges, set_dir, ts]):
             return False
         if not prefix:
             raise ValueError(f"--set{idx}-prefix is required when providing CSVs for set {idx}")
         if not nodes or not edges:
             raise ValueError(f"--set{idx}-nodes and --set{idx}-edges are both required for set {idx}")
 
-        nodes_path = resolve_path(Path(nodes), root)
-        edges_path = resolve_path(Path(edges), root)
+        nodes_path = resolve_path(nodes, root)
+        edges_path = resolve_path(edges, root)
         if not nodes_path.exists():
             raise FileNotFoundError(f"Set {idx}: nodes file not found: {nodes_path}")
         if not edges_path.exists():
             raise FileNotFoundError(f"Set {idx}: edges file not found: {edges_path}")
 
+        # Create/ensure schemas
         if args.recreate:
             drop_and_create_schema_for_prefix(conn, prefix)
         else:
             ensure_schema_for_prefix(conn, prefix)
 
+        # Ingest graph
         lat = getattr(args, f"set{idx}_pos_base_lat")
         lon = getattr(args, f"set{idx}_pos_base_lon")
 
         n = ingest_nodes(conn, prefix, nodes_path, base_lat=lat, base_lon=lon)
         e = ingest_edges(conn, prefix, edges_path)
 
+        # Optional per-set timeseries
+        if ts:
+            ts_path = resolve_path(ts, root)
+            if not ts_path.exists():
+                raise FileNotFoundError(f"Set {idx}: timeseries file not found: {ts_path}")
+            ts_tbl = ts_table or f"{prefix}_timeseries"
+            rows = ingest_timeseries_raw(conn, ts_tbl, ts_path, if_exists="replace")
+            print(f"[{prefix}] loaded timeseries table={ts_tbl} rows={rows}")
+
+        # Indexes
         cur = conn.cursor()
         cur.execute(f"CREATE INDEX IF NOT EXISTS {qident(f'idx_{prefix}_nodes_id')} ON {qident(prefix+'_nodes')}(id);")
         cur.execute(f"CREATE INDEX IF NOT EXISTS {qident(f'idx_{prefix}_edges_src')} ON {qident(prefix+'_edges')}(source);")
@@ -336,7 +384,7 @@ def run_graph(args: argparse.Namespace):
             used += 1
 
     if used == 0:
-        print("No sets provided. Use --set{1|2|3}-prefix + (--set{1|2|3}-dir OR --set{1|2|3}-nodes + --set{1|2|3}-edges).")
+        print("No sets provided. Use --set{1|2|3}-prefix + (--set{1|2|3}-dir OR --set{1|2|3}-nodes + --set{1|2|3}-edges) and optionally --set{1|2|3}-ts.")
     else:
         print(f"Done. Processed {used} set(s). DB: {args.db}")
     conn.close()
@@ -371,7 +419,6 @@ def run_timeseries(args: argparse.Namespace):
         if args.aggregate_by not in df.columns:
             raise ValueError(f"Column '{args.aggregate_by}' not found in CSV columns: {list(df.columns)}")
 
-        # Fix A: simple mean with group key kept as a column
         df_coerced = df.apply(pd.to_numeric, errors="ignore")
         grouped = df_coerced.groupby(args.aggregate_by, as_index=False).mean(numeric_only=True)
 
@@ -388,7 +435,7 @@ def main():
     ap = argparse.ArgumentParser(description="Omen unified loader (graph + timeseries) for SQLite/Grafana.")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    sp_graph = sub.add_parser("graph", help="Load nodes/edges CSVs into prefixed tables")
+    sp_graph = sub.add_parser("graph", help="Load nodes/edges CSVs into prefixed tables (+ optional per-set timeseries)")
     add_graph_args(sp_graph)
     sp_graph.set_defaults(func=run_graph)
 
@@ -401,3 +448,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
