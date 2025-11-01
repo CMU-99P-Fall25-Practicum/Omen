@@ -12,11 +12,24 @@ import (
 	"mn_raw_output_processing/models"
 )
 
-func readFile(directory string) ([]models.MovementRecord, []models.PingRecord, []models.StationRecord, []models.AccessPointRecord, error) {
-	var movements []models.MovementRecord
-	var pings []models.PingRecord
-	var stations []models.StationRecord
-	var aps []models.AccessPointRecord
+// Regex patterns
+// Updated to handle both old format (70,10,0) and new format ([70.0, 10.0, 0.0])
+var (
+	movementPattern     = regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+\[?([0-9.,\s-]+)\]?`)
+	pingallStartPattern = regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
+	csvHeaderPattern    = regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
+	iwStartPattern      = regexp.MustCompile(`\[iw_stations\]`)
+	stationPattern      = regexp.MustCompile(`^--- Station (\w+) ---$`)
+	apPattern           = regexp.MustCompile(`^--- Access Point (\w+) ---$`)
+)
+
+// processRawFileDirectory processes each .txt file (expecting 1 file per timeframe, of the nomenclature 'timeframeX.txt') in the given directory,
+// parsing the data into records for node movements, ping results, station info (via iw), and access point info (also via iw).
+func processRawFileDirectory(directory string) (
+	movements []models.MovementRecord, pings []models.PingRecord,
+	stations []models.StationRecord, aps []models.AccessPointRecord,
+	_ error,
+) {
 
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -43,36 +56,32 @@ func readFile(directory string) ([]models.MovementRecord, []models.PingRecord, [
 	return movements, pings, stations, aps, err
 }
 
-func processFile(filePath, fileName string) ([]models.MovementRecord, []models.PingRecord, []models.StationRecord, []models.AccessPointRecord, error) {
+// processFile walks timeframeX.txt file to parse out usable data.
+// Relies on direct string matches to figure out the structure of a line.
+//
+// If an error occurs, no arrays are returned to ensure incomplete data is not passed in.
+func processFile(filePath, fileName string) (
+	movements []models.MovementRecord, pings []models.PingRecord,
+	stations []models.StationRecord, aps []models.AccessPointRecord,
+	_ error,
+) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 	defer file.Close()
 
-	var movements []models.MovementRecord
-	var pings []models.PingRecord
-	var stations []models.StationRecord
-	var aps []models.AccessPointRecord
+	var (
+		currentMovementNumber string
+		inPingallSection      bool
+		inIwSection           bool
+		currentStationName    string
+		currentAPName         string
+		inStationOutput       bool
+		inAPOutput            bool
+	)
 
 	scanner := bufio.NewScanner(file)
-	var currentMovementNumber string
-	var inPingallSection bool
-	var inIwSection bool
-	var currentStationName string
-	var currentAPName string
-	var inStationOutput bool
-	var inAPOutput bool
-
-	// Regex patterns
-	// Updated to handle both old format (70,10,0) and new format ([70.0, 10.0, 0.0])
-	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+\[?([0-9.,\s-]+)\]?`)
-	pingallStartPattern := regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
-	csvHeaderPattern := regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
-	iwStartPattern := regexp.MustCompile(`\[iw_stations\]`)
-	stationPattern := regexp.MustCompile(`^--- Station (\w+) ---$`)
-	apPattern := regexp.MustCompile(`^--- Access Point (\w+) ---$`)
-
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 

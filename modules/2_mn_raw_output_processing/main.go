@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// Process all .txt files
-	movements, pings, stations, aps, err := readFile(latestDir)
+	movements, pings, stations, aps, err := processRawFileDirectory(latestDir)
 	if err != nil {
 		fmt.Printf("Error processing files: %v\n", err)
 		os.Exit(1)
