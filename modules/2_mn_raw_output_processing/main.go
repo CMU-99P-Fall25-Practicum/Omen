@@ -5,16 +5,32 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/spf13/pflag"
 )
 
+// default values
+const (
+	defaultOutputDir string = "./results"
+)
+
+// flag values
+var (
+	outputDir *string
+)
+
+func init() {
+	outputDir = pflag.StringP("output", "o", defaultOutputDir, "directory to write processed files to")
+}
+
 func main() {
-	if len(os.Args) != 2 {
+	// validate arguments
+	if len(pflag.Args()) != 1 {
 		fmt.Printf("Usage: %s <path_to_mn_result_raw_directory>\n", os.Args[0])
 		fmt.Printf("Example: %s ../1_spawn_topology/mn_result_raw\n", os.Args[0])
 		os.Exit(1)
 	}
-
-	inputDir := os.Args[1]
+	inputDir := pflag.Arg(0)
 
 	// Find the latest subdirectory
 	latestDir, err := findLatestDirectory(inputDir)
@@ -25,14 +41,13 @@ func main() {
 
 	fmt.Printf("Processing files in: %s\n", latestDir)
 
-	// Create results directory if it doesn't exist
-	resultsDir := "./result"
-	if err := os.MkdirAll(resultsDir, 0755); err != nil {
+	// prepare output dir
+	if err := os.MkdirAll(*outputDir, 0755); err != nil {
 		fmt.Printf("Error creating results directory: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Process all .txt files
+	// collect raw output into local struct arrays
 	movements, pings, stations, aps, err := processRawFileDirectory(latestDir)
 	if err != nil {
 		fmt.Printf("Error processing files: %v\n", err)
@@ -41,7 +56,7 @@ func main() {
 
 	// write the collection of all ping data
 	if len(pings) > 0 {
-		outputPath := filepath.Join(resultsDir, "pingall_full_data.csv")
+		outputPath := filepath.Join(*outputDir, "pingall_full_data.csv")
 		if err := writePingAllFull(outputPath, pings); err != nil {
 			fmt.Printf("Error writing pingall CSV: %v\n", err)
 			os.Exit(1)
@@ -52,7 +67,7 @@ func main() {
 
 	// Write iw CSV if we have station/AP data
 	if len(stations) > 0 || len(aps) > 0 {
-		iwOutputPath := filepath.Join(resultsDir, "final_iw_data.csv")
+		iwOutputPath := filepath.Join(*outputDir, "final_iw_data.csv")
 		if err := writeIwToCSV(iwOutputPath, stations, aps); err != nil {
 			fmt.Printf("Error writing iw CSV: %v\n", err)
 			os.Exit(1)
@@ -62,7 +77,7 @@ func main() {
 
 		// Process nodes output (per test file)
 		fmt.Println("\nGenerating per-test-file nodes CSV files:")
-		_, err := processNodesOutput(stations, aps, pings, movements, resultsDir)
+		_, err := processNodesOutput(stations, aps, pings, movements, *outputDir)
 		if err != nil {
 			fmt.Printf("Error processing nodes output: %v\n", err)
 			os.Exit(1)
@@ -70,7 +85,7 @@ func main() {
 
 		// Process edges output (per test file)
 		fmt.Println("\nGenerating per-test-file edges CSV files:")
-		if err := processEdgesOutput(pings, resultsDir); err != nil {
+		if err := processEdgesOutput(pings, *outputDir); err != nil {
 			fmt.Printf("Error processing edges output: %v\n", err)
 			os.Exit(1)
 		}

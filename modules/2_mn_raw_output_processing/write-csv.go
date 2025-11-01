@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"mn_raw_output_processing/models"
+	"Omen/modules/2_mn_raw_output_processing/models"
 )
 
 // WritePingAllFull writes the ping data to the given output.
