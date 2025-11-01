@@ -39,10 +39,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Write pingall CSV if we have movement/ping data
-	if len(movements) > 0 || len(pings) > 0 {
+	// write the collection of all ping data
+	if len(pings) > 0 {
 		outputPath := filepath.Join(resultsDir, "pingall_full_data.csv")
-		if err := writeToCSV(outputPath, movements, pings); err != nil {
+		if err := writePingAllFull(outputPath, pings); err != nil {
 			fmt.Printf("Error writing pingall CSV: %v\n", err)
 			os.Exit(1)
 		}

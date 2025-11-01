@@ -8,7 +8,14 @@ import (
 	"mn_raw_output_processing/models"
 )
 
-func writeToCSV(outputPath string, movements []models.MovementRecord, pings []models.PingRecord) error {
+// WritePingAllFull writes the ping data to the given output.
+//
+// Uses the following format:
+// data_type,movement_number,test_file,node_name,position,src,dst,tx,rx,loss_pct,avg_rtt_ms
+//
+// NOTE(rlandau): This format is somewhat a relic from earlier I/O Contracts.
+// data_type is always "ping" and node_name+position are always empty.
+func writePingAllFull(outputPath string, pings []models.PingRecord) error {
 	file, err := os.Create(outputPath)
 	if err != nil {
 		return err
@@ -25,17 +32,6 @@ func writeToCSV(outputPath string, movements []models.MovementRecord, pings []mo
 	}
 	if err := writer.Write(header); err != nil {
 		return err
-	}
-
-	// Write movement records
-	for _, movement := range movements {
-		record := []string{
-			"movement", movement.MovementNumber, movement.TestFile, movement.NodeName, movement.Position,
-			"", "", "", "", "", "", // Empty ping fields
-		}
-		if err := writer.Write(record); err != nil {
-			return err
-		}
 	}
 
 	// Write ping records
