@@ -48,7 +48,7 @@ func writePingAllFull(outputPath string, pings []models.PingRecord) error {
 	return nil
 }
 
-func writeIwToCSV(outputPath string, stations []models.StationRecord, aps []models.AccessPointRecord) error {
+func writeIWFull(outputPath string, stations []models.StationRecord, aps []models.AccessPointRecord) error {
 	file, err := os.Create(outputPath)
 	if err != nil {
 		return err

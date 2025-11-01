@@ -9,21 +9,18 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// default values
-const (
-	defaultOutputDir string = "./results"
-)
-
 // flag values
 var (
 	outputDir *string
 )
 
+// init defines and maps flags
 func init() {
-	outputDir = pflag.StringP("output", "o", defaultOutputDir, "directory to write processed files to")
+	outputDir = pflag.StringP("output", "o", "./results", "directory to write processed files to")
 }
 
 func main() {
+	pflag.Parse()
 	// validate arguments
 	if len(pflag.Args()) != 1 {
 		fmt.Printf("Usage: %s <path_to_mn_result_raw_directory>\n", os.Args[0])
@@ -43,7 +40,7 @@ func main() {
 
 	// prepare output dir
 	if err := os.MkdirAll(*outputDir, 0755); err != nil {
-		fmt.Printf("Error creating results directory: %v\n", err)
+		fmt.Printf("Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -56,24 +53,24 @@ func main() {
 
 	// write the collection of all ping data
 	if len(pings) > 0 {
-		outputPath := filepath.Join(*outputDir, "pingall_full_data.csv")
-		if err := writePingAllFull(outputPath, pings); err != nil {
+		op := filepath.Join(*outputDir, "pingall_full_data.csv")
+		if err := writePingAllFull(op, pings); err != nil {
 			fmt.Printf("Error writing pingall CSV: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("Successfully processed %d movements and %d ping records\n", len(movements), len(pings))
-		fmt.Printf("Pingall results written to: %s\n", outputPath)
+		fmt.Printf("Pingall results written to: %s\n", op)
 	}
 
-	// Write iw CSV if we have station/AP data
+	// generate complete IW data and individual timeframe file pairs
 	if len(stations) > 0 || len(aps) > 0 {
-		iwOutputPath := filepath.Join(*outputDir, "final_iw_data.csv")
-		if err := writeIwToCSV(iwOutputPath, stations, aps); err != nil {
+		op := filepath.Join(*outputDir, "final_iw_data.csv")
+		if err := writeIWFull(op, stations, aps); err != nil {
 			fmt.Printf("Error writing iw CSV: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("Successfully processed %d stations and %d access points\n", len(stations), len(aps))
-		fmt.Printf("IW results written to: %s\n", iwOutputPath)
+		fmt.Printf("IW results written to: %s\n", op)
 
 		// Process nodes output (per test file)
 		fmt.Println("\nGenerating per-test-file nodes CSV files:")
