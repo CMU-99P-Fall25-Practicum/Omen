@@ -1,16 +1,24 @@
 FROM python:3.12.11-bookworm
 
-LABEL ARGS="Define 4 environment variables: \
--e DB_HOST=127.0.0.1 \
--e DB_PORT=3306 \
--e DB_USER=root \
--e DB_PASS=Practicum26 \
--e DB_NAME=test \
- \
-INPUT OPTIONS: \
-  1. A folder containing 'nodes.csv' and 'edges.csv' \
-  2. A single raw CSV file (ping/pingall data with src,dst,tx,rx,loss_pct,avg_rtt_ms) \
-  3. Two explicit CSV files: nodes.csv and edges.csv \
+LABEL ARGS="\
+INPUT: \
+ A directory of the form: \
+ some_directory/ \
+ ├── timeframe0/ \
+ │   ├── nodes.csv \
+ │   └── edges.csv \
+ ├── timeframe1/ \
+ │   ├── nodes.csv \
+ │   └── edges.csv \
+ ├── timeframe2/ \
+ │   ├── nodes.csv \
+ │   └── edges.csv \
+ ├── ... \
+ ├── timeframeX/ \
+ │   ├── nodes.csv \
+ │   └── edges.csv \
+ ├── pingall_data.csv \
+ └── movements.csv  \
 "
 
 RUN mkdir /input
