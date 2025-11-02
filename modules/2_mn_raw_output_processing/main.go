@@ -9,6 +9,9 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// expected timestamp format in directory name
+const directoryNameFormat string = "20060102_150405"
+
 // flag values
 var (
 	outputDir *string
