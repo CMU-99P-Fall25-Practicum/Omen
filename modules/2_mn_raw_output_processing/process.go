@@ -451,11 +451,16 @@ func writeNodesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
 		}
 	}
 
-	fmt.Printf("  Nodes CSV for timeframe %d written to: %s\n", parsed.Timeframe, csvPath)
+	fmt.Printf("\tNodes CSV for timeframe %d written to: %s\n", parsed.Timeframe, csvPath)
 
 	return nil
 }
 
+// writeEdgesCSV generates an edges.csv file inside of tfDirPath using the parsed data for this timeframe.
+// Duplicates are coalesced.
+//
+// NOTE(rlandau): station to station edges are ignored using "sta" substring matches.
+// It is quite brittle.
 func writeEdgesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
 	// prep output file
 	csvPath := path.Join(tfDirPath, "edges.csv")
@@ -507,7 +512,7 @@ func writeEdgesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
 		}
 	}
 
-	fmt.Printf("  Edges CSV for timeframe %d written to: %s\n", parsed.Timeframe, csvPath)
+	fmt.Printf("\tEdges CSV for timeframe %d written to: %s\n", parsed.Timeframe, csvPath)
 
 	return nil
 }
