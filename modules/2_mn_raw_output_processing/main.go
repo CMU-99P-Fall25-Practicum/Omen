@@ -59,6 +59,21 @@ func main() {
 		}
 		fmt.Printf("Successfully processed %d stations and %d access points\n", len(stations), len(aps))
 		fmt.Printf("IW results written to: %s\n", iwOutputPath)
+
+		// Process nodes output (per test file)
+		fmt.Println("\nGenerating per-test-file nodes CSV files:")
+		_, err := processNodesOutput(stations, aps, pings, movements, resultsDir)
+		if err != nil {
+			fmt.Printf("Error processing nodes output: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Process edges output (per test file)
+		fmt.Println("\nGenerating per-test-file edges CSV files:")
+		if err := processEdgesOutput(pings, resultsDir); err != nil {
+			fmt.Printf("Error processing edges output: %v\n", err)
+			os.Exit(1)
+		}
 	}
 }
 

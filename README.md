@@ -23,8 +23,8 @@ A modular pipeline for instrumenting network simulations and producing real, usa
 
 ## Quick Start
 
->[!NOTE]
-> All commands executed from the top level directory.
+>[!WARNING]
+> Coordinator is not complete for MS2. The above instruction will be fully supported by MS3.
 
 Build all components: `mage`.
 
@@ -34,31 +34,39 @@ Execute coordinator with a list of json files or directories containing json fil
 
 Omen uses [mage](https://magefile.org/) as its build system, Go as the primary driver language, and dockerized Python scripts for some modules.
 
-The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for information about what I/O each module expected and returns.
+The coordinator is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module's I/O expectations and results.
 
-### Manual Execution
+You can also run each step manually, if preferred.
 
-You can also run each step manually, if preferred. This assumes that each binary has been compiled and placed into `./artefacts/` and each docker image built.
+Start by running `mage` from the top-level `./Omen` directory, then `cd` into `./artefacts/` (artefacts is where all build objects reside).
 
 Each module strictly follows its [I/O contract](MODULE_CONTRACTS.md) to ensure proper cooperation.
 
-Start by entering the artefacts directory: `cd artefacts`.
-
 #### Input Validation
 
-Run the validator: `docker run --rm -v path/to/user/input.json:/input/in.json 0_omen-input-validator:latest /input/in.json`
+Run the validator: `docker run --rm -v /path/to/user/input.json:/input/in.json 0_omen-input-validator:latest /input/in.json`
+
+If this passes, the given file can be considered validated and ready for the rest of the pipeline.
 
 #### Execute Test
 
-Run the test driver: `./1_spawn path/to/validated/in.json`
+This module is responsible for connecting to mininet, executing the test script, and collecting results for later processing.
+
+Ensure your mininet vm is spinning and accessible via the u/p and address listed in the validated json.
+
+Run the test driver: `./1_spawn /path/to/validated/in.json`
 
 #### Output Coercion
 
+The Raw Output module is responsible for transforming the the raw results from the test driver into usable input for the visualization module. Given a directory, this module will find the latest batch of results in the given path (by reading the timestamped subdirectories of the form YYYYMMDD_HHMMSS). It will coalesce the results into two files, placing them in a local `./results` directory.
+
 Run output coercion: `./2_output_processing path/to/raw/results/directory/`
 
-TODO
+Example: `./2_output_processing ./mn_result_raw/`
 
 #### Visualization
+
+*TODO: all of these steps should really be automated. The Python loader can install expected configuration or that can be included in the docker image's build process. Spooling up the docker containers (and finding MySQL's IP) will be handled by Coordinator, as it has direct access to Docker via the client library.*
 
 As of Milestone 2, each run of the visualizer expects a clean environment; as such, Docker containers are started fresh each run.
 
@@ -73,16 +81,36 @@ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' Ome
 
 (Optional) manually connect to the database: `mysql -h <OmenVizSQL ip address> -u root -p`
 
+Grafana now must also be configured to connect to the SQL server. Access the Grafana server at `localhost:3000`, navigate to "connections/add new connection", select mySQL, and enter the following details:
+- **Host URL**: <OmenVizSQL_IP>:3306
+- **Database name**: test
+- **Username**: root
+- **Password**: mypass
+
 Run the loader:
 ```bash
 docker run  --rm -it /
-    -e DB_HOST=172.17.0.2 /
-    -e DB_PASS=mypass <OmenVizSQL ip address> /
-    -v ./modules/3_output_visualization/nodes.csv:/input/nodes.csv /
-    -v ./modules/3_output_visualization/edges.csv:/input/edges.csv /
+    -e DB_HOST=<OmenVizSQL ip address> /
+    -e DB_PASS=mypass /
+    -v ./path/to/nodes.csv:/input/nodes.csv /
+    -v ./path/to/edges.csv:/input/edges.csv /
     3_omen-output-visualizer /input/nodes.csv /input/edges.csv
 ```
 
-# Architectural Diagram
+Install the Grafana dashboard used for node visualization:
+- Navigate to Dashboards and click "new"
+- Click "Import"
+- Copy the [Dashboard JSON](modules/3_output_visualization/Dashboard.json) and replace all 3 instances of 'YOUR_DS_UID_HERE' with the id of the MySQL datasource.
 
-![pipeline diagram](img/Pipeline.drawio.png)
+
+# Architectural Diagrams
+
+![original pipeline diagram](img/Pipeline.drawio.png)
+
+## Milestone 2 Overview
+
+![simplified milestone 2](img/milestone2.drawio.png)
+
+## Milestone 3 Updated Test Driver Flow
+
+![proposed milestone 3 upgrade](img/milestone3_script_flow.drawio.png)

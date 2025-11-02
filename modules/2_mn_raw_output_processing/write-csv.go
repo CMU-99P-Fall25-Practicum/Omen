@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"os"
+	"strings"
 
 	"mn_raw_output_processing/models"
 )
@@ -93,6 +94,77 @@ func writeIwToCSV(outputPath string, stations []models.StationRecord, aps []mode
 			ap.TXBytes, ap.TXPackets, "", "", "", "", "", "", ap.Flags, ap.MTU, ap.Ether,
 			ap.TxQueueLen, ap.RXErrors, ap.RXDropped, ap.RXOverruns, ap.RXFrame, ap.TXErrors,
 			ap.TXDropped, ap.TXOverruns, ap.TXCarrier, ap.TXCollisions,
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func writeNodesCSV(outputPath string, nodes []models.NodeRecord) error {
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write header
+	header := []string{"id", "title", "position", "rx_bytes", "rx_packets", "tx_bytes", "tx_packets", "success_pct_rate"}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	// Write node records
+	for _, node := range nodes {
+		record := []string{
+			node.ID,
+			node.Title,
+			node.Position,
+			node.RXBytes,
+			node.RXPackets,
+			node.TXBytes,
+			node.TXPackets,
+			node.SuccessPctRate,
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func writeEdgesCSV(outputPath string, edges []models.EdgeRecord) error {
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write header
+	header := []string{"id", "source", "target"}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	// Write edge records
+	for _, edge := range edges {
+		// Skip station-to-station communication
+		if strings.HasPrefix(edge.Source, "sta") && strings.HasPrefix(edge.Target, "sta") {
+			continue
+		}
+		record := []string{
+			edge.ID,
+			edge.Source,
+			edge.Target,
 		}
 		if err := writer.Write(record); err != nil {
 			return err

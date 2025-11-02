@@ -60,3 +60,20 @@ type AccessPointRecord struct {
 	TXCarrier    string
 	TXCollisions string
 }
+
+type NodeRecord struct {
+	ID             string
+	Title          string
+	Position       string
+	RXBytes        string
+	RXPackets      string
+	TXBytes        string
+	TXPackets      string
+	SuccessPctRate string
+}
+
+type EdgeRecord struct {
+	ID     string
+	Source string
+	Target string
+}
