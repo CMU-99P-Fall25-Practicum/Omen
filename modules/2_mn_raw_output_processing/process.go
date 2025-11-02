@@ -34,18 +34,18 @@ func processRawFileDirectory(directory string) ([]models.ParsedRawFile, error) {
 	err := filepath.WalkDir(directory, func(pth string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
-		} else if !d.IsDir() {
+		} else if d.IsDir() {
 			return nil // continue
 		}
 		m := models.ParsedRawFile{
-			Path: path.Join(pth, d.Name()), // recombine path
+			Path: pth, // recombine path
 		}
-		if scanned, err := fmt.Sscanf(strings.ToLower(d.Name()), "timeline%d.txt", &m.Timeframe); err != nil {
+		if scanned, err := fmt.Sscanf(strings.ToLower(d.Name()), "timeframe%d.txt", &m.Timeframe); err != nil {
 			return nil
 		} else if scanned != 1 {
 			return nil
 		}
-		fmt.Printf("Processing file: %s\n", d.Name())
+		fmt.Printf("Processing file: %s\n", m.Path)
 
 		m.Movements, m.Pings, m.Stations, m.APs, err = processFile(pth, d.Name())
 		if err != nil {
