@@ -480,6 +480,11 @@ func writeEdgesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
 		target string
 	}{}
 	for _, ping := range parsed.Pings {
+		// ignore station to station edges
+		if strings.Contains(ping.Src, "sta") && strings.Contains(ping.Dst, "sta") {
+			continue
+		}
+
 		id := ping.Src + "-" + ping.Dst
 		edges[id] = struct {
 			src    string
