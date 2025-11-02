@@ -23,7 +23,7 @@ func Test_findLatestDirectory(t *testing.T) {
 		zeroFileDir  string = path.Join(tDir, "zero")
 		oneFileDir   string = path.Join(tDir, "one")
 		twoFileDir   string = path.Join(tDir, "two")
-		threeFileDir string = path.Join(tDir, "three")
+		threeFileDir string = path.Join(tDir, "three") // NOTE(rlandau): this dir contains a 4th, unparsable dir name, too
 	)
 	if err := os.Mkdir(zeroFileDir, tempDirPerm); err != nil {
 		t.Fatal(err)
@@ -52,6 +52,8 @@ func Test_findLatestDirectory(t *testing.T) {
 		} else if err := os.Mkdir(path.Join(threeFileDir, time.Now().AddDate(0, -3, 0).Format(directoryNameFormat)), tempFilePerm); err != nil {
 			t.Fatal(err)
 		} else if err := os.Mkdir(path.Join(threeFileDir, time.Now().Add(-3*time.Minute).Format(directoryNameFormat)), tempFilePerm); err != nil {
+			t.Fatal(err)
+		} else if err := os.Mkdir(path.Join(threeFileDir, "bad_sub_dir_name"), tempFilePerm); err != nil {
 			t.Fatal(err)
 		}
 	}
