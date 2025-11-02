@@ -38,7 +38,7 @@ func writePingAllFull(outputPath string, parsed []models.ParsedRawFile) (count u
 	for _, p := range parsed {
 		for _, ping := range p.Pings {
 			record := []string{
-				"ping", ping.MovementNumber, ping.TestFile, "", "", // Empty movement fields
+				"ping", strconv.FormatUint(uint64(p.Timeframe), 10), ping.TestFile, "", "", // Empty movement fields
 				ping.Src, ping.Dst, ping.Tx, ping.Rx, ping.LossPct, ping.AvgRttMs,
 			}
 			if err := writer.Write(record); err != nil {
