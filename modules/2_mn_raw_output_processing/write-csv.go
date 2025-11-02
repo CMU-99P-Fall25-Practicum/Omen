@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"os"
+	"strconv"
 	"strings"
 
 	"Omen/modules/2_mn_raw_output_processing/models"
@@ -168,4 +169,42 @@ func writeEdgesCSV(outputPath string, edges []models.EdgeRecord) error {
 	}
 
 	return nil
+}
+
+// Params:
+//
+// outPath: the file path to create/truncate and write data to.
+//
+// timeframe: the timeframe we are processing for (under the "movement_number" column)
+//
+// rawTestFileName: "timeframeX.txt", where X==timeframe
+func writeMovementCSV(outPath string, timeframe uint64, rawTestFileName string, pings []models.PingRecord) error {
+	f, err := os.Create(outPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	wr := csv.NewWriter(f)
+	defer wr.Flush()
+
+	// header
+	hdr := []string{"data_type", "movement_number", "test_file", "node_name", "position", "src", "dst", "tx", "rx", "loss_pct", "avg_rtt_ms"}
+	if err := wr.Write(hdr); err != nil {
+		return err
+	}
+
+	// records
+	record := []string{
+		"ping", strconv.FormatUint(timeframe, 10),
+		rawTestFileName,
+		"",    // node name is always empty
+		"",    // position is always empty
+		pings, // staX
+		// staY
+
+	}
+	if err := wr.Write(record); err != nil {
+
+	}
 }

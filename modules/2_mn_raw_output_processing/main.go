@@ -91,7 +91,7 @@ func main() {
 			os.Exit(1)
 		}
 		// write position files into each timeframe
-		// TODO
+		writeMovementCSV(path.Join(*outputDir, "ping_data_movement_1.csv"))
 
 	}
 }
