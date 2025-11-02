@@ -64,10 +64,13 @@ func BuildOutputProcessing() error {
 	return err
 }
 
-// DockerizeOV recompiles the output visualization docker container.
+// DockerizeOV recompiles the output visualization loader  and grafana-sqlite images.
 func DockerizeOV() error {
 	mg.Deps(dockerInPath)
-	return sh.Run("docker", "build", "-t", "3_omen-output-visualizer", "modules/3_output_visualization")
+	if err := sh.Run("docker", "build", "-t", "3_omen-output-visualizer-loader", "-f", "modules/3_output_visualization/loader.Dockerfile", "modules/3_output_visualization"); err != nil {
+		return err
+	}
+	return sh.Run("docker", "build", "-t", "3_omen-output-visualizer-grafana", "-f", "modules/3_output_visualization/grafana-sqlite.Dockerfile", "modules/3_output_visualization")
 }
 
 //#endregion module building
