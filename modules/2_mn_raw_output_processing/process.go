@@ -431,7 +431,7 @@ func writeNodesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
 	// write aps
 	for i, ap := range parsed.APs {
 		// validate that movement node lines up with station node
-		if parsed.Movements[i].NodeName != ap.APName {
+		if parsed.Movements[i+len(parsed.Stations)].NodeName != ap.APName {
 			fmt.Printf("WARNING: movement node name does not match station name! node: %s != station: %s\n", parsed.Movements[i].NodeName, ap.APName)
 			continue
 		}
