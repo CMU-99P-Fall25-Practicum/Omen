@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
-	"sort"
+	"time"
 
 	"github.com/spf13/pflag"
 )
@@ -76,7 +77,7 @@ func main() {
 		fmt.Printf("IW results written to: %s\n", op)
 
 		// Process nodes output (per test file)
-		fmt.Println("\nGenerating per-test-file nodes CSV files:")
+		fmt.Println("\nGenerating per-timeframe nodes CSV files:")
 		_, err := processNodesOutput(stations, aps, pings, movements, *outputDir)
 		if err != nil {
 			fmt.Printf("Error processing nodes output: %v\n", err)
@@ -84,11 +85,14 @@ func main() {
 		}
 
 		// Process edges output (per test file)
-		fmt.Println("\nGenerating per-test-file edges CSV files:")
+		fmt.Println("\nGenerating per-timeframe edges CSV files:")
 		if err := processEdgesOutput(pings, *outputDir); err != nil {
 			fmt.Printf("Error processing edges output: %v\n", err)
 			os.Exit(1)
 		}
+		// write position files into each timeframe
+		// TODO
+
 	}
 }
 
@@ -96,22 +100,28 @@ func findLatestDirectory(basePath string) (string, error) {
 	entries, err := os.ReadDir(basePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read directory %s: %v", basePath, err)
-	}
-
-	var directories []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			directories = append(directories, entry.Name())
-		}
-	}
-
-	if len(directories) == 0 {
+	} else if len(entries) <= 0 {
 		return "", fmt.Errorf("no subdirectories found in %s", basePath)
 	}
 
-	// Sort directories by name (assuming timestamp format makes them sortable)
-	sort.Strings(directories)
-	latest := directories[len(directories)-1]
+	var (
+		newestTime time.Time
+		newestDir  string
+	)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			v, err := time.Parse(directoryNameFormat, entry.Name())
+			if err != nil { // if an error occurs, skip it
+				continue
+			} else if newestTime.Before(v) {
+				newestTime = v
+				newestDir = entry.Name()
+			}
+		}
+	}
+	if newestDir == "" {
+		return "", fmt.Errorf("no subdirectories with the correct format found in %s", basePath)
+	}
 
-	return filepath.Join(basePath, latest), nil
+	return path.Join(basePath, newestDir), nil
 }
