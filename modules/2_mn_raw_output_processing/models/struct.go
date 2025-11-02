@@ -1,6 +1,17 @@
 // Package models contains structs to serve as intermediate formats while transforming raw test output into well-formed data points to be visualized.
 package models
 
+// ParsedRawFile is the collection of records pulled a raw timeframeX.txt file.
+// Each ParsedRawFile should represent exactly 1 timeframe.
+type ParsedRawFile struct {
+	Timeframe uint
+	Path      string // file path
+	Movements []MovementRecord
+	Pings     []PingRecord
+	Stations  []StationRecord
+	APs       []AccessPointRecord
+}
+
 // A MovementRecord represents a single move action performed on a node during the last run.
 type MovementRecord struct {
 	MovementNumber string

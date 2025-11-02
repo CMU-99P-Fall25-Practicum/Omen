@@ -33,14 +33,17 @@ func main() {
 	}
 
 	// Process all .txt files
-	movements, pings, stations, aps, err := processRawFileDirectory(latestDir)
+	parsed, err := processRawFileDirectory(latestDir)
 	if err != nil {
 		fmt.Printf("Error processing files: %v\n", err)
 		os.Exit(1)
+	} else if len(parsed) == 0 {
+		fmt.Printf("no raw files were parsed\n")
+		return
 	}
 
-	// Write pingall CSV if we have movement/ping data
-	if len(movements) > 0 || len(pings) > 0 {
+	// write complete ping data from all parsed models
+	{
 		outputPath := filepath.Join(resultsDir, "pingall_full_data.csv")
 		if err := writeToCSV(outputPath, movements, pings); err != nil {
 			fmt.Printf("Error writing pingall CSV: %v\n", err)
@@ -49,7 +52,6 @@ func main() {
 		fmt.Printf("Successfully processed %d movements and %d ping records\n", len(movements), len(pings))
 		fmt.Printf("Pingall results written to: %s\n", outputPath)
 	}
-
 	// Write iw CSV if we have station/AP data
 	if len(stations) > 0 || len(aps) > 0 {
 		iwOutputPath := filepath.Join(resultsDir, "final_iw_data.csv")

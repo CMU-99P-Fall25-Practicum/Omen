@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -25,35 +26,40 @@ var (
 
 // processRawFileDirectory processes each .txt file (expecting 1 file per timeframe, of the nomenclature 'timeframeX.txt') in the given directory,
 // parsing the data into records for node movements, ping results, station info (via iw), and access point info (also via iw).
-func processRawFileDirectory(directory string) (
-	movements []models.MovementRecord, pings []models.PingRecord,
-	stations []models.StationRecord, aps []models.AccessPointRecord,
-	_ error,
-) {
+func processRawFileDirectory(directory string) ([]models.ParsedRawFile, error) {
+	var parsed []models.ParsedRawFile
 
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(directory, func(pth string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
+		} else if !d.IsDir() {
+			return nil // continue
+		}
+		m := models.ParsedRawFile{
+			Path: path.Join(pth, d.Name()), // recombine path
+		}
+		if scanned, err := fmt.Sscanf(strings.ToLower(d.Name()), "timeline%d.txt", &m.Timeframe); err != nil {
+			return nil
+		} else if scanned != 1 {
+			return nil
+		}
+		fmt.Printf("Processing file: %s\n", d.Name())
+
+		m.Movements, m.Pings, m.Stations, m.APs, err = processFile(pth, d.Name())
+		if err != nil {
+			fmt.Printf("Warning: Error processing file %s: %v\n", d.Name(), err)
+			return nil // continue
+		}
+		// sanity check our index
+		if len(parsed) != int(m.Timeframe) {
+			fmt.Printf("Warning: parsed timeframe does not equal the current # of parsed models. %d parsed, %d latest timeframe", len(parsed), m.Timeframe)
 		}
 
-		if !d.IsDir() && strings.HasSuffix(strings.ToLower(d.Name()), ".txt") {
-			fmt.Printf("Processing file: %s\n", d.Name())
-
-			fileMovements, filePings, fileStations, fileAPs, err := processFile(path, d.Name())
-			if err != nil {
-				fmt.Printf("Warning: Error processing file %s: %v\n", d.Name(), err)
-				return nil // Continue with other files
-			}
-
-			movements = append(movements, fileMovements...)
-			pings = append(pings, filePings...)
-			stations = append(stations, fileStations...)
-			aps = append(aps, fileAPs...)
-		}
+		parsed = append(parsed, m)
 		return nil
 	})
 
-	return movements, pings, stations, aps, err
+	return parsed, err
 }
 
 // processFile walks timeframeX.txt file to parse out usable data.
