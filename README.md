@@ -133,3 +133,6 @@ Visualization is actually 3, separate actions.
 ## Milestone 3 Updated Test Driver Flow
 
 ![proposed milestone 3 upgrade](img/milestone3_script_flow.drawio.png)
+
+>[!NOTE]
+>Support for outputting extra files is theoretical and not currently supported.

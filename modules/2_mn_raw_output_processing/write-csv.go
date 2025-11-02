@@ -3,12 +3,20 @@ package main
 import (
 	"encoding/csv"
 	"os"
+	"strconv"
 	"strings"
 
-	"mn_raw_output_processing/models"
+	"Omen/modules/2_mn_raw_output_processing/models"
 )
 
-func writeToCSV(outputPath string, movements []models.MovementRecord, pings []models.PingRecord) error {
+// WritePingAllFull writes the ping data to the given output.
+//
+// Uses the following format:
+// data_type,movement_number,test_file,node_name,position,src,dst,tx,rx,loss_pct,avg_rtt_ms
+//
+// NOTE(rlandau): This format is somewhat a relic from earlier I/O Contracts.
+// data_type is always "ping" and node_name+position are always empty.
+func writePingAllFull(outputPath string, pings []models.PingRecord) error {
 	file, err := os.Create(outputPath)
 	if err != nil {
 		return err
@@ -27,17 +35,6 @@ func writeToCSV(outputPath string, movements []models.MovementRecord, pings []mo
 		return err
 	}
 
-	// Write movement records
-	for _, movement := range movements {
-		record := []string{
-			"movement", movement.MovementNumber, movement.TestFile, movement.NodeName, movement.Position,
-			"", "", "", "", "", "", // Empty ping fields
-		}
-		if err := writer.Write(record); err != nil {
-			return err
-		}
-	}
-
 	// Write ping records
 	for _, ping := range pings {
 		record := []string{
@@ -52,7 +49,7 @@ func writeToCSV(outputPath string, movements []models.MovementRecord, pings []mo
 	return nil
 }
 
-func writeIwToCSV(outputPath string, stations []models.StationRecord, aps []models.AccessPointRecord) error {
+func writeIWFull(outputPath string, stations []models.StationRecord, aps []models.AccessPointRecord) error {
 	file, err := os.Create(outputPath)
 	if err != nil {
 		return err
@@ -172,4 +169,42 @@ func writeEdgesCSV(outputPath string, edges []models.EdgeRecord) error {
 	}
 
 	return nil
+}
+
+// Params:
+//
+// outPath: the file path to create/truncate and write data to.
+//
+// timeframe: the timeframe we are processing for (under the "movement_number" column)
+//
+// rawTestFileName: "timeframeX.txt", where X==timeframe
+func writeMovementCSV(outPath string, timeframe uint64, rawTestFileName string, pings []models.PingRecord) error {
+	f, err := os.Create(outPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	wr := csv.NewWriter(f)
+	defer wr.Flush()
+
+	// header
+	hdr := []string{"data_type", "movement_number", "test_file", "node_name", "position", "src", "dst", "tx", "rx", "loss_pct", "avg_rtt_ms"}
+	if err := wr.Write(hdr); err != nil {
+		return err
+	}
+
+	// records
+	record := []string{
+		"ping", strconv.FormatUint(timeframe, 10),
+		rawTestFileName,
+		"",    // node name is always empty
+		"",    // position is always empty
+		pings, // staX
+		// staY
+
+	}
+	if err := wr.Write(record); err != nil {
+
+	}
 }

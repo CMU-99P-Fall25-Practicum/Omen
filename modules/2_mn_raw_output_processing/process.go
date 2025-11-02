@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Omen/modules/2_mn_raw_output_processing/models"
 	"bufio"
 	"fmt"
 	"io/fs"
@@ -9,8 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"mn_raw_output_processing/models"
 )
 
 // Regex patterns
