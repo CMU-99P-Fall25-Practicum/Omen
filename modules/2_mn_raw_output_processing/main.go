@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -46,13 +48,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Processing files in: %s\n", latestDir)
-
 	// prepare output dir
 	if err := os.MkdirAll(*outputDir, 0755); err != nil {
 		fmt.Printf("Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}
+
+	fmt.Printf("Processing files in: %s\n", latestDir)
 
 	// Process all .txt files
 	parsed, err := processRawFileDirectory(latestDir)
@@ -88,9 +90,13 @@ func main() {
 	for tf := range parsed {
 		// create subdir for this timeframe
 		tfDir := path.Join(*outputDir, "timeframe"+strconv.FormatUint(uint64(tf), 10))
+		if err := os.Mkdir(tfDir, 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+			fmt.Printf("failed to create directory %s: %v\n", tfDir, err)
+			os.Exit(1)
+		}
 
+		fmt.Printf("writing data from timeframe %d\n", tf)
 		// process nodes for this timeframe
-		fmt.Println("\nGenerating per-timeframe nodes CSV files:")
 		err := writeNodesCSV(parsed[tf], tfDir)
 		if err != nil {
 			fmt.Printf("Error processing nodes output: %v\n", err)
@@ -98,7 +104,6 @@ func main() {
 		}
 
 		// process edges for this timeframe
-		fmt.Println("\nGenerating per-timeframe edges CSV files:")
 		if err := writeEdgesCSV(parsed[tf], tfDir); err != nil {
 			fmt.Printf("Error processing edges output: %v\n", err)
 			os.Exit(1)
