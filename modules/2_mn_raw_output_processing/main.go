@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -12,6 +13,11 @@ import (
 
 // expected timestamp format in directory name
 const directoryNameFormat string = "20060102_150405"
+
+const (
+	fullPingDataCSV string = "pingall_full_data.csv" // name of the cumulative ping data file
+	fullIWDataCSV   string = "final_iw_data.csv"
+)
 
 // flag values
 var (
@@ -58,44 +64,49 @@ func main() {
 		return
 	}
 
-	// write complete ping data from all parsed models
-	{
-		op := filepath.Join(*outputDir, "pingall_full_data.csv")
-		if err := writePingAllFull(op, movements, pings); err != nil {
+	{ // write complete ping data from all parsed models
+		op := filepath.Join(*outputDir, fullPingDataCSV)
+		count, err := writePingAllFull(op, parsed)
+		if err != nil {
 			fmt.Printf("Error writing pingall CSV: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Successfully processed %d movements and %d ping records\n", len(movements), len(pings))
-		fmt.Printf("Pingall results written to: %s\n", op)
+		fmt.Printf("Successfully processed %d ping records\n"+
+			"Pingall results written to: %s\n", count, op)
 	}
-	// generate complete IW data and individual timeframe file pairs
-	if len(stations) > 0 || len(aps) > 0 {
-		op := filepath.Join(*outputDir, "final_iw_data.csv")
-		if err := writeIWFull(op, stations, aps); err != nil {
+	{ // write complete IW data from all parsed models
+		op := filepath.Join(*outputDir, fullIWDataCSV)
+		staCount, apCount, err := writeIWFull(op, parsed)
+		if err != nil {
 			fmt.Printf("Error writing iw CSV: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Successfully processed %d stations and %d access points\n", len(stations), len(aps))
+		fmt.Printf("Successfully processed %d stations and %d access points\n", staCount, apCount)
 		fmt.Printf("IW results written to: %s\n", op)
+	}
+	// write a folder for each timeframe
+	for tf := range parsed {
+		// create subdir for this timeframe
+		tfDir := path.Join(*outputDir, "timeframe"+strconv.FormatUint(uint64(tf), 10))
 
-		// Process nodes output (per test file)
+		// process nodes for this timeframe
 		fmt.Println("\nGenerating per-timeframe nodes CSV files:")
-		_, err := processNodesOutput(stations, aps, pings, movements, *outputDir)
+		err := writeNodesCSV(parsed[tf], tfDir)
 		if err != nil {
 			fmt.Printf("Error processing nodes output: %v\n", err)
 			os.Exit(1)
 		}
 
-		// Process edges output (per test file)
+		// process edges for this timeframe
 		fmt.Println("\nGenerating per-timeframe edges CSV files:")
-		if err := processEdgesOutput(pings, *outputDir); err != nil {
+		if err := writeEdgesCSV(parsed[tf], tfDir); err != nil {
 			fmt.Printf("Error processing edges output: %v\n", err)
 			os.Exit(1)
 		}
 		// write position files into each timeframe
-		writeMovementCSV(path.Join(*outputDir, "ping_data_movement_1.csv"))
-
+		//writeMovementCSV(path.Join(*outputDir, "ping_data_movement_1.csv"))
 	}
+
 }
 
 // findLatestDirectory
