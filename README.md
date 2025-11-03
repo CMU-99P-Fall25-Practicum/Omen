@@ -139,15 +139,16 @@ python3 omenloader.py timeseries \
   --if-exists replace \
   --aggregate-by movement_number
 ```
+
 - `--csv=<filename>.csv` is the name of the file containing summary ping data (as opposed to ping data from a specific timeframe). **NOTE**: the path to this file is rooted by `--root`.
 
 #### 2. spin up a Grafana docker container directed at the database.
 
 Spool up the docker container, making sure to map the database created in the last step: `docker run -d -v ./<db output path>.db:/var/lib/grafana/data.db -p 3000:3000 3_omen-output-visualizer-grafana`
 
-Update the Dashboard.json file with the UID of the sqlite datasource in Grafana (access the datasource in the Grafana UI and copy the string after 'edit': `http://localhost:3000/connections/datasources/edit/<this string>`)
+Update the Dashboard.json file with the UID of the sqlite datasource in Grafana (access the datasource in the Grafana UI and copy the string after 'edit': `http://localhost:3000/connections/datasources/edit/<this string>`).
 
-Import a new dashboard and feed in Dashboard.json
+Import a new dashboard and feed in Dashboard.json. Tada!
 
 # Architectural Diagrams
 
