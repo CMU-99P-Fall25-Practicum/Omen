@@ -112,7 +112,7 @@ results/
 
 #### Visualization
 
-**Limitation:** Each run of the visualizer expects a clean Grafana instance; as such, Docker containers and the sqlite database are create fresh each run.
+**Limitation:** Each run of the visualizer expects a clean Grafana instance; as such, Docker containers and the sqlite database are created fresh each run.
 
 ##### 1. generate a sqlite3 database for Grafana to visualize.
 
@@ -146,7 +146,9 @@ python3 omenloader.py timeseries \
 
 Spool up the docker container, making sure to map the database created in the last step: `docker run -d -v ./<db output path>.db:/var/lib/grafana/data.db -p 3000:3000 3_omen-output-visualizer-grafana`
 
-Update the Dashboard.json file with the UID of the sqlite datasource in Grafana (access the datasource in the Grafana UI and copy the string after 'edit': `http://localhost:3000/connections/datasources/edit/<this string>`).
+Finally, update the Dashboard.json file with the UID of the sqlite datasource in Grafana (access the datasource in the Grafana UI and copy the string after 'edit': `http://localhost:3000/connections/datasources/edit/<this string>`). Run: `sed -i 's/YOUR UID HERE/<sqlite datasource UID>/gI' timeframeX.json` against every timeframe.json file and the Dashboard.json file.
+
+For example: `sed -i 's/YOUR UID HERE/P0CD8666848BF286D/gI' timeframe0.json`
 
 Import a new dashboard and feed in Dashboard.json. Tada!
 
