@@ -24,10 +24,10 @@ INPUT: \
 RUN mkdir /input
 
 WORKDIR /app
-COPY loader.py .
-RUN chmod +x loader.py
+COPY omenloader.py .
+RUN chmod +x omenloader.py
 
 # install dependencies
-RUN pip install pandas mysql-connector-python
+RUN pip install pandas
 
-ENTRYPOINT [ "/app/loader.py" ]
+ENTRYPOINT [ "/app/omenloader.py" ]
