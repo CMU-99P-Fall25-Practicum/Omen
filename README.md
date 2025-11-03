@@ -118,7 +118,34 @@ Visualization is actually 3, separate actions.
 
 1) chop out ... (TODO: UPDATE THE COERCION CODE TO REMOVE THIS STEP)
 
-2) generate a sqlite3 database for Grafana to visualize.
+##### 2. generate a sqlite3 database for Grafana to visualize.
+
+From `Omen/modules/3_output_visualization` execute two commands:
+```bash
+python3 omenloader.py graph \
+  --db <output path>.db \
+  --recreate \
+  --root <path/to/results> \
+  --set1-prefix netA --set1-dir timeframe0 --set1-ts timeframe0/ping_data_movement_0.csv \
+  --set2-prefix netB --set2-dir timeframe1 --set2-ts timeframe1/ping_data_movement_1.csv \
+  --set3-prefix netC --set3-dir timeframe2 --set3-ts timeframe2/ping_data_movement_2.csv
+```
+
+- `--db=<output path>.db` can be any path; a database file will be created at that location.
+- `--root=<path/to/results>` must be the path to the directory that looks like the results directory output by the [prior](#output-coercion) module. For example: `--root ../../example_files/2_output-result`
+
+```bash
+python3 omenloader.py timeseries \
+  --root ../../example_files/2_output-result \
+  --csv <filename>.csv \
+  --db <output path>.sb \
+  --table ping_data \
+  --if-exists replace \
+  --aggregate-by movement_number
+```
+- `--csv=<filename>.csv` is the name of the file containing summary ping data (as opposed to ping data from a specific timeframe). **NOTE**: the path to this file is rooted by `--root`.
+
+
 
 3) spin up a Grafana docker container directed at the database.
 
