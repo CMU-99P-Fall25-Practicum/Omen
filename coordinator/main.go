@@ -29,6 +29,7 @@ const (
 	inputValidatorImageTag          string = "latest"
 	DefaultTestRunnerBinaryPath     string = "./1_spawn"
 	DefaultCoalesceOutputBinaryPath string = "./2_output_processing"
+	DefaultLoaderScriptPath         string = "omenloader.py"
 )
 
 var (
@@ -113,6 +114,6 @@ func cleanup(errored bool) {
 			log.Error().Err(err).Msg("failed to force-remove the Grafana container")
 		}
 	} else { // notify about still running containers
-		fmt.Println("Remember to stop the Grafana container when you are done! ID: " + grafanaContainerID)
+		fmt.Println("Remember to stop the Grafana container when you are done! ") //ID: " + grafanaContainerID)
 	}
 }

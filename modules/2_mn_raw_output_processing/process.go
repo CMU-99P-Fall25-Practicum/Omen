@@ -1,78 +1,95 @@
 package main
 
 import (
+	"Omen/modules/2_mn_raw_output_processing/models"
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
-
-	"mn_raw_output_processing/models"
 )
 
-func readFile(directory string) ([]models.MovementRecord, []models.PingRecord, []models.StationRecord, []models.AccessPointRecord, error) {
-	var movements []models.MovementRecord
-	var pings []models.PingRecord
-	var stations []models.StationRecord
-	var aps []models.AccessPointRecord
+// Regex patterns
+// Updated to handle both old format (70,10,0) and new format ([70.0, 10.0, 0.0])
+var (
+	movementPattern     = regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+\[?([0-9.,\s-]+)\]?`)
+	pingallStartPattern = regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
+	csvHeaderPattern    = regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
+	iwStartPattern      = regexp.MustCompile(`\[iw_stations\]`)
+	stationPattern      = regexp.MustCompile(`^--- Station (\w+) ---$`)
+	apPattern           = regexp.MustCompile(`^--- Access Point (\w+) ---$`)
+)
 
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
+// processRawFileDirectory processes each .txt file (expecting 1 file per timeframe, of the nomenclature 'timeframeX.txt') in the given directory,
+// parsing the data into records for node movements, ping results, station info (via iw), and access point info (also via iw).
+func processRawFileDirectory(directory string) ([]models.ParsedRawFile, error) {
+	var parsed []models.ParsedRawFile
+
+	err := filepath.WalkDir(directory, func(pth string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
+		} else if d.IsDir() {
+			return nil // continue
+		}
+		m := models.ParsedRawFile{
+			Path: pth, // recombine path
+		}
+		if scanned, err := fmt.Sscanf(strings.ToLower(d.Name()), "timeframe%d.txt", &m.Timeframe); err != nil {
+			return nil
+		} else if scanned != 1 {
+			return nil
+		}
+		fmt.Printf("Processing file: %s\n", m.Path)
+
+		m.Movements, m.Pings, m.Stations, m.APs, err = processFile(pth, d.Name())
+		if err != nil {
+			fmt.Printf("Warning: Error processing file %s: %v\n", d.Name(), err)
+			return nil // continue
+		}
+		// sanity check our index
+		if len(parsed) != int(m.Timeframe) {
+			fmt.Printf("Warning: parsed timeframe does not equal the current # of parsed models. %d parsed, %d latest timeframe", len(parsed), m.Timeframe)
 		}
 
-		if !d.IsDir() && strings.HasSuffix(strings.ToLower(d.Name()), ".txt") {
-			fmt.Printf("Processing file: %s\n", d.Name())
-
-			fileMovements, filePings, fileStations, fileAPs, err := processFile(path, d.Name())
-			if err != nil {
-				fmt.Printf("Warning: Error processing file %s: %v\n", d.Name(), err)
-				return nil // Continue with other files
-			}
-
-			movements = append(movements, fileMovements...)
-			pings = append(pings, filePings...)
-			stations = append(stations, fileStations...)
-			aps = append(aps, fileAPs...)
-		}
+		parsed = append(parsed, m)
 		return nil
 	})
 
-	return movements, pings, stations, aps, err
+	return parsed, err
 }
 
-func processFile(filePath, fileName string) ([]models.MovementRecord, []models.PingRecord, []models.StationRecord, []models.AccessPointRecord, error) {
+// processFile walks timeframeX.txt file to parse out usable data.
+// Relies on direct string matches to figure out the structure of a line.
+//
+// If an error occurs, no arrays are returned to ensure incomplete data is not passed in.
+func processFile(filePath, fileName string) (
+	movements []models.MovementRecord, pings []models.PingRecord,
+	stations []models.StationRecord, aps []models.AccessPointRecord,
+	_ error,
+) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 	defer file.Close()
 
-	var movements []models.MovementRecord
-	var pings []models.PingRecord
-	var stations []models.StationRecord
-	var aps []models.AccessPointRecord
+	var (
+		currentMovementNumber string
+		inPingallSection      bool
+		inIwSection           bool
+		currentStationName    string
+		currentAPName         string
+		inStationOutput       bool
+		inAPOutput            bool
+	)
 
 	scanner := bufio.NewScanner(file)
-	var currentMovementNumber string
-	var inPingallSection bool
-	var inIwSection bool
-	var currentStationName string
-	var currentAPName string
-	var inStationOutput bool
-	var inAPOutput bool
-
-	// Regex patterns
-	// Updated to handle both old format (70,10,0) and new format ([70.0, 10.0, 0.0])
-	movementPattern := regexp.MustCompile(`\[node movements\]\s+(\d+):\s+move\s+(\w+):\s+moving\s+\w+\s+->\s+\[?([0-9.,\s-]+)\]?`)
-	pingallStartPattern := regexp.MustCompile(`\[pingall_full\]\s+(\d+):`)
-	csvHeaderPattern := regexp.MustCompile(`^src,dst,tx,rx,loss_pct,avg_rtt_ms$`)
-	iwStartPattern := regexp.MustCompile(`\[iw_stations\]`)
-	stationPattern := regexp.MustCompile(`^--- Station (\w+) ---$`)
-	apPattern := regexp.MustCompile(`^--- Access Point (\w+) ---$`)
-
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
@@ -367,132 +384,135 @@ func updateAPField(ap *models.AccessPointRecord, line string) {
 	}
 }
 
-func processNodesOutput(stations []models.StationRecord, aps []models.AccessPointRecord, pings []models.PingRecord, movements []models.MovementRecord, resultsDir string) (map[string]float64, error) {
-	// Group stations and APs by test file
-	stationsByTest := make(map[string][]models.StationRecord)
-	apsByTest := make(map[string][]models.AccessPointRecord)
+// writeNodesCSV generates a nodes.csv file inside of tfDirPath using the parsed data for this timeframe.
+func writeNodesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
+	// Calculate success rates based on cumulative pings
+	successRates := calculateSuccessRates(parsed.Pings)
 
-	for _, station := range stations {
-		stationsByTest[station.TestFile] = append(stationsByTest[station.TestFile], station)
+	// prep output file
+	csvPath := path.Join(tfDirPath, "nodes.csv")
+	f, err := os.Create(csvPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
+	defer writer.Flush()
+
+	// write header
+	hdr := []string{"id", "title", "position", "rx_bytes", "rx_packets", "tx_bytes", "tx_packets", "success_pct_rate"}
+	if err := writer.Write(hdr); err != nil {
+		return err
 	}
 
-	for _, ap := range aps {
-		apsByTest[ap.TestFile] = append(apsByTest[ap.TestFile], ap)
-	}
-
-	// Get all unique test files from stations and APs
-	testFiles := make(map[string]bool)
-	for testFile := range stationsByTest {
-		testFiles[testFile] = true
-	}
-	for testFile := range apsByTest {
-		testFiles[testFile] = true
-	}
-
-	// Process each test file
-	for testFile := range testFiles {
-		// Get cumulative pings up to this test file
-		cumulativePings := getCumulativePings(pings, testFile)
-
-		// Calculate success rates based on cumulative pings
-		successRates := calculateSuccessRates(cumulativePings)
-
-		// Build position map from movements for this test file
-		positionMap := getPositionMap(movements, testFile)
-
-		// Create node records for this test file
-		var nodes []models.NodeRecord
-
-		// Add stations from this test file
-		for _, station := range stationsByTest[testFile] {
-			successRate := successRates[station.StationName]
-			node := models.NodeRecord{
-				ID:             station.StationName,
-				Title:          station.StationName,
-				Position:       positionMap[station.StationName],
-				RXBytes:        station.RXBytes,
-				RXPackets:      station.RXPackets,
-				TXBytes:        station.TXBytes,
-				TXPackets:      station.TXPackets,
-				SuccessPctRate: fmt.Sprintf("%.2f", successRate),
-			}
-			nodes = append(nodes, node)
+	// write stations
+	for i, sta := range parsed.Stations {
+		// validate that movement node lines up with station node
+		if parsed.Movements[i].NodeName != sta.StationName {
+			fmt.Printf("WARNING: movement node name does not match station name! node: %s != station: %s\n", parsed.Movements[i].NodeName, sta.StationName)
+			continue
 		}
 
-		// Add access points from this test file
-		for _, ap := range apsByTest[testFile] {
-			successRate := successRates[ap.APName]
-			node := models.NodeRecord{
-				ID:             ap.APName,
-				Title:          ap.APName,
-				Position:       positionMap[ap.APName],
-				RXBytes:        ap.RXBytes,
-				RXPackets:      ap.RXPackets,
-				TXBytes:        ap.TXBytes,
-				TXPackets:      ap.TXPackets,
-				SuccessPctRate: fmt.Sprintf("%.2f", successRate),
-			}
-			nodes = append(nodes, node)
+		record := []string{
+			sta.StationName,              // id
+			sta.StationName,              // title
+			parsed.Movements[i].Position, // position
+			sta.RXBytes,
+			sta.RXPackets,
+			sta.TXBytes,
+			sta.TXPackets,
+			fmt.Sprintf("%.2f", successRates[sta.StationName]),
 		}
-
-		// Create subdirectory for this test file
-		testDir := filepath.Join(resultsDir, getTestName(testFile))
-		if err := os.MkdirAll(testDir, 0755); err != nil {
-			return nil, fmt.Errorf("failed to create test directory %s: %v", testDir, err)
-		}
-
-		// Write nodes CSV for this test file
-		nodesPath := filepath.Join(testDir, "nodes.csv")
-		if err := writeNodesCSV(nodesPath, nodes); err != nil {
-			return nil, err
-		}
-		fmt.Printf("  Nodes CSV for %s written to: %s\n", testFile, nodesPath)
-	}
-
-	return nil, nil
-}
-
-func processEdgesOutput(pings []models.PingRecord, resultsDir string) error {
-	// Group pings by test file to get all unique test files
-	testFiles := make(map[string]bool)
-	for _, ping := range pings {
-		testFiles[ping.TestFile] = true
-	}
-
-	// Process each test file
-	for testFile := range testFiles {
-		// Get cumulative pings up to this test file
-		cumulativePings := getCumulativePings(pings, testFile)
-
-		var edges []models.EdgeRecord
-		edgeSet := make(map[string]bool) // To avoid duplicates
-
-		for _, ping := range cumulativePings {
-			edgeID := ping.Src + "-" + ping.Dst
-			if !edgeSet[edgeID] {
-				edge := models.EdgeRecord{
-					ID:     edgeID,
-					Source: ping.Src,
-					Target: ping.Dst,
-				}
-				edges = append(edges, edge)
-				edgeSet[edgeID] = true
-			}
-		}
-
-		// Create subdirectory for this test file
-		testDir := filepath.Join(resultsDir, getTestName(testFile))
-		if err := os.MkdirAll(testDir, 0755); err != nil {
-			return fmt.Errorf("failed to create test directory %s: %v", testDir, err)
-		}
-
-		// Write edges CSV for this test file
-		edgesPath := filepath.Join(testDir, "edges.csv")
-		if err := writeEdgesCSV(edgesPath, edges); err != nil {
+		if err := writer.Write(record); err != nil {
 			return err
 		}
-		fmt.Printf("  Edges CSV for %s written to: %s\n", testFile, edgesPath)
 	}
+	// write aps
+	for i, ap := range parsed.APs {
+		// validate that movement node lines up with station node
+		if parsed.Movements[i+len(parsed.Stations)].NodeName != ap.APName {
+			fmt.Printf("WARNING: movement node name does not match station name! node: %s != station: %s\n", parsed.Movements[i].NodeName, ap.APName)
+			continue
+		}
+
+		record := []string{
+			ap.APName,
+			ap.APName,
+			parsed.Movements[i].Position,
+			ap.RXBytes,
+			ap.RXPackets,
+			ap.TXBytes,
+			ap.TXPackets,
+			fmt.Sprintf("%.2f", successRates[ap.APName]),
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+
+	fmt.Printf("\tNodes CSV for timeframe %d written to: %s\n", parsed.Timeframe, csvPath)
+
+	return nil
+}
+
+// writeEdgesCSV generates an edges.csv file inside of tfDirPath using the parsed data for this timeframe.
+// Duplicates are coalesced.
+//
+// NOTE(rlandau): station to station edges are ignored using "sta" substring matches.
+// It is quite brittle.
+func writeEdgesCSV(parsed models.ParsedRawFile, tfDirPath string) error {
+	// prep output file
+	csvPath := path.Join(tfDirPath, "edges.csv")
+	f, err := os.Create(csvPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
+	defer writer.Flush()
+
+	// write header
+	header := []string{"id", "source", "target"}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	// use a map to consolidate duplicates; the map keys are broken apart later
+	edges := map[string]struct {
+		src    string
+		target string
+	}{}
+	for _, ping := range parsed.Pings {
+		// ignore station to station edges
+		if strings.Contains(ping.Src, "sta") && strings.Contains(ping.Dst, "sta") {
+			continue
+		}
+
+		id := ping.Src + "-" + ping.Dst
+		edges[id] = struct {
+			src    string
+			target string
+		}{
+			ping.Src, ping.Dst,
+		}
+	}
+
+	// sort and write the map into a file, breaking id into source and target
+	elems := slices.Sorted(maps.Keys(edges))
+	for _, id := range elems {
+		record := []string{
+			id,               // id
+			edges[id].src,    // src
+			edges[id].target, // target
+		}
+		if err := writer.Write(record); err != nil {
+			return fmt.Errorf("failed to write line '%s' to %s: %w", id, csvPath, err)
+		}
+	}
+
+	fmt.Printf("\tEdges CSV for timeframe %d written to: %s\n", parsed.Timeframe, csvPath)
 
 	return nil
 }

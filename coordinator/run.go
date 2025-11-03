@@ -2,7 +2,6 @@ package main
 
 import (
 	omen "Omen"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,16 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/go-connections/nat"
 	"github.com/spf13/cobra"
 )
 
 const (
 	testRunnerStdoutLog     string = "test_runner.out.log"
 	testRunnerStderrLog     string = "test_runner.err.log"
-	coalesceOutputStdoutLog string = "test_runner.out.log"
-	coalesceOutputStderrLog string = "test_runner.err.log"
+	coalesceOutputStdoutLog string = "coalesce_output.out.log"
+	coalesceOutputStderrLog string = "coalesce_output.err.log"
 )
 
 // ErrNoFilesValidated returns an error as it says on the tin
@@ -63,7 +60,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// spin up Grafana container for visualizer
-	{
+	/*{
 		cr, err := dCLI.ContainerCreate(context.TODO(),
 			&container.Config{
 				ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
@@ -90,9 +87,9 @@ func run(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to start grafana container: %w", err)
 		}
 		grafanaContainerID = cr.ID
-	}
+	}*/
 
-	err := executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath)
+	err := executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath, grafanaPortStr)
 	if err == nil {
 		fmt.Println("Results are available @ localhost:" + grafanaPortStr)
 	}
@@ -100,7 +97,7 @@ func run(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath string) error {
+func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath, grafanaPortStr string) error {
 	paths, err := runInputValidationModule([]string{inputPath})
 	if err != nil {
 		return err
@@ -191,16 +188,49 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath s
 	}
 
 	var sbErr strings.Builder
-	// load visualization
-	vizLoaderCmd := exec.Command("docker", "run", "--rm", "-v", "./result/nodes.csv:/input/nodes.csv", "-v", "./result/edges.csv:/input/edges.csv", "3_omen-output-visualizer", "/input/nodes.csv", "/input/edges.csv")
-	log.Debug().Strs("args", vizLoaderCmd.Args).Msg("executing test runner binary")
-	vizLoaderCmd.Stderr = &sbErr
-	if _, err := vizLoaderCmd.Output(); err != nil {
-		log.Error().Err(err).Msg("failed to run visualization loader module")
+	// generate the database
+	{
+		cmd := exec.Command("python3", DefaultLoaderScriptPath, "graph",
+			"--db", "omen.db",
+			"--recreate",
+			"--root", "./results",
+			"--set1-prefix", "netA", "--set1-dir", "timeframe0", "--set1-ts", "timeframe0/ping_data_movement_0.csv",
+			"--set2-prefix", "netB", "--set2-dir", "timeframe1", "--set2-ts", "timeframe1/ping_data_movement_1.csv",
+			"--set3-prefix", "netC", "--set3-dir", "timeframe2", "--set3-ts", "timeframe2/ping_data_movement_2.csv",
+		)
+		log.Debug().Strs("args", cmd.Args).Msg("executing visualization loader binary (graph)")
+		cmd.Stderr = &sbErr
+		if _, err := cmd.Output(); err != nil {
+			log.Error().Err(err).Msg("failed to run visualization loader module (graph)")
+			return errors.New(sbErr.String())
+		}
+	}
+	sbErr.Reset()
+	const dbOut string = "omen.db"
+	{
+		cmd := exec.Command("python3", DefaultLoaderScriptPath, "timeseries",
+			"--root", "./results",
+			"--csv", "ping_data.csv",
+			"--db", dbOut,
+			"--table", "ping_data",
+			"--if-exists", "replace",
+			"--aggregate-by", "movement_number",
+		)
+		log.Debug().Strs("args", cmd.Args).Msg("executing visualization loader binary (graph)")
+		cmd.Stderr = &sbErr
+		if _, err := cmd.Output(); err != nil {
+			log.Error().Err(err).Msg("failed to run visualization loader module (graph)")
+			return errors.New(sbErr.String())
+		}
+	}
+	sbErr.Reset()
+	// boot visualizations
+	cmd := exec.Command("docker", "run", "-d", "-v", "./"+dbOut+":/var/lib/grafana/data.db", "-p", "3000:3000", "3_omen-output-visualizer-grafana")
+	cmd.Stderr = &sbErr
+	if _, err := cmd.Output(); err != nil {
+		log.Error().Err(err).Msg("failed to run visualization grafana container")
 		return errors.New(sbErr.String())
 	}
-	// -it -e DB_HOST=172.17.0.3 -e DB_PASS=mypass -v ./result/nodes.csv:/input/nodes.csv -v ./result/edges.csv:/input/edges.csv 3_omen-output-visualizer /input/nodes.csv /input/edges.csv
-
 	return nil
 }
 
