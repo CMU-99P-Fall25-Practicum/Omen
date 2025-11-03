@@ -44,7 +44,7 @@ func writePingAllFull(outputPath string, parsed []models.ParsedRawFile) (count u
 			if err := writer.Write(record); err != nil {
 				return count, err
 			}
-			count = +1
+			count += 1
 		}
 	}
 
