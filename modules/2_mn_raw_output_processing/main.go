@@ -109,7 +109,13 @@ func main() {
 			os.Exit(1)
 		}
 		// write position files into each timeframe
-		//writeMovementCSV(path.Join(*outputDir, "ping_data_movement_1.csv"))
+		pth := path.Join(tfDir, "ping_data_movement_"+strconv.FormatInt(int64(tf), 10)+".csv")
+		if err := writeMovementCSV(pth, uint64(tf), parsed[tf]); err != nil {
+			fmt.Printf("failed to write ping_data_movement file for timeframe %d: %v\n", tf, err)
+			os.Exit(1)
+		}
+		fmt.Printf("\tPing CSV for timeframe %d written to: %s\n", tf, pth)
+
 	}
 
 }

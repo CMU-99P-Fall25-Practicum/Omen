@@ -117,7 +117,7 @@ func writeIWFull(outputPath string, parsed []models.ParsedRawFile) (staCount, ap
 // timeframe: the timeframe we are processing for (under the "movement_number" column)
 //
 // rawTestFileName: "timeframeX.txt", where X==timeframe
-func writeMovementCSV(outPath string, timeframe uint64, rawTestFileName string, pings []models.PingRecord) error {
+func writeMovementCSV(outPath string, timeframe uint64, parsed models.ParsedRawFile) error {
 	f, err := os.Create(outPath)
 	if err != nil {
 		return err
@@ -133,18 +133,24 @@ func writeMovementCSV(outPath string, timeframe uint64, rawTestFileName string, 
 		return err
 	}
 
-	// records
-	record := []string{
-		"ping", strconv.FormatUint(timeframe, 10),
-		rawTestFileName,
-		"", // node name is always empty
-		"", // position is always empty
-		//pings, // staX
-		// staY
-		// TODO
+	for _, ping := range parsed.Pings {
+		record := []string{
+			"ping",                            // data_type
+			strconv.FormatUint(timeframe, 10), // movement_number
+			ping.TestFile,                     // test_file
+			"",                                // node name is always empty
+			"",                                // position is always empty
+			ping.Src,
+			ping.Dst,
+			ping.Tx,
+			ping.Rx,
+			ping.LossPct,
+			ping.AvgRttMs,
+		}
+		if err := wr.Write(record); err != nil {
+			return err
+		}
 	}
-	if err := wr.Write(record); err != nil {
-		// TODO
-	}
+
 	return nil
 }
