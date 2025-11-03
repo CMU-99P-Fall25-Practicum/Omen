@@ -29,6 +29,7 @@ const (
 	inputValidatorImageTag          string = "latest"
 	DefaultTestRunnerBinaryPath     string = "./1_spawn"
 	DefaultCoalesceOutputBinaryPath string = "./2_output_processing"
+	DefaultLoaderScriptPath         string = "omenloader.py"
 )
 
 var (
