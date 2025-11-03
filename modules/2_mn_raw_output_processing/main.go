@@ -17,7 +17,7 @@ import (
 const directoryNameFormat string = "20060102_150405"
 
 const (
-	fullPingDataCSV string = "pingall_full_data.csv" // name of the cumulative ping data file
+	fullPingDataCSV string = "ping_data.csv" // name of the cumulative ping data file
 	fullIWDataCSV   string = "final_iw_data.csv"
 )
 
