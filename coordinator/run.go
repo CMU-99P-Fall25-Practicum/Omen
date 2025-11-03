@@ -21,8 +21,8 @@ import (
 const (
 	testRunnerStdoutLog     string = "test_runner.out.log"
 	testRunnerStderrLog     string = "test_runner.err.log"
-	coalesceOutputStdoutLog string = "test_runner.out.log"
-	coalesceOutputStderrLog string = "test_runner.err.log"
+	coalesceOutputStdoutLog string = "coalesce_output.out.log"
+	coalesceOutputStderrLog string = "coalesce_output.err.log"
 )
 
 // ErrNoFilesValidated returns an error as it says on the tin
