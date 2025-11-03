@@ -80,7 +80,14 @@ func Build() error {
 	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing, DockerizeOV)
 
 	// copy the driver script into the artefacts directory so it can be passed by spawn topology
-	return sh.Copy(path.Join(buildDir, "mininet-script.py"), "modules/1_spawn_topology/mininet-script.py")
+	if err := sh.Copy(path.Join(buildDir, "mininet-script.py"), "modules/1_spawn_topology/mininet-script.py"); err != nil {
+		return err
+	}
+	// copy the database generator script into artefacts for coordinator to invoke directly
+	if err := sh.Copy(path.Join(buildDir, "omenloader.py"), "modules/3_output_visualization/omenloader.py"); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Clean deletes the build directory and everything in it.
