@@ -2,16 +2,21 @@ package main
 
 import (
 	omen "Omen"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/go-connections/nat"
 	"github.com/spf13/cobra"
 )
 
@@ -58,36 +63,6 @@ func run(cmd *cobra.Command, args []string) error {
 	} else if inf.IsDir() {
 		return fmt.Errorf("input json cannot be a directory")
 	}
-
-	// spin up Grafana container for visualizer
-	/*{
-		cr, err := dCLI.ContainerCreate(context.TODO(),
-			&container.Config{
-				ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
-				Image:        "grafana/grafana",
-			},
-			&container.HostConfig{
-				PortBindings: nat.PortMap{
-					nat.Port("3000/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: grafanaPortStr}},
-				},
-			},
-			nil,
-			nil,
-			"OmenVizGrafana_p"+grafanaPortStr)
-		if err != nil {
-			return fmt.Errorf("failed to create grafana container: %w", err)
-		}
-		if len(cr.Warnings) > 0 {
-			log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("spun up grafana container with warnings")
-		} else {
-			log.Info().Str("container ID", cr.ID).Msg("spun up grafana container")
-		}
-
-		if err := dCLI.ContainerStart(context.TODO(), cr.ID, container.StartOptions{}); err != nil {
-			return fmt.Errorf("failed to start grafana container: %w", err)
-		}
-		grafanaContainerID = cr.ID
-	}*/
 
 	err := executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath, grafanaPortStr)
 	if err == nil {
@@ -224,13 +199,48 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath, 
 		}
 	}
 	sbErr.Reset()
-	// boot visualizations
-	cmd := exec.Command("docker", "run", "-d", "-v", "./"+dbOut+":/var/lib/grafana/data.db", "-p", "3000:3000", "3_omen-output-visualizer-grafana")
-	cmd.Stderr = &sbErr
-	if _, err := cmd.Output(); err != nil {
-		log.Error().Err(err).Msg("failed to run visualization grafana container")
-		return errors.New(sbErr.String())
+
+	// because host mounts must be absolute, we need to get the full path to the local file first
+	abspth, err := filepath.Abs("omen.db")
+	if err != nil {
+		return err
 	}
+
+	// boot visualization container
+	cr, err := dCLI.ContainerCreate(context.TODO(),
+		&container.Config{
+			ExposedPorts: nat.PortSet{nat.Port("3000/tcp"): struct{}{}},
+			Image:        omen.VisualizationGrafanaImage,
+		},
+		&container.HostConfig{
+			PortBindings: nat.PortMap{
+				nat.Port("3000/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: grafanaPortStr}},
+			},
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: abspth,
+					Target: "/var/lib/grafana/data.db",
+				},
+			},
+		},
+		nil,
+		nil,
+		"OmenVizGrafana_p"+grafanaPortStr)
+	if err != nil {
+		return fmt.Errorf("failed to create grafana container: %w", err)
+	}
+	if len(cr.Warnings) > 0 {
+		log.Warn().Strs("warnings", cr.Warnings).Str("container ID", cr.ID).Msg("created grafana container with warnings")
+	} else {
+		log.Info().Str("container ID", cr.ID).Msg("created grafana container")
+	}
+
+	if err := dCLI.ContainerStart(context.Background(), cr.ID, container.StartOptions{}); err != nil {
+		return fmt.Errorf("failed to spin up grafana container: %w", err)
+	}
+	grafanaContainerID = cr.ID
+
 	return nil
 }
 
