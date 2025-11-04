@@ -114,6 +114,6 @@ func cleanup(errored bool) {
 			log.Error().Err(err).Msg("failed to force-remove the Grafana container")
 		}
 	} else { // notify about still running containers
-		fmt.Println("Remember to stop the Grafana container when you are done! ") //ID: " + grafanaContainerID)
+		fmt.Println("Remember to stop the Grafana container when you are done! ID: " + grafanaContainerID)
 	}
 }
