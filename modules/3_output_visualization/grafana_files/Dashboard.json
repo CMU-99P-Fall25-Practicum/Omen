@@ -24,7 +24,7 @@
     {
       "datasource": {
         "type": "frser-sqlite-datasource",
-        "uid": "YOUR UID HERE"   
+        "uid": null
       },
       "fieldConfig": {
         "defaults": {
@@ -133,7 +133,7 @@
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
           "queryText": "SELECT * FROM ping_data_agg LIMIT 1000;\n",
           "queryType": "table",
@@ -148,7 +148,7 @@
     {
       "datasource": {
         "type": "frser-sqlite-datasource",
-        "uid": "YOUR UID HERE"
+        "uid": null
       },
       "fieldConfig": {
         "defaults": {
@@ -254,7 +254,7 @@
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
           "queryText": "SELECT * FROM ping_data_agg;\n\n\n\n\n\n\n\n\n\n\n\n\n",
           "queryType": "table",
