@@ -1,3 +1,5 @@
+// Package omen provides functionality shared across all modules (including the magefile).
+// It has no direct function within the pipeline.
 package omen
 
 import (
@@ -9,7 +11,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const Version string = "MS3"
+const (
+	Version string = "MS3"
+)
+
+// Docker-related
+const (
+	InputValidatorImage       string = "0_omen-input-validator"
+	VisualizationLoaderImage  string = "3_omen-output-visualizer-loader"
+	VisualizationGrafanaImage string = "3_omen-output-visualizer-grafana"
+)
 
 // Contains styles we are using.
 // NOTE(rlandau): Most are ripped out of charmtone and based on the default color schemes Fang uses.

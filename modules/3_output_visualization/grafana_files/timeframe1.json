@@ -18,18 +18,18 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 4,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "frser-sqlite-datasource",
-        "uid": "Your UID Here"
+        "uid": null
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic-by-name"
+            "mode": "thresholds"
           },
           "custom": {
             "hideFrom": {
@@ -53,28 +53,19 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": ""
-            },
-            "properties": []
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 12,
+        "h": 8,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 2,
       "options": {
         "basemap": {
           "config": {},
           "name": "Layer 0",
-          "opacity": 0.8,
           "type": "default"
         },
         "controls": {
@@ -146,25 +137,28 @@
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
-          "queryText": "SELECT\n  id AS node_id,\n  title,\n  latitude,\n  longitude,\n  detail__success_rate AS success_rate\nFROM netA_nodes\nWHERE latitude IS NOT NULL AND longitude IS NOT NULL;\n",
+          "queryText": "SELECT\n  id AS node_id,\n  title,\n  latitude,\n  longitude,\n  detail__success_rate AS success_rate\nFROM netB_nodes\nWHERE latitude IS NOT NULL AND longitude IS NOT NULL;",
           "queryType": "table",
-          "rawQueryText": "SELECT\n  id AS node_id,\n  title,\n  latitude,\n  longitude,\n  detail__success_rate AS success_rate\nFROM netA_nodes\nWHERE latitude IS NOT NULL AND longitude IS NOT NULL;\n",
+          "rawQueryText": "SELECT\n  id AS node_id,\n  title,\n  latitude,\n  longitude,\n  detail__success_rate AS success_rate\nFROM netB_nodes\nWHERE latitude IS NOT NULL AND longitude IS NOT NULL;",
           "refId": "A",
           "timeColumns": []
         },
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
           "hide": false,
-          "queryText": "SELECT\n  e.id,\n  e.source,\n  e.target,\n  ns.latitude  AS source_lat,\n  ns.longitude AS source_lon,\n  nt.latitude  AS target_lat,\n  nt.longitude AS target_lon,\n  e.status\nFROM netA_edges e\nJOIN netA_nodes ns ON ns.id = e.source\nJOIN netA_nodes nt ON nt.id = e.target\nWHERE ns.latitude  IS NOT NULL AND ns.longitude IS NOT NULL\n  AND nt.latitude  IS NOT NULL AND nt.longitude IS NOT NULL;\n",
+          "queryText": "",
           "queryType": "table",
-          "rawQueryText": "SELECT\n  e.id,\n  e.source,\n  e.target,\n  ns.latitude  AS source_lat,\n  ns.longitude AS source_lon,\n  nt.latitude  AS target_lat,\n  nt.longitude AS target_lon,\n  e.status\nFROM netA_edges e\nJOIN netA_nodes ns ON ns.id = e.source\nJOIN netA_nodes nt ON nt.id = e.target\nWHERE ns.latitude  IS NOT NULL AND ns.longitude IS NOT NULL\n  AND nt.latitude  IS NOT NULL AND nt.longitude IS NOT NULL;\n",
+          "rawQueryText": "",
           "refId": "B",
-          "timeColumns": []
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
         }
       ],
       "title": "Map",
@@ -173,33 +167,34 @@
     {
       "datasource": {
         "type": "frser-sqlite-datasource",
-        "uid": "YOUR UID HERE"
+        "uid": null
       },
       "fieldConfig": {
         "defaults": {},
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
+        "h": 12,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 8
       },
-      "id": 2,
+      "id": 1,
       "options": {
         "edges": {},
         "layoutAlgorithm": "layered",
         "nodes": {
           "arcs": [
             {
-              "color": "#73BF69",
+              "color": "#37872D",
               "field": "arc__success"
             },
             {
-              "color": "#F2495C",
+              "color": "#C4162A",
               "field": "arc__errors"
             }
-          ]
+          ],
+          "mainStatUnit": ""
         },
         "zoomMode": "cooperative"
       },
@@ -208,23 +203,23 @@
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
-          "queryText": "SELECT\n  id,\n  title,\n  subTitle,\n  mainStat,\n  severity,\n  \"detail__rx_bytes\",\n  \"detail__rx_packets\",\n  \"detail__tx_bytes\",\n  \"detail__tx_packets\",\n  \"detail__success_rate\",\n  \"arc__success\",\n  \"arc__errors\"\nFROM netA_nodes\nLIMIT 50;\n\n",
+          "queryText": "SELECT\n  id,\n  title,\n  subTitle,\n  mainStat,\n  severity,\n  \"detail__rx_bytes\",\n  \"detail__rx_packets\",\n  \"detail__tx_bytes\",\n  \"detail__tx_packets\",\n  \"detail__success_rate\",\n  \"arc__success\",\n  \"arc__errors\"\nFROM netB_nodes\nLIMIT 50;",
           "queryType": "table",
-          "rawQueryText": "SELECT\n  id,\n  title,\n  subTitle,\n  mainStat,\n  severity,\n  \"detail__rx_bytes\",\n  \"detail__rx_packets\",\n  \"detail__tx_bytes\",\n  \"detail__tx_packets\",\n  \"detail__success_rate\",\n  \"arc__success\",\n  \"arc__errors\"\nFROM netA_nodes\nLIMIT 50;\n\n",
+          "rawQueryText": "SELECT\n  id,\n  title,\n  subTitle,\n  mainStat,\n  severity,\n  \"detail__rx_bytes\",\n  \"detail__rx_packets\",\n  \"detail__tx_bytes\",\n  \"detail__tx_packets\",\n  \"detail__success_rate\",\n  \"arc__success\",\n  \"arc__errors\"\nFROM netB_nodes\nLIMIT 50;",
           "refId": "A",
           "timeColumns": []
         },
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
           "hide": false,
-          "queryText": "SELECT\n  id,      \n  source,    \n  target,    \n  status\nFROM netA_edges;\n",
+          "queryText": "SELECT\n  id,      \n  source,    \n  target,    \n  status\nFROM netB_edges;",
           "queryType": "table",
-          "rawQueryText": "SELECT\n  id,      \n  source,    \n  target,    \n  status\nFROM netA_edges;\n",
+          "rawQueryText": "SELECT\n  id,      \n  source,    \n  target,    \n  status\nFROM netB_edges;",
           "refId": "B",
           "timeColumns": []
         }
@@ -235,7 +230,7 @@
     {
       "datasource": {
         "type": "frser-sqlite-datasource",
-        "uid": "YOUR UID HERE"
+        "uid": null
       },
       "fieldConfig": {
         "defaults": {
@@ -281,10 +276,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
+        "h": 9,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 20
       },
       "id": 3,
       "options": {
@@ -315,13 +310,16 @@
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
-            "uid": "YOUR UID HERE"
+            "uid": null
           },
-          "queryText": "SELECT * FROM netA_timeseries;",
+          "queryText": "SELECT * FROM netB_timeseries;",
           "queryType": "table",
-          "rawQueryText": "SELECT * FROM netA_timeseries;",
+          "rawQueryText": "SELECT * FROM netB_timeseries;",
           "refId": "A",
-          "timeColumns": []
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
         }
       ],
       "title": "Metrics",
@@ -335,12 +333,12 @@
     "list": []
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "",
-  "title": "Timeframe 0",
-  "uid": "34be8bc3-4288-46eb-9430-026d44f65a5a",
+  "timezone": "browser",
+  "title": "Timeframe 1",
+  "uid": "43e4b0ac-e9a7-4dfc-948a-e88d88ecaa6a",
   "version": 15
 }

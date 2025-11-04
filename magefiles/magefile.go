@@ -1,9 +1,8 @@
-//go:build mage
-
 // Package mage implements a mage file capable of generating each module.
 package main
 
 import (
+	omen "Omen"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -42,7 +41,7 @@ func BuildCoordinator() error {
 // DockerizeIV recompiles the input validation docker container.
 func DockerizeIV() error {
 	mg.Deps(dockerInPath)
-	return sh.Run("docker", "build", "-t", "0_omen-input-validator", "modules/0_input/")
+	return sh.Run("docker", "build", "-t", omen.InputValidatorImage, "modules/0_input/")
 }
 
 // BuildSpawnTopo builds the binary for the glue module.
@@ -67,10 +66,10 @@ func BuildOutputProcessing() error {
 // DockerizeOV recompiles the output visualization loader  and grafana-sqlite images.
 func DockerizeOV() error {
 	mg.Deps(dockerInPath)
-	if err := sh.Run("docker", "build", "-t", "3_omen-output-visualizer-loader", "-f", "modules/3_output_visualization/loader.Dockerfile", "modules/3_output_visualization"); err != nil {
+	if err := sh.Run("docker", "build", "-t", omen.VisualizationLoaderImage, "-f", "modules/3_output_visualization/loader.Dockerfile", "modules/3_output_visualization"); err != nil {
 		return err
 	}
-	return sh.Run("docker", "build", "-t", "3_omen-output-visualizer-grafana", "-f", "modules/3_output_visualization/grafana-sqlite.Dockerfile", "modules/3_output_visualization")
+	return sh.Run("docker", "build", "-t", omen.VisualizationGrafanaImage, "-f", "modules/3_output_visualization/grafana-sqlite.Dockerfile", "modules/3_output_visualization")
 }
 
 //#endregion module building
