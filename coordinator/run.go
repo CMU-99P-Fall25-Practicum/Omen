@@ -109,35 +109,8 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath, 
 			result <- nil
 		}()
 
-		{ // wait for the command to complete
-			onScreen := 0
-			char1, char2 := '.', ':'
-			curChar := char1
-			var err error
-		DoneLoop:
-			for {
-				select {
-				case err = <-result:
-					break DoneLoop
-				case <-time.After(3 * time.Second):
-					if onScreen > 4 { // reset and flip
-						fmt.Printf("\r")
-						onScreen = 0
-						if curChar == char1 {
-							curChar = char2
-						} else {
-							curChar = char1
-						}
-					} else {
-						fmt.Printf("%c", curChar)
-						onScreen += 1
-					}
-
-				}
-			}
-			if err != nil {
-				return err
-			}
+		if err := waitDisplay(result, 5); err != nil {
+			return err
 		}
 
 		sbOut.Reset()
@@ -240,6 +213,44 @@ func executePipeline(inputPath, testRunnerBinaryPath, coalesceOutputBinaryPath, 
 		return fmt.Errorf("failed to spin up grafana container: %w", err)
 	}
 	grafanaContainerID = cr.ID
+
+	return nil
+}
+
+// waitDisplay awaits any value on the result channel.
+// In the meantime, it prints a simple, looping string to represent that processing is still occurring.
+//
+// charLimit sets the max number of characters to display at once.
+func waitDisplay(result <-chan error, charLimit uint16) error {
+	onScreen := uint16(0)
+	char1, char2 := '.', ':' // the characters to alternate between
+	curChar := char1
+	var err error
+DoneLoop:
+	for {
+		select {
+		case err = <-result:
+			// wipe away the spinner
+			fmt.Printf("\r%s", strings.Repeat(" ", int(charLimit)))
+			break DoneLoop
+		case <-time.After(3 * time.Second):
+			if onScreen > charLimit+1 { // reset and flip
+				fmt.Print("\r")
+				onScreen = 0
+				if curChar == char1 {
+					curChar = char2
+				} else {
+					curChar = char1
+				}
+			} else {
+				fmt.Printf("%c", curChar)
+				onScreen += 1
+			}
+		}
+	}
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
