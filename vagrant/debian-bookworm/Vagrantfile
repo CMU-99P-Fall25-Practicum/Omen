@@ -1,0 +1,35 @@
+Vagrant.configure("2") do |config|
+  # use a reasonably new ubuntu box
+  config.vm.box = "debian/bookworm64"
+  config.vm.box_version = "12.20250126.1"
+  
+
+  # provision resources
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "mininet-wifi-vf"
+    vb.memory = 4096
+    vb.cpus = 2
+  end
+
+  # Host-only network so host can SSH to the VM; not exposed to external networks
+  # Use a static IP on a host-only adapter
+  # static ip address on the host's network (available only to host)
+  #config.vm.network "private_network", ip: "192.168.56.10"
+
+  # Forward guest SSH to a host port (optional). If you want to connect with 'vagrant ssh' it's not needed.
+  # Keep commented unless you need direct port on localhost:
+  # config.vm.network "forwarded_port", guest: 22, host: 2222, id: "ssh", auto_correct: true
+
+  # Provision: run an inline shell or script to install mininet-wifi dependencies.
+  # It's a minimal example — adapt to match the OVA provisioning steps from the repo.
+  config.vm.provision "shell", path: "setup.sh"
+
+  # Optional: ensure the VM is accessible via SSH from host only with a keypair:
+  # Vagrant by default sets up SSH keys. To use your own key, uncomment and set path:
+  # config.ssh.private_key_path = "~/.ssh/id_rsa"
+
+  # Prevent shared folder UID/GID issues (optional)
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+  end
+end
