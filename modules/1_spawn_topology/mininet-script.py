@@ -38,6 +38,16 @@ from mn_wifi.link import wmediumd
 from mn_wifi.wmediumdConnector import interference
 
 def make_results_dir():
+    """
+    Create a new results directory under /tmp/test_results named by the current timestamp.
+
+    The folder name is generated using the current date and time 
+    (e.g., 20251110_104530). If the base directory or timestamped 
+    folder does not exist, it will be created automatically.
+
+    Returns:
+        str: Path to the created results directory.
+    """
     base = "/tmp/test_results"
     # folder named by current time
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -47,6 +57,25 @@ def make_results_dir():
 
 
 def build_from_spec(spec):
+    """
+    Build and start a Mininet-WiFi network based on a given specification.
+
+    The function reads network parameters, access points, and station settings 
+    from the input dictionary 'spec', creates corresponding nodes, configures 
+    the propagation model, and starts the network.
+
+    Args:
+        spec (dict): Network specification containing:
+            - "nets": global settings (e.g., noise_th, propagation_model)
+            - "aps": list of access point definitions
+            - "stations": list of station definitions
+
+    Returns:
+        tuple: (net, sta_objs, ap_objs)
+            - net: the Mininet-WiFi network instance
+            - sta_objs: dictionary of station objects
+            - ap_objs: dictionary of access point objects
+    """
     # net options
     net_cfg = spec["nets"]
     noise_th = net_cfg["noise_th"]
@@ -190,6 +219,14 @@ def run_iw_stations(sta_objs, ap_objs, cmd, test_name="iw_stations"):
     return "".join(lines)
 
 def run_tests(sta_objs, ap_objs, spec, tests, results_dir):
+    """
+    Run all tests defined in 'tests' and save results by timeframe.
+
+    Supports ping tests and node movements. After each timeframe, runs
+    `pingall_full` and `iw` checks on all nodes. Each timeframe's output 
+    is written to `timeframeX.txt` in `results_dir`.
+    """
+
     info("*** Running tests\n")
     time.sleep(30)
     
