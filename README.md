@@ -214,10 +214,15 @@ Noise Threshold for successful communication (more negative means less noise):
 
 ### References
 [Out-of-Band Interference and Noise Floors – MetaGeek Support](https://support.metageek.com/hc/en-us/articles/202424234-Out-of-Band-Interference-and-Noise-Floors)
+
 [Friis Free Space Propagation Model – GaussianWaves](https://www.gaussianwaves.com/2013/09/friss-free-space-propagation-model/)
+
 [RECOMMENDATION ITU-R P.838-3 - Specific attenuation model for rain for use in prediction methods](https://www.itu.int/dms_pubrec/itu-r/rec/p/r-rec-p.838-3-200503-i%21%21pdf-e.pdf)
+
 [How does rain affect my 2.4 GHz and 5 GHz links? – Edgecore Help Center](https://support.edge-core.com/hc/en-us/articles/900004117526-How-does-rain-affect-my-2-4-GHz-and-5-GHz-links)
+
 [https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.840-7-201712-S%21%21PDF-E.pdf](https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.840-7-201712-S%21%21PDF-E.pdf)
+
 [Signal-to-Noise Ratio (SNR) and Wireless Signal Strength - Cisco Meraki Documentation](https://documentation.meraki.com/MR/Design_and_Configure/Architecture_and_Best_Practices/Signal-to-Noise_Ratio_(SNR)_and_Wireless_Signal_Strength)
 
 # Architectural Diagrams
