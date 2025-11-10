@@ -171,22 +171,9 @@ To simulate varying environmental conditions and states, we have collected some 
     - Path-loss exponent (n)
     - Shadowing standard deviation (σ, in dB)
 
-## Noise Thresholds
-> [!NOTE]
-> At 2.4/2.5 GHz, rain and snow attenuation is tiny over Wi-Fi distances. Therefore, instead of using a huge noise penalty, it will be more ideal to manipulate the path-loss exponent and shadowing standard deviation. Additionally, 5GHz suffers slightly greater loss than 2.4 GHz.
-
-Noise Threshold for successful communication (more negative means less noise):
-- Clear/open environment:
-  - 2.4 GHz: -105
-  - 5 GHz: -95
-- Typical Normal environment (apartment / office) (default)
-  - 2.4 GHz: -100
-  - 5 GHz: -93
-- Noisy environment
-  - 2.4 GHz: -98
-  - 5 GHz: -90
-
 ## Suggested Values
+
+### Propagation Model
 
 - Normal/Unobstructed Conditions
   - Log-Distance
@@ -212,7 +199,23 @@ Noise Threshold for successful communication (more negative means less noise):
     - exp = 2.9 - 3.1
     - s = 2 - 3 dB
 
+### Noise Threshold
+
+- Clear/open environment:
+  - 2.4 GHz: -105
+  - 5 GHz: -95
+- Typical Normal environment (apartment / office) (default)
+  - 2.4 GHz: -100
+  - 5 GHz: -93
+- Noisy environment
+  - 2.4 GHz: -98
+  - 5 GHz: -90
+
+> [!NOTE]
+> At 2.4/2.5 GHz, rain and snow attenuation is tiny over Wi-Fi distances. Therefore, instead of using a huge noise penalty, it will be more ideal to manipulate the path-loss exponent and shadowing standard deviation. Additionally, 5GHz suffers slightly greater loss than 2.4 GHz.
+
 ### References
+
 [Out-of-Band Interference and Noise Floors – MetaGeek Support](https://support.metageek.com/hc/en-us/articles/202424234-Out-of-Band-Interference-and-Noise-Floors)
 
 [Friis Free Space Propagation Model – GaussianWaves](https://www.gaussianwaves.com/2013/09/friss-free-space-propagation-model/)
