@@ -10,6 +10,37 @@ As it says on the tin, Input Validation modules consume a configuration file and
 *In*:
 - arg1: Json file (path taken as argument) to be validated. This file contains a topology, at least one test to execute against the topology, environmental conditions to apply to the topology’s links and nodes, and all required metadata (ssh information & credentials, test name, backend, OSM connection information, etc).
   - [Example](example_files/test_run.json).
+  - Because JSON does not support inline comments, the fields are documented here:
+    - **schemaVersion**: "1.0"
+    - **meta**
+      - **backend**: "mininet"
+      - **name**: Name to use for this run, to distinguish it from other tests. Has no impact on logic.
+      - **duration**: *unused*. The maximum duration the actual test script is allowed to run for.
+    - **topo**
+      - **nets**
+        - **noise_th**: sets the noise sensitivity threshold on receiving nodes. Lower thresholds mean more sensitive receivers. See the [README](README.md#noise-thresholds) for suggested values.
+        - **propagation_model**: selects a propagation model for simulation wireless signal degradation. Alters the energy loss by distance; set this to simulate a mostly free-space environment, a mostly indoor environment, etc. See the [README](README.md#wireless-propagation-models) for more information on supported models and suggested values.
+          - **exp**: path-loss exponent (n)
+          - **s**: shadowing standard deviation (σ)
+      - **aps**: *array*. access points (wireless routers) in the topology
+        - **id**: unique identifier for this node. Must have a unique number in it (this is used by Mininet to set a datapath-id).
+        - **mode**: "a". IEEE 802.11 mode.
+        - **channel**: Wi-Fi channel this node is broadcasting on
+        - **ssid**: name of the ssid this ap is broadcasting.
+          - currently, all SSIDs used must match.
+        - **position**: Coordinate offset in the 3D space. Used to determine distance from other nodes (in meters).
+      - **stations**: *array*. wireless hosts in the topology
+        - **id**: unique identifier for this node. Must have a unique number in it (this is used by Mininet to set a datapath-id).
+        - **position**: Coordinate offset in the 3D space. Used to determine distance from other nodes (in meters).
+    - **tests**: *array*. tests to run over the course of the run. Executed sequentially.
+      - **name**: name to use for this test, to distinguish it from other tests. Has no impact on logic.
+      - **type**: "node movements"
+      - **timeframe**: movements in the same timeframe are (functionally) executed simultaneously. Once all movements within a timeframe are completed, connectivity tests are performed and the framework moves onto the next timeframe.
+      - **node**: id of the node to move
+      - **position**: coordinate offset to move the node to
+    - **username**: username of the ssh-enabled user on the virtual machine that hosts mininet
+    - **password**: password of the ssh-enabled user on the virtual machine that hosts mininet
+    - **address**: ssh target. Must have the form <host>:<port>.
 
 *Out*: 
 - stdout: warnings and errors related to the validity of the given input file.
@@ -42,39 +73,6 @@ As it says on the tin, Input Validation modules consume a configuration file and
 *In*:
 - arg1: the json file validated by the prior input validation module execution.
   - [Example](example_files/test_run.json).
-    - Because JSON does not support inline comments, the fields are documented here:
-      - **schemaVersion**: "1.0"
-      - **meta**
-        - **backend**: "mininet"
-        - **name**: Name to use for this run, to distinguish it from other tests. Has no impact on logic.
-        - **duration**: *unused*. The maximum duration the actual test script is allowed to run for.
-      - **topo**
-        - **nets**
-          - **noise_th**: sets the noise sensitivity threshold on receiving nodes. Lower thresholds mean more sensitive receivers. See the [README](README.md#noise-thresholds) for suggested values.
-          - **propagation_model**: selects a propagation model for simulation wireless signal degradation. Alters the energy loss by distance; set this to simulate a mostly free-space environment, a mostly indoor environment, etc. See the [README](README.md#wireless-propagation-models) for more information on supported models and suggested values.
-            - **exp**: path-loss exponent (n)
-            - **s**: shadowing standard deviation (σ)
-        - **aps**: *array*. access points (wireless routers) in the topology
-          - **id**: unique identifier for this node. Must have a unique number in it (this is used by Mininet to set a datapath-id).
-          - **mode**: "a". IEEE 802.11 mode.
-          - **channel**: Wi-Fi channel this node is broadcasting on
-          - **ssid**: name of the ssid this ap is broadcasting.
-            - currently, all SSIDs used must match.
-          - **position**: Coordinate offset in the 3D space. Used to determine distance from other nodes (in meters).
-        - **stations**: *array*. wireless hosts in the topology
-          - **id**: unique identifier for this node. Must have a unique number in it (this is used by Mininet to set a datapath-id).
-          - **position**: Coordinate offset in the 3D space. Used to determine distance from other nodes (in meters).
-      - **tests**: *array*. tests to run over the course of the run. Executed sequentially.
-        - **name**: name to use for this test, to distinguish it from other tests. Has no impact on logic.
-        - **type**: "node movements"
-        - **timeframe**: movements in the same timeframe are (functionally) executed simultaneously. Once all movements within a timeframe are completed, connectivity tests are performed and the framework moves onto the next timeframe.
-        - **node**: id of the node to move
-        - **position**: coordinate offset to move the node to
-      - **username**: username of the ssh-enabled user on the virtual machine that hosts mininet
-      - **password**: password of the ssh-enabled user on the virtual machine that hosts mininet
-      - **address**: ssh target. Must have the form <host>:<port>.
-
-      
 
 *Out*: 
 - stdout: path to a directory containing at least one timestamped subdirectory with raw output files.
