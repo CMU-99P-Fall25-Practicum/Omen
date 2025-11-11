@@ -13,13 +13,20 @@ sudo apt-get install -y git
 if [ ! -d "/home/vagrant/mininet-wifi/.git" ]; then
   cd /home/vagrant || exit 1
   rm -rf mininet-wifi
-  git clone --depth 1 https://github.com/intrig-unicamp/mininet-wifi
+  git clone --depth 1 https://github.com/rflandau/mininet-wifi.git
 fi
+
+# add pip-installed items to our path
+PATH=$PATH:/home/vagrant/.local/bin
+
+# consider the repository safe for installation purposes
+git config --global --add safe.directory /home/vagrant/mininet-wifi
+
 
 # execute the install script
 cd mininet-wifi || exit 1
-sudo util/install.sh -Wlnfv
+sudo util/install-deb12.sh
 
 # ensure mininet has a clean start up environment
 
-sudo mn -c
+#sudo mn -c
