@@ -74,6 +74,33 @@ func DockerizeOV() error {
 
 //#endregion module building
 
+// Gui leverages wails to compile the GUI.
+func Gui(debug bool) error {
+	if _, err := exec.LookPath("wails"); err != nil {
+		return err
+	}
+
+	if err := os.Chdir("omen-gui"); err != nil {
+		return err
+	}
+	args := []string{"build"}
+	if debug {
+		args = append(args, "-debug")
+	}
+	if err := sh.Run("wails", args...); err != nil {
+		return err
+	}
+	if err := os.Chdir(".."); err != nil {
+		return err
+	}
+	// copy the linux/mac binary into artefacts
+	if err := sh.Copy(path.Join("artefacts", "omen-gui"), path.Join("omen-gui", "build", "bin", "omen-gui")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Build builds all required files and containers.
 func Build() error {
 	mg.Deps(DockerizeIV, BuildCoordinator, BuildSpawnTopo, BuildOutputProcessing, DockerizeOV)
