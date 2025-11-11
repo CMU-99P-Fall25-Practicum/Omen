@@ -32,6 +32,13 @@ Each module strictly follows its [I/O contract](MODULE_CONTRACTS.md) to ensure p
 
 - A Mininet_Wifi VM available over SSH
 
+### GUI
+
+The GUI is built in Wails. On top of the Go dependency above, it requires npm (available [here](https://nodejs.org/en/download/)).
+We built against npm 24, but other versions should work okay.
+I am not a JS developer; don't ask me.
+For more information, see the [Wails docs](https://wails.io/docs/gettingstarted/installation).
+
 ## Quick Start
 
 Build all components by executing `mage` at repo root.
