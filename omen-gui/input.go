@@ -4,6 +4,7 @@ package main
 
 //#region enums
 
+// PropModel enumerates the three, supported propagation models mn-wifi supports
 type PropModel string
 
 const (
@@ -19,6 +20,21 @@ var AllPropModels = []struct {
 	{Friis, "Friis"},
 	{LogDistance, "LogDistance"},
 	{LogNormalShadowing, "LogNormalShadowing"},
+}
+
+type WifiMode string
+
+const (
+	A WifiMode = "a"
+	B WifiMode = "b"
+)
+
+var AllWifiModes = []struct {
+	Value  WifiMode
+	TSName string
+}{
+	{A, "a"},
+	{B, "b"},
 }
 
 //#endregion enums
