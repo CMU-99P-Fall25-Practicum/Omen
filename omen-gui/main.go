@@ -31,6 +31,9 @@ func main() {
 		Bind: []any{
 			app,
 		},
+		EnumBind: []interface{}{
+			AllPropModels,
+		},
 	})
 
 	if err != nil {

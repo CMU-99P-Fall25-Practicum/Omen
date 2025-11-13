@@ -2,6 +2,27 @@ package main
 
 // This file exists because wails does not support anonymous structs so every sub-struct must be named.
 
+//#region enums
+
+type PropModel string
+
+const (
+	Friis              PropModel = "Friis"
+	LogDistance        PropModel = "LogDistance"
+	LogNormalShadowing PropModel = "LogNormalShadowing"
+)
+
+var AllPropModels = []struct {
+	Value  PropModel
+	TSName string
+}{
+	{Friis, "Friis"},
+	{LogDistance, "LogDistance"},
+	{LogNormalShadowing, "LogNormalShadowing"},
+}
+
+//#endregion enums
+
 type PropagationModel struct {
 	Model string  `json:"model"`
 	Exp   float64 `json:"exp"`
@@ -13,19 +34,23 @@ type Nets struct {
 	PropagationModel PropagationModel `json:"propagation_model"`
 }
 
+type AP struct {
+	ID       string `json:"id"`
+	Mode     string `json:"mode"`
+	Channel  int    `json:"channel"`
+	SSID     string `json:"ssid"`
+	Position string `json:"position"`
+}
+
+type Sta struct {
+	ID       string `json:"id"`
+	Position string `json:"position"`
+}
+
 type Topo struct {
-	Nets Nets `json:"nets"`
-	/*Aps []struct {
-		ID       string `json:"id"`
-		Mode     string `json:"mode"`
-		Channel  int    `json:"channel"`
-		Ssid     string `json:"ssid"`
-		Position string `json:"position"`
-	} `json:"aps"`
-	Stations []struct {
-		ID       string `json:"id"`
-		Position string `json:"position"`
-	} `json:"stations"`*/
+	Nets     Nets  `json:"nets"`
+	Aps      []AP  `json:"aps"`
+	Stations []Sta `json:"stations"`
 }
 
 type Input struct {
