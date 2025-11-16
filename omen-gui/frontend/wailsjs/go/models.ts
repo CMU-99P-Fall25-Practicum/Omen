@@ -5,6 +5,10 @@ export namespace main {
 	    LogDistance = "LogDistance",
 	    LogNormalShadowing = "LogNormalShadowing",
 	}
+	export enum WifiMode {
+	    a = "a",
+	    b = "b",
+	}
 	export class AP {
 	    id: string;
 	    mode: string;

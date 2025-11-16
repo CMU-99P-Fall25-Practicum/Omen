@@ -1,14 +1,9 @@
-<script lang="ts" variables>
-
-</script>
- 
-
 <template>
   <div>
-        <input v-model="cur.id" type="text" placeholder="ID" />
+        <input v-model="cur.id" type="text" placeholder="ID" /> <!-- TODO validate a unique number exists across stations and aps --> 
         <select v-model="cur.mode">
-            <option value="a">a</option>
-            <option value="b">b</option>
+            <option value={{main.WifiMode.a}}>a</option>
+            <option value={{main.WifiMode.b}}>b</option>
         </select>
         <input v-model="cur.channel" type="text" placeholder="Channel" />
         <input v-model="cur.ssid" type="text" placeholder="SSID" />
@@ -20,13 +15,16 @@
               <div class="cell"><label>Y</label><input v-model="y" type="number" /></div>
               <div class="cell"><label>Z</label><input v-model="z" type="number" /></div>
             </div>
+            <div class="error-text">
+              <label>{{errors.position}}</label>
+            </div>
         </div>
     <button @click="addAP">Add AP</button>
   </div>
 </template>
 
 
-<style scoped>
+<style>
 .position-table {
   display: inline-block;
   border: 1px solid #ccc;
@@ -48,18 +46,25 @@
   font-weight: bold;
   margin-bottom: 5px;
 }
+
+.error-text label {
+  color: rgb(252, 107, 107);
+}
+
 </style>
 
 <script lang="ts" setup>
 import { main } from '../../wailsjs/go/models'
 import { AddAP } from '../../wailsjs/go/main/App'
 
+//let wm: main.WifiMode = main.WifiMode.a
+
 // NOTE: x, y, and z are composed into main.AP.position
 let cur = new main.AP()
 let x: number = 0, y: number = 0, z: number = 0;
 
 var errors = {
-    position: ""
+    position: "test"
 }
 
 
