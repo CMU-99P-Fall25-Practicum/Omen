@@ -26,8 +26,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		// TODO fix background color
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+		BackgroundColour: &options.RGBA{R: 60, G: 60, B: 54, A: 1},
 		OnStartup:        app.startup,
 		Bind: []any{
 			app,
