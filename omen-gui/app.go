@@ -53,6 +53,9 @@ func (a *App) GenerateJSON() (success bool) {
 		return false
 	}
 	defer f.Close()
+
+	a.log.Debug().Any("values", a.values).Msg("encoding values...")
+
 	enc := json.NewEncoder(f)
 	if err := enc.Encode(a.values); err != nil {
 		a.log.Error().Err(err).Str("output path", outPath).Msg("failed to encode values")
