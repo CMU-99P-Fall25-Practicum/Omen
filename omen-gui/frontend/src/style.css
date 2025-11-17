@@ -24,3 +24,7 @@ body {
     height: 100vh;
     text-align: center;
 }
+
+.error-text label {
+  color: rgb(252, 107, 107);
+}
