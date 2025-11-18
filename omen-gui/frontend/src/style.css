@@ -28,3 +28,29 @@ body {
 .error-text {
   color: rgb(252, 107, 107);
 }
+
+/* region: bubble stylings for inserted APs and STAs */
+.bubbles {
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.bubble {
+  background: #007aff;
+  /* TODO replace with secondary color var */
+  color: #fff;
+  /* TODO replace with text color var */
+  border: none;
+  border-radius: 50%;
+  /* rounded */
+  justify-content: center;
+
+  /* minimums so small bubbles look like circles */
+  min-width: 2em;
+  min-height: 2em;
+
+  font-size: 12px;
+  /* space the bubbles out a bit */
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}

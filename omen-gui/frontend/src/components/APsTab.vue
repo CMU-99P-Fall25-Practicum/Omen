@@ -135,28 +135,4 @@ function validateAll(): string[] {
   color: rgb(252, 107, 107);
 }
 
-/* --- bubble styling --- */
-.bubbles {
-  margin-top: 12px;
-  flex-wrap: wrap;
-  gap: 3px;
-  /* space between bubbles */
-}
-
-.bubble {
-  background: #007aff;
-  /* TODO replace with secondary color var */
-  color: #fff;
-  /* TODO replace with text color var */
-  border: none;
-  border-radius: 50%;
-  /* rounded */
-  justify-content: center;
-
-  /* minimums so small bubbles look like circles */
-  min-width: 2em;
-  min-height: 2em;
-
-  font-size: 12px;
-}
 </style>
