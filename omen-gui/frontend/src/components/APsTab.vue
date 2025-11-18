@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { main } from '../../wailsjs/go/models'
 import { AddAP } from '../../wailsjs/go/main/App'
-import { reactive, watch, ref } from 'vue'
+import { reactive, computed, watchEffect } from 'vue'
 import { GetNumberGroup } from "./shared.vue"
 
 // define events
@@ -11,75 +11,74 @@ const emit = defineEmits<{
 
 //#region variables -----------------------------------------------------------
 
-const defaults = {
-  mode: main.WifiMode.a
-}
+// list of APs already added to be displayed below as clickable buttons
+const addedAPs = reactive(Array<string>())
 
 // NOTE: x, y, and z are composed into main.AP.position
-let cur = ref(new main.AP({
-  mode: defaults.mode
-}))
-let c = reactive({
-  x: 0,
-  y: 0,
-  z: 0 
+let cur = reactive(new main.AP({
+    id: "ap1",
+    mode: main.WifiMode.a,
+    channel: 0,
+    ssid: "",
+    position: "",
+  }))
+let c = reactive({ x: 0, y: 0, z: 0 })
+// validation errors is recomputed every time cur (as its one dependency) is touched.
+// It is used to disable the Add AP button and provide reasons why.
+let validationErrors = computed(() => {
+  const msgs: string[] = []
+
+  // test id
+  if (cur.id.trim() == "")     msgs.push('ID is required')
+  else { // populated-only tests
+    {
+      let ng: string = GetNumberGroup(cur.id)
+      if (ng == "")  msgs.push('ID must have exactly one number group')
+      if (Number(ng) < 0) msgs.push('ID number group must be positive')
+    }
+    if (addedAPs.findIndex((v) => cur.id === v) != -1) msgs.push('AP ids must be unique')
+  }
+  // TODO additional rules
+
+  return msgs
 })
-// controlled by the following watch
-let errors = ref(Array<string>())
+
+// alert our parent about our current state
+watchEffect(() => {
+  emit('valid', validationErrors.value.length === 0)
+})
+
 // whenever a field (that requires validation) changes,
 // check all fields for errors,
 // emit whether or not we are in a valid state,
 // and print error messages.
-watch([() => cur.value.id, () => cur.value.position, () => c], () => {
-  errors.value = validateAll()
-  emit('valid', errors.value.length===0)
-})
 
-// list of APs already added to be displayed below as clickable buttons
-const addedAPs = reactive(Array<string>())
 
 //#endregion variables --------------------------------------------------------
 
 function addAP() {
   // coalesce x,y,z into cur
-  cur.value.position = `(${c.x},${c.y},${c.z})`
+  cur.position = `(${c.x},${c.y},${c.z})`
 
   // save off ID for later retrieval 
-  addedAPs.push(cur.value.id)
-  AddAP(cur.value)
+  addedAPs.push(cur.id)
+  AddAP(cur)
 
   // determine default values for next AP
-  let newID: number = Number(GetNumberGroup(cur.value.id))+1
+  let newID: number = Number(GetNumberGroup(cur.id))+1
 
   // reset the form for the next entry
-  cur.value = new main.AP({
-    id: "ap"+String(newID), // retain dpid
-    mode: defaults.mode,
-    ssid: cur.value.ssid, // retain ssid
-  })
+  cur.id = "ap"+String(newID)
+  cur.mode = main.WifiMode.a
+  cur.channel = 0
+  // do not touch ssid
+  cur.position = ''
 
   c.x = 0
   c.y = 0
   c.z = 0
 }
 
-// validate checks all fields and returns a list of errors
-function validateAll(): string[] {
-  const msgs: string[] = []
-
-  // test id
-  if (cur.value.id.trim() == "")     msgs.push('ID is required')
-  else { // populated-only tests
-    {
-      let ng: string = GetNumberGroup(cur.value.id)
-      if (ng == "")  msgs.push('ID must have exactly one number group')
-      if (Number(ng) < 0) msgs.push('ID number group must be positive')
-    }
-    if (addedAPs.findIndex((v) => cur.value.id === v) != -1) msgs.push('AP ids must be unique')
-  }
-  // TODO additional rules
-  return msgs
-}
 </script>
 
 <template>
@@ -104,8 +103,6 @@ function validateAll(): string[] {
       </div>
     </div>
     <br /><br />
-    <button @click="addAP" :hidden="errors.length>0">Add AP</button>
-
     <!-- bubbles showing added AP IDs -->
     <div class="bubbles">
       <button v-for="id in addedAPs" :key="id" class="bubble" type="button" @click.stop>
@@ -113,9 +110,10 @@ function validateAll(): string[] {
         {{ id }}
       </button>
     </div>
-    <!-- errors -->
+
+    <button @click="addAP" v-show="validationErrors.length===0">Add AP</button>
     <div class="error-list"> <!-- TODO define error-list class in css-->
-      <div v-for="(err, idx) in errors"
+      <div v-for="(err, idx) in validationErrors"
         :key="idx"
       >{{ err }}
       </div>
