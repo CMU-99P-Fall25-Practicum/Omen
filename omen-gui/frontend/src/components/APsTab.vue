@@ -48,8 +48,15 @@ function addAP() {
   addedAPs.push(cur.value.id)
   AddAP(cur.value)
 
+  // determine default values for next AP
+  let newID: number = Number(GetNumberGroup(cur.value.id))+1
+
   // reset the form for the next entry
-  cur.value = new main.AP()
+  cur.value = new main.AP({
+    id: "ap"+String(newID), // retain dpid
+    mode: defaults.mode,
+    ssid: cur.value.ssid, // retain ssid
+  })
 
   c.x = 0
   c.y = 0
