@@ -61,7 +61,6 @@ function validateAll(): string[] {
     if (addedAPs.findIndex((v) => cur.value.id === v) != -1) msgs.push('AP ids must be unique')
   }
   // TODO additional rules
-  console.warn("pushing error messages:", msgs)
   return msgs
 }
 </script>
@@ -88,7 +87,8 @@ function validateAll(): string[] {
         <div class="cell"><label>Z</label><input v-model="c.z" type="number" /></div>
       </div>
     </div>
-    <button @click="addAP">Add AP</button>
+    <br /><br />
+    <button @click="addAP" :hidden="errors.length>0">Add AP</button>
 
     <!-- bubbles showing added AP IDs -->
     <div class="bubbles">
