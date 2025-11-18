@@ -12,7 +12,9 @@ const emit = defineEmits<{
 //#region variables -----------------------------------------------------------
 
 // NOTE: x, y, and z are composed into main.AP.position
-let cur = ref(new main.AP())
+let cur = ref(new main.AP({
+  mode: main.WifiMode.a
+}))
 let c = reactive({
   x: 0,
   y: 0,
