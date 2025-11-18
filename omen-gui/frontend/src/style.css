@@ -1,3 +1,5 @@
+/* NOTE(rlandau): most of this is from the boilerplate Wails Vue template. */
+
 html {
     background-color: rgba(27, 38, 54, 1);
     text-align: center;
@@ -25,7 +27,8 @@ body {
     text-align: center;
 }
 
-.error-text {
+/* Used for printing validation errors inside of a tab */
+.error-list {
   color: rgb(252, 107, 107);
 }
 
