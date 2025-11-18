@@ -60,6 +60,31 @@ import pandas as pd
 
 DEFAULT_DB = "/opt/homebrew/var/lib/grafana/omen.db"
 
+# Columns that represent loss percentages in the CSV (0-100) that we want as 0-1.
+LOSS_PERCENT_COLUMNS = [
+    "loss_pct",
+    "loss_percentage",
+    "loss_percent",
+    "packet_loss_pct",
+    "packet_loss_percentage",
+]
+
+def normalize_loss_fraction(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Ensure loss percentage columns are stored as 0-1 fractions rather than 0-100."
+    If the max value in a loss column is > 1, we assume it's in percent and "
+    divide by 100. 
+    """
+    df = df.copy()
+    for col in LOSS_PERCENT_COLUMNS:
+        if col in df.columns:
+            numeric = pd.to_numeric(df[col], errors="coerce")
+            max_value = numeric.max(skipna=True)
+            if max_value is not None and max_value > 1.0:
+                df[col] = numeric / 100.0
+    return df
+
+
 # ------------------------ Common helpers ------------------------
 
 def ensure_parent(path: Path):
@@ -313,6 +338,7 @@ def ingest_timeseries_raw(conn: sqlite3.Connection, table: str, csv_path: Path,
                           if_exists: str = "replace") -> int:
     # Load any CSV as-is into a table (user per-set movement series).
     df = pd.read_csv(csv_path)
+    df = normalize_loss_fraction(df)
     df.to_sql(table, conn, if_exists=if_exists, index=False)
     return len(df)
 
@@ -446,6 +472,8 @@ def run_timeseries(args: argparse.Namespace):
         raise FileNotFoundError(f"CSV file not found: {csv_path}")
 
     df = pd.read_csv(csv_path)
+    # Normalize any loss percentage columns into 0-1 fractions before storing.
+    df = normalize_loss_fraction(df)
     print(f"Loaded CSV with {len(df)} rows and {len(df.columns)} columns from {csv_path}.")
 
     conn = open_db(Path(args.db))
@@ -468,7 +496,7 @@ def run_timeseries(args: argparse.Namespace):
         print(f"Created aggregated table '{agg_name}' grouped by '{args.aggregate_by}' ({len(grouped)} rows).")
 
     conn.close()
-    print("✅ Done.")
+    print("Done.")
 
 # ------------------------ Main entry ------------------------
 
