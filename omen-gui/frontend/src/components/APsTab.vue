@@ -15,28 +15,28 @@ const emit = defineEmits<{
 const addedAPs = reactive(Array<string>())
 
 // NOTE: x, y, and z are composed into main.AP.position
-let cur = reactive(new main.AP({
+let curAP = reactive(new main.AP({
     id: "ap1",
     mode: main.WifiMode.a,
     channel: 0,
     ssid: "",
     position: "",
   }))
-let c = reactive({ x: 0, y: 0, z: 0 })
+let pos = reactive({ x: 0, y: 0, z: 0 })
 // validation errors is recomputed every time cur (as its one dependency) is touched.
 // It is used to disable the Add AP button and provide reasons why.
 let validationErrors = computed(() => {
   const msgs: string[] = []
 
   // test id
-  if (cur.id.trim() == "")     msgs.push('ID is required')
+  if (curAP.id.trim() == "")     msgs.push('ID is required')
   else { // populated-only tests
     {
-      let ng: string = GetNumberGroup(cur.id)
+      let ng: string = GetNumberGroup(curAP.id)
       if (ng == "")  msgs.push('ID must have exactly one number group')
       if (Number(ng) < 0) msgs.push('ID number group must be positive')
     }
-    if (addedAPs.findIndex((v) => cur.id === v) != -1) msgs.push('AP ids must be unique')
+    if (addedAPs.findIndex((v) => curAP.id === v) != -1) msgs.push('AP ids must be unique')
   }
   // TODO additional rules
 
@@ -58,25 +58,25 @@ watchEffect(() => {
 
 function addAP() {
   // coalesce x,y,z into cur
-  cur.position = `(${c.x},${c.y},${c.z})`
+  curAP.position = `(${pos.x},${pos.y},${pos.z})`
 
   // save off ID for later retrieval 
-  addedAPs.push(cur.id)
-  AddAP(cur)
+  addedAPs.push(curAP.id)
+  AddAP(curAP)
 
   // determine default values for next AP
-  let newID: number = Number(GetNumberGroup(cur.id))+1
+  let newID: number = Number(GetNumberGroup(curAP.id))+1
 
   // reset the form for the next entry
-  cur.id = "ap"+String(newID)
-  cur.mode = main.WifiMode.a
-  cur.channel = 0
+  curAP.id = "ap"+String(newID)
+  curAP.mode = main.WifiMode.a
+  curAP.channel = 0
   // do not touch ssid
-  cur.position = ''
+  curAP.position = ''
 
-  c.x = 0
-  c.y = 0
-  c.z = 0
+  pos.x = 0
+  pos.y = 0
+  pos.z = 0
 }
 
 </script>
@@ -84,22 +84,22 @@ function addAP() {
 <template>
   <div>
     <input 
-    v-model="cur.id"
+    v-model="curAP.id"
     type="text"
     placeholder="ID" />
-    <select v-model="cur.mode">
+    <select v-model="curAP.mode">
       <option v-for="mode in main.WifiMode">{{ mode }}</option>
     </select>
-    <input v-model="cur.channel" type="number" placeholder="Channel" />
-    <input v-model="cur.ssid" type="text" placeholder="SSID" />
+    <input v-model="curAP.channel" type="number" placeholder="Channel" />
+    <input v-model="curAP.ssid" type="text" placeholder="SSID" />
     <br /><br />
 
     <div class="position-table">
       <div class="header-row">Position</div>
       <div class="row">
-        <div class="cell"><label>X</label><input v-model="c.x" type="number" /></div>
-        <div class="cell"><label>Y</label><input v-model="c.y" type="number" /></div>
-        <div class="cell"><label>Z</label><input v-model="c.z" type="number" /></div>
+        <div class="cell"><label>X</label><input v-model="pos.x" type="number" /></div>
+        <div class="cell"><label>Y</label><input v-model="pos.y" type="number" /></div>
+        <div class="cell"><label>Z</label><input v-model="pos.z" type="number" /></div>
       </div>
     </div>
     <br /><br />
