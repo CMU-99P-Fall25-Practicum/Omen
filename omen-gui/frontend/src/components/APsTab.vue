@@ -11,9 +11,13 @@ const emit = defineEmits<{
 
 //#region variables -----------------------------------------------------------
 
+const defaults = {
+  mode: main.WifiMode.a
+}
+
 // NOTE: x, y, and z are composed into main.AP.position
 let cur = ref(new main.AP({
-  mode: main.WifiMode.a
+  mode: defaults.mode
 }))
 let c = reactive({
   x: 0,
