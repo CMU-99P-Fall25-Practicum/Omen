@@ -25,8 +25,12 @@ var AllPropModels = []struct {
 type WifiMode string
 
 const (
-	A WifiMode = "a"
-	B WifiMode = "b"
+	A  WifiMode = "a"
+	B  WifiMode = "b"
+	G  WifiMode = "g"
+	N  WifiMode = "n"
+	AX WifiMode = "ax"
+	AC WifiMode = "ac"
 )
 
 var AllWifiModes = []struct {
@@ -35,6 +39,10 @@ var AllWifiModes = []struct {
 }{
 	{A, "a"},
 	{B, "b"},
+	{G, "g"},
+	{N, "n"},
+	{AX, "ax"},
+	{AC, "ac"},
 }
 
 //#endregion enums
