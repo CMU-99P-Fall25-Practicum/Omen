@@ -72,8 +72,7 @@ function validateAll(): string[] {
     type="text"
     placeholder="ID" />
     <select v-model="cur.mode">
-      <option value={{main.WifiMode.a}}>a</option>
-      <option value={{main.WifiMode.b}}>b</option>
+      <option v-for="mode in main.WifiMode">{{ mode }}</option>
     </select>
     <input v-model="cur.channel" type="number" placeholder="Channel" />
     <input v-model="cur.ssid" type="text" placeholder="SSID" />
