@@ -13,29 +13,60 @@
     <!-- set main pane content depending on active tab -->
     <div class="tab-content">
       <div 
-        v-for="(tab, index) in tabs" 
+        v-for="(_, index) in tabs" 
         :key="index" 
         class="tab-pane" 
         :class="{ active: currentTab === index }"
       >
-        <APsTab v-if="index === 0" />
-        <StationsTab v-if="index === 1"/>
-        <NetsTab v-if="index === 2" />
+        <APsTab
+          @valid="(v) => tabValid.AP = v"
+          v-if="index === 0"
+        />
+        <StationsTab  v-if="index === 1" />
+        <NetsTab      v-if="index === 2" />
       </div>
     </div>
-    <div id="gen-result" class="result">{{ dynamic.gend }}</div>
-    <div id="generate"> 
-      <button class="btn" @click="generateJSON">Generate</button>
+    <div id="generate">
+      <!-- this button is only enabled if every tab has self-reported as valid-->
+      <button class="btn" :disabled="!allTabsValid" @click="generateJSON">Generate</button>
+      <div id="generate-result" class="result">{{ dynamic.gend }}</div>
     </div>
   </main>
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import {GenerateJSON} from '../../wailsjs/go/main/App'
 import APsTab from './APsTab.vue'
 import StationsTab from './StationsTab.vue'
 import NetsTab from './NetsTab.vue'
+
+// are all tabs in a valid state?
+const tabValid = {
+  AP  : false,
+  Sta : false,
+  Nets: false,
+}
+
+// are all tabs in a valid state?
+const allTabsValid = computed(() =>
+  Object.values(tabValid).every((v) => v)
+)
+
+// errors propagated from children
+const errors = reactive<Array<{ source: string; msg: string }>>([])
+
+function handleValidation(payload: { source: string; msgs: string[] }) {
+  // Remove any previous errors that came from this same tab
+  const filtered = errors.filter(e => e.source !== payload.source)
+
+  // Append the fresh set (if any)
+  const newEntries = payload.msgs.map(msg => ({
+    source: payload.source,
+    msg,
+  }))
+  errors.splice(0, errors.length, ...filtered, ...newEntries)
+}
 
 // data that must update the UI automatically when changed/set
 const dynamic = reactive({
