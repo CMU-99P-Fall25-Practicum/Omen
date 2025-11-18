@@ -63,7 +63,11 @@ function validateAll(): string[] {
   // test id
   if (cur.value.id.trim() == "")     msgs.push('ID is required')
   else { // populated-only tests
-    if (!GetNumberGroup(cur.value.id)) msgs.push('ID must have exactly one number group')
+    {
+      let ng: string = GetNumberGroup(cur.value.id)
+      if (ng == "")  msgs.push('ID must have exactly one number group')
+      if (Number(ng) < 0) msgs.push('ID number group must be positive')
+    }
     if (addedAPs.findIndex((v) => cur.value.id === v) != -1) msgs.push('AP ids must be unique')
   }
   // TODO additional rules
