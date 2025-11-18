@@ -8,7 +8,8 @@
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    //"isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "esModuleInterop": true,
     "lib": [
       "ESNext",
