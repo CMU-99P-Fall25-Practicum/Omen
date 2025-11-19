@@ -2,5 +2,7 @@
     "cSpell.words": [
         "Mininet",
         "Topo"
-    ]
+    ],
+  "eslint.validate": ["javascript", "typescript", "vue"],
+  "files.associations": { "*.vue": "vue" }
 }
