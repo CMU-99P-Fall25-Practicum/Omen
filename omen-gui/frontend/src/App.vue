@@ -23,7 +23,7 @@
         <APsTab
           @valid="(v) => (tabs['APs'].valid = v)"
           v-if="currentTab === 'APs'" />
-        <StationsTab v-if="currentTab === 'Stations'" />
+        <StationsTab @stationsChanged="(count) => (tabs['Stations'].valid = count>0)" v-if="currentTab === 'Stations'" />
         <NetsTab v-if="currentTab === 'Nets'" />
       </div>
     </div>
