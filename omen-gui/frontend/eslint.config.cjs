@@ -7,7 +7,7 @@ const tsPlugin = require('@typescript-eslint/eslint-plugin')
 module.exports = [
   {
     files: ['**/*.{js,cjs,mjs,ts,tsx,vue}'],
-    ignores: ['node_modules/**', 'dist/**', 'coverage/**'],
+    ignores: ['node_modules/**', 'dist/**', 'coverage/**', 'wailsjs/**'],
 
     languageOptions: {
       parser: vueParser,
