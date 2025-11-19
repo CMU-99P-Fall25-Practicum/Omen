@@ -35,7 +35,7 @@ const curSta = reactive(
   })
 const pos = reactive({ x: 0, y: 0, z: 0 })
 
-// alert our parent when at least one station has been added
+// alert our parent whenever a station is added or removed
 watchEffect(() => {
   emit('stationsChanged', AddedStas.length)
 })
@@ -62,9 +62,19 @@ function addStation() {
 
 <template>
   <div>
-    <!-- TODO add properties -->
-    <input v-model="curSta.id" type="text" placeholder="StaX">
-    <!-- TODO add fields-->
-    <button @click="addStation">Add Station</button>
+    <label class='field'>ID</label>: <input v-model="curSta.id" type="text" placeholder="StaX">
+    <br />
+    <div class="position-table">
+      <div class="header-row">Position</div>
+      <div class="row">
+        <div class="cell"><label>X</label><input v-model="pos.x" type="number"></div>
+        <div class="cell"><label>Y</label><input v-model="pos.y" type="number"></div>
+        <div class="cell"><label>Z</label><input v-model="pos.z" type="number"></div>
+      </div>
+    </div>
+    <button @click="addStation" v-show="validationErrors.length === 0">Add Station</button>
+    <div class="error-list">
+      <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
+    </div>
   </div>
 </template>
