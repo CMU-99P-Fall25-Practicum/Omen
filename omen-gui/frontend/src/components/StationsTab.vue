@@ -11,7 +11,7 @@ const emit = defineEmits<{
 /*export*/ const AddedStas = reactive(Array<string>())
 const curSta = reactive(
   new main.Sta({
-    id: '',
+    id: 'sta1',
     position: ''
   })
 ),
@@ -51,7 +51,7 @@ function addStation() {
   let newID: number = Number(GetNumberGroup(curSta.id)) + 1
 
   // reset the form for the next entry
-  curSta.id = 'ap' + String(newID)
+  curSta.id = 'sta' + String(newID)
   curSta.position = ''
 
   pos.x = 0
@@ -62,7 +62,7 @@ function addStation() {
 
 <template>
   <div>
-    <label class='field'>ID</label>: <input v-model="curSta.id" type="text" placeholder="StaX">
+    <label class='field'>ID</label>: <input v-model="curSta.id" type="text" placeholder="staX">
     <br />
     <div class="position-table">
       <div class="header-row">Position</div>
