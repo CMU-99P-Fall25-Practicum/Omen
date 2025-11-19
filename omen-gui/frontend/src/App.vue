@@ -17,9 +17,32 @@
         :key="key"
         class="tab-pane"
         :class="{ active: currentTab === key }">
-        <MainTab
-          @valid="(v) => (tabs['main'].valid = v)"
-          v-if="currentTab === 'main'" />
+        <div v-if="currentTab === 'main'">
+          <div>
+    <label>Username</label>: <input v-model="username" type="text"> <label>Password</label>:
+    <input v-model="password" type="password">
+  </div>
+  <div>
+    <label>Host</label>: <input v-model="host" type="text"> <label>Port</label>:
+    <input v-model="port"
+      type="number"
+      min="1"
+      max="65535">
+  </div>
+  <hr />
+  <h1 class="section-header">Wireless Propagation Settings</h1>
+  <div>
+    <input v-model="noise_threshold" type="number" placeholder="Noise Threshold">
+    <select v-model="model.m">
+      <option v-for="name in main.PropModel">{{ name }}</option>
+    </select>
+    <input v-model="model.exp" type="number" placeholder="Exponent">
+    <input v-model="model.s" type="number" placeholder="S">
+  </div>
+  <div class="error-list">
+    <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
+  </div>
+        </div>
         <APsTab
           @valid="(v) => (tabs['APs'].valid = v)"
           v-if="currentTab === 'APs'" />
@@ -30,7 +53,7 @@
     <div id="generate">
       <!-- this button is only enabled if every tab has self-reported as valid-->
       <button class="btn" :disabled="!allTabsValid" @click="generateJSON">Generate</button>
-      <div id="generate-result" class="result">{{ dynamic.gend }}</div>
+      <div id="generate-result" class="result">{{ generation_result }}</div>
     </div>
   </main>
 </template>
@@ -40,30 +63,56 @@ import { computed, reactive, ref } from 'vue'
 import { GenerateJSON } from '../wailsjs/go/main/App'
 import APsTab from './components/APsTab.vue'
 import StationsTab from './components/StationsTab.vue'
-import NetsTab from './components/NetsTab.vue'
-import MainTab from './components/MainTab.vue'
+import { main } from '../wailsjs/go/models'
+import { isValid as IsValidIP } from 'ipaddr.js'
 
-// are all tabs in a valid state?
-const allTabsValid = computed(() => Object.values(tabs).every((v) => v.valid))
+// #region tab handling -------------------------------------------------------
 
-// data that must update the UI automatically when changed/set
-const dynamic = reactive({ name: '', gend: '' })
-
-const currentTab = ref('main')
+const allTabsValid  = computed(() => Object.values(tabs).every((v) => v.valid)),
+  generation_result = ref(''),
+  currentTab        = ref('main')
 
 const tabs = {
-  main: { valid: false },
+  main: { valid: false }, // this tab
   APs: { valid: false },
   Stations: { valid: false },
-  Nets: { valid: false },
 }
 
+// #endregion tab handling ----------------------------------------------------
+
+  const username = ref(''),
+    password = ref(''),
+    host = ref('127.0.0.1'),
+    port = ref(22),
+    noise_threshold = ref(-100),
+    model = reactive({
+      m: main.PropModel.LogNormalShadowing,
+      exp: 0,
+      s: 0})
+
+  // check each field for validation errors whenever one changes
+  let validationErrors = computed(() => {
+    const msgs: string[] = []
+
+    if (username.value.trim() === '') msgs.push('SSH username cannot be empty')
+    if (host.value.trim() === '') msgs.push('SSH host cannot be empty')
+    else {
+      // populated-ony checks
+      if (!IsValidIP(host.value)) msgs.push('SSH host must be a valid IPv4 or IPv6 address')
+    }
+    if (port.value < 1 || port.value > (2 << 16) - 1) msgs.push('Port must be between 1 and 65535')
+
+    return msgs
+  })
+
+// generateJSON invokes the backend to create an input.json file.
+// Success or failure is placed in a local variable for display.
 function generateJSON() {
   GenerateJSON().then((success) => {
     if (success) {
-      dynamic.gend = 'successfully generated input file'
+      generation_result.value = 'successfully generated input file'
     } else {
-      dynamic.gend = 'an error occurred'
+      generation_result.value = 'an error occurred'
     }
   })
 }
