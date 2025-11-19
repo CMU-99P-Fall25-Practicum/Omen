@@ -2,26 +2,29 @@
   <main>
     <!-- generate the tabs header -->
     <div class="tab-container">
-      <button 
-        v-for="(tab, index) in tabs"
-        :key="index" 
-        :class="{ active: currentTab === index }" 
-        @click="currentTab = index">
-        {{ tab.name }}
+      <button
+        v-for="(_, key) in tabs"
+        :key="key"
+        :class="{ active: currentTab === key }"
+        @click="currentTab = key">
+        {{ key }}
       </button>
     </div>
     <!-- set main pane content depending on active tab -->
     <div class="tab-content">
-      <div 
-        v-for="(_, index) in tabs" 
-        :key="index" 
-        class="tab-pane" 
-        :class="{ active: currentTab === index }"
-      >
-        <MainTab  v-if="index === 0" />
-        <APsTab @valid="(v) => tabValid.AP = v" v-if="index === 1" />
-        <StationsTab  v-if="index === 2" />
-        <NetsTab      v-if="index === 3" />
+      <div
+        v-for="(_, key) in tabs"
+        :key="key"
+        class="tab-pane"
+        :class="{ active: currentTab === key }">
+        <MainTab
+          @valid="(v) => (tabs['main'].valid = v)"
+          v-if="currentTab === 'main'" />
+        <APsTab
+          @valid="(v) => (tabs['APs'].valid = v)"
+          v-if="currentTab === 'APs'" />
+        <StationsTab v-if="currentTab === 'Stations'" />
+        <NetsTab v-if="currentTab === 'Nets'" />
       </div>
     </div>
     <div id="generate">
@@ -34,44 +37,35 @@
 
 <script lang="ts" setup>
 import { computed, reactive, ref } from 'vue'
-import {GenerateJSON} from '../wailsjs/go/main/App'
+import { GenerateJSON } from '../wailsjs/go/main/App'
 import APsTab from './components/APsTab.vue'
 import StationsTab from './components/StationsTab.vue'
 import NetsTab from './components/NetsTab.vue'
 import MainTab from './components/MainTab.vue'
 
 // are all tabs in a valid state?
-const tabValid = {
-  AP  : false,
-  Sta : false,
-  Nets: false,
-}
-
-// are all tabs in a valid state?
-const allTabsValid = computed(() => Object.values(tabValid).every((v) => v))
+const allTabsValid = computed(() => Object.values(tabs).every((v) => v.valid))
 
 // data that must update the UI automatically when changed/set
-const dynamic = reactive({
-  name: "",
-  resultText: "Please enter your name below 👇",
-  gend: "",
-})
+const dynamic = reactive({ name: '', gend: '' })
 
-const currentTab = ref(0)
+const currentTab = ref('main')
 
-const tabs = [
-  { name: 'main' },
-  { name: 'APs' },
-  { name: 'Stations' },
-  { name: 'Nets' },
-]
+const tabs = {
+  main: { valid: false },
+  APs: { valid: false },
+  Stations: { valid: false },
+  Nets: { valid: false },
+}
 
-
-function generateJSON(){
-    GenerateJSON().then(success => {
-      if (success){dynamic.gend = "successfully generated input file"}
-      else {dynamic.gend = "an error occurred"}
-    })
+function generateJSON() {
+  GenerateJSON().then((success) => {
+    if (success) {
+      dynamic.gend = 'successfully generated input file'
+    } else {
+      dynamic.gend = 'an error occurred'
+    }
+  })
 }
 </script>
 
