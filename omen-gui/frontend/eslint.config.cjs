@@ -28,23 +28,14 @@ module.exports = [
     rules: {
       /* Vue formatting/structure rules */
       'vue/html-closing-bracket-newline': ['error', { singleline: 'never', multiline: 'never' }],
-      'vue/html-closing-bracket-spacing': ['error', { startTag: 'never', endTag: 'never', selfClosingTag: 'always' }],
-      'vue/html-self-closing': [
-        'error',
-        {
-          html: { void: 'never', normal: 'always', component: 'always' },
-          svg: 'always',
-          math: 'always'
-        }
-      ],
-      'vue/max-attributes-per-line': ['error', { singleline: 3, multiline: { max: 1 } }],
+      'vue/html-closing-bracket-spacing': ['warn', { startTag: 'never', endTag: 'never', selfClosingTag: 'always' }],
 
-      /* TypeScript rules */
+      /* TS rules */
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
 
-      /* Stylistic JS rules (ESLint will autofix where possible) */
+      /* stylistic JS*/
       'semi': ['error', 'never'],
       'quotes': ['error', 'single', { avoidEscape: true }],
 
