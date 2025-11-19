@@ -111,36 +111,7 @@ type="button"
 
     <button @click="addAP" v-show="validationErrors.length === 0">Add AP</button>
     <div class="error-list">
-      <!-- TODO define error-list class in css-->
       <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
     </div>
   </div>
 </template>
-
-<style scoped>
-  .position-table {
-    display: inline-block;
-    border: 1px solid #ccc;
-    padding: 10px;
-  }
-
-  .row {
-    display: flex;
-  }
-
-  .cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 10px;
-  }
-
-  .cell label {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .error-text label {
-    color: rgb(252, 107, 107);
-  }
-</style>
