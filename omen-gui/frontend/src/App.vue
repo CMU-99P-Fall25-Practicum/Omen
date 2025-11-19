@@ -2,51 +2,47 @@
   <main>
     <!-- generate the tabs header -->
     <div class="tab-container">
-      <button
-        v-for="(_, key) in tabs"
-        :key="key"
-        :class="{ active: currentTab === key }"
-        @click="currentTab = key">
+      <button v-for="(_, key) in tabs" :key="key" :class="{ active: currentTab === key }" @click="currentTab = key">
         {{ key }}
       </button>
     </div>
     <!-- set main pane content depending on active tab -->
     <div class="tab-content">
-      <div
-        v-for="(_, key) in tabs"
-        :key="key"
-        class="tab-pane"
-        :class="{ active: currentTab === key }">
+      <div v-for="(_, key) in tabs" :key="key" class="tab-pane" :class="{ active: currentTab === key }">
         <div v-if="currentTab === 'main'">
+          <h1 class="section-header">SSH Connection</h1>
           <div>
-    <label>Username</label>: <input v-model="username" type="text"> <label>Password</label>:
-    <input v-model="password" type="password">
-  </div>
-  <div>
-    <label>Host</label>: <input v-model="host" type="text"> <label>Port</label>:
-    <input v-model="port"
-      type="number"
-      min="1"
-      max="65535">
-  </div>
-  <hr />
-  <h1 class="section-header">Wireless Propagation Settings</h1>
-  <div>
-    <input v-model="noise_threshold" type="number" placeholder="Noise Threshold">
-    <select v-model="model.m">
-      <option v-for="name in main.PropModel">{{ name }}</option>
-    </select>
-    <input v-model="model.exp" type="number" placeholder="Exponent">
-    <input v-model="model.s" type="number" placeholder="S">
-  </div>
-  <div class="error-list">
-    <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
-  </div>
+            <label class="field">Username</label>: <input v-model="username" type="text">
+            <label class="field">Password</label>: <input v-model="password" type="password">
+          </div>
+          <div>
+            <label class="field">Host</label>: <input v-model="host" type="text"> <label>Port</label>:
+            <input v-model="port" type="number" min="1" max="65535">
+          </div>
+          <div class="error-list">
+            <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
+          </div>
+          <hr />
+          <h1 class="section-header">Wireless Propagation Settings</h1>
+          <div>
+            <label class="field">Noise Threshold</label>:
+              <input v-model="noise_threshold" type="number" placeholder="Noise Threshold">
+            <br />
+            <h2>Model:</h2>
+              <select v-model="model.m">
+                <option v-for="name in main.PropModel">{{ name }}</option>
+              </select>
+            <br />
+            <label class="field">Exponent</label>:
+              <input v-model="model.exp" type="number" placeholder="Exponent">
+            <br />
+            <label class="field">Standard Deviation</label>:
+              <input v-model="model.s" type="number" placeholder="S">
+          </div>
         </div>
-        <APsTab
-          @valid="(v) => (tabs['APs'].valid = v)"
-          v-if="currentTab === 'APs'" />
-        <StationsTab @stationsChanged="(count) => (tabs['Stations'].valid = count>0)" v-if="currentTab === 'Stations'" />
+        <APsTab @valid="(v) => (tabs['APs'].valid = v)" v-if="currentTab === 'APs'" />
+        <StationsTab @stationsChanged="(count) => (tabs['Stations'].valid = count > 0)"
+          v-if="currentTab === 'Stations'" />
         <NetsTab v-if="currentTab === 'Nets'" />
       </div>
     </div>
@@ -68,9 +64,9 @@ import { isValid as IsValidIP } from 'ipaddr.js'
 
 // #region tab handling -------------------------------------------------------
 
-const allTabsValid  = computed(() => Object.values(tabs).every((v) => v.valid)),
+const allTabsValid = computed(() => Object.values(tabs).every((v) => v.valid)),
   generation_result = ref(''),
-  currentTab        = ref('main')
+  currentTab = ref('main')
 
 const tabs = {
   main: { valid: false }, // this tab
@@ -80,30 +76,31 @@ const tabs = {
 
 // #endregion tab handling ----------------------------------------------------
 
-  const username = ref(''),
-    password = ref(''),
-    host = ref('127.0.0.1'),
-    port = ref(22),
-    noise_threshold = ref(-100),
-    model = reactive({
-      m: main.PropModel.LogNormalShadowing,
-      exp: 0,
-      s: 0})
-
-  // check each field for validation errors whenever one changes
-  let validationErrors = computed(() => {
-    const msgs: string[] = []
-
-    if (username.value.trim() === '') msgs.push('SSH username cannot be empty')
-    if (host.value.trim() === '') msgs.push('SSH host cannot be empty')
-    else {
-      // populated-ony checks
-      if (!IsValidIP(host.value)) msgs.push('SSH host must be a valid IPv4 or IPv6 address')
-    }
-    if (port.value < 1 || port.value > (2 << 16) - 1) msgs.push('Port must be between 1 and 65535')
-
-    return msgs
+const username = ref(''),
+  password = ref(''),
+  host = ref('127.0.0.1'),
+  port = ref(22),
+  noise_threshold = ref(-100),
+  model = reactive({
+    m: main.PropModel.LogNormalShadowing,
+    exp: 0,
+    s: 0
   })
+
+// check each field for validation errors whenever one changes
+let validationErrors = computed(() => {
+  const msgs: string[] = []
+
+  if (username.value.trim() === '') msgs.push('SSH username cannot be empty')
+  if (host.value.trim() === '') msgs.push('SSH host cannot be empty')
+  else {
+    // populated-ony checks
+    if (!IsValidIP(host.value)) msgs.push('SSH host must be a valid IPv4 or IPv6 address')
+  }
+  if (port.value < 1 || port.value > (2 << 16) - 1) msgs.push('Port must be between 1 and 65535')
+
+  return msgs
+})
 
 // generateJSON invokes the backend to create an input.json file.
 // Success or failure is placed in a local variable for display.
