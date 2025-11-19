@@ -1,63 +1,63 @@
 <script lang="ts" setup>
-  import { main } from '../../wailsjs/go/models'
-  import { reactive, computed, watchEffect } from 'vue'
-  import { AddSta } from '../../wailsjs/go/main/App'
-  import { GetNumberGroup } from './shared.vue'
+import { main } from '../../wailsjs/go/models'
+import { reactive, computed, watchEffect } from 'vue'
+import { AddSta } from '../../wailsjs/go/main/App'
+import { GetNumberGroup } from './shared.vue'
 
-  const emit = defineEmits<{
-    stationsChanged: [count: number] // the number of stations that will be generated
-  }>()
+const emit = defineEmits<{
+  stationsChanged: [count: number] // the number of stations that will be generated
+}>()
 
-  export const AddedStas = reactive(Array<string>())
-  const curSta = reactive(
-      new main.Sta({
-        id: '',
-        position: ''
-      })
-    ),
-    validationErrors = computed(() => {
-      const msgs: string[] = []
-
-      // test id
-      if (curSta.id.trim() == '') msgs.push('ID is required')
-      else {
-        // populated-only tests
-        {
-          let ng: string = GetNumberGroup(curSta.id)
-          if (ng == '') msgs.push('ID must have exactly one number group')
-          if (Number(ng) < 0) msgs.push('ID number group must be positive')
-        }
-        if (AddedStas.findIndex((v) => curSta.id === v) != -1)
-          msgs.push('station ids must be unique')
-      }
-
-      return msgs
-    })
-  const pos = reactive({ x: 0, y: 0, z: 0 })
-
-  // alert our parent when at least one station has been added
-  watchEffect(() => {
-    emit('stationsChanged', AddedStas.length)
+export const AddedStas = reactive(Array<string>())
+const curSta = reactive(
+  new main.Sta({
+    id: '',
+    position: ''
   })
+),
+  validationErrors = computed(() => {
+    const msgs: string[] = []
 
-  function addStation() {
-    curSta.position = `(${pos.x},${pos.y},${pos.z})`
+    // test id
+    if (curSta.id.trim() == '') msgs.push('ID is required')
+    else {
+      // populated-only tests
+      {
+        let ng: string = GetNumberGroup(curSta.id)
+        if (ng == '') msgs.push('ID must have exactly one number group')
+        if (Number(ng) < 0) msgs.push('ID number group must be positive')
+      }
+      if (AddedStas.findIndex((v) => curSta.id === v) != -1)
+        msgs.push('station ids must be unique')
+    }
 
-    AddedStas.push(curSta.id)
-    // pass to the backend
-    AddSta(curSta)
+    return msgs
+  })
+const pos = reactive({ x: 0, y: 0, z: 0 })
 
-    // determine default values for next station
-    let newID: number = Number(GetNumberGroup(curSta.id)) + 1
+// alert our parent when at least one station has been added
+watchEffect(() => {
+  emit('stationsChanged', AddedStas.length)
+})
 
-    // reset the form for the next entry
-    curSta.id = 'ap' + String(newID)
-    curSta.position = ''
+function addStation() {
+  curSta.position = `(${pos.x},${pos.y},${pos.z})`
 
-    pos.x = 0
-    pos.y = 0
-    pos.z = 0
-  }
+  AddedStas.push(curSta.id)
+  // pass to the backend
+  AddSta(curSta)
+
+  // determine default values for next station
+  let newID: number = Number(GetNumberGroup(curSta.id)) + 1
+
+  // reset the form for the next entry
+  curSta.id = 'ap' + String(newID)
+  curSta.position = ''
+
+  pos.x = 0
+  pos.y = 0
+  pos.z = 0
+}
 </script>
 
 <template>
