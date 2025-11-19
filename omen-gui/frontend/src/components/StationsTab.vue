@@ -8,7 +8,7 @@ const emit = defineEmits<{
   stationsChanged: [count: number] // the number of stations that will be generated
 }>()
 
-export const AddedStas = reactive(Array<string>())
+/*export*/ const AddedStas = reactive(Array<string>())
 const curSta = reactive(
   new main.Sta({
     id: '',
