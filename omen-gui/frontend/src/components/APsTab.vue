@@ -102,5 +102,8 @@ function addAP() {
     <div class="error-list">
       <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
     </div>
+    <div class="error-list">
+      <div v-show="addedAPs.length===0">You must add at least 1 access point.</div>
+    </div>
   </div>
 </template>

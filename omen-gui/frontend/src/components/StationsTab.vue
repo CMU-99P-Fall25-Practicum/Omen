@@ -80,13 +80,16 @@ function addStation() {
 class="bubble"
 type="button"
 @click.stop>
-        <!-- TODO click a button to load that AP's information-->
+        <!-- TODO click a button to load that station's information-->
         {{ id }}
       </button>
     </div>
     <button class="add-button" @click="addStation" v-show="validationErrors.length === 0">Add Station</button>
     <div class="error-list">
       <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
+    </div>
+    <div class="error-list">
+      <div v-show="AddedStas.length===0">You must add at least 1 station.</div>
     </div>
   </div>
 </template>
