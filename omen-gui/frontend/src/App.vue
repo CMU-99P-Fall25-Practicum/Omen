@@ -3,6 +3,7 @@
     <!-- main tab content -->
     <div>
       <h1 class="section-header">SSH Connection</h1>
+      <p>This section sets the information required to remotely access the Mininet-Wifi instance.</p>
       <div>
         <label class="field">Username</label>: <input v-model="sections.main.username" type="text">
         <label class="field">Password</label>: <input v-model="sections.main.password" type="password">
@@ -16,21 +17,82 @@
       </div>
       <hr />
       <h1 class="section-header">Wireless Propagation Settings</h1>
+      <p class="section-description">This section alters how Mininet-Wifi simulates energy loss over distances.</p>
       <div>
         <label class="field">Noise Threshold</label>:
-        <input title="Noise Threshold sets the value (in dBm) below which a message is considered lost."
-          v-model="sections.main.nets.noise_th" type="number" placeholder="Noise Threshold">
-        <br />
+        <input v-model="sections.main.nets.noise_th" type="number" placeholder="Noise Threshold">dBm
+        <p class="field-description">
+          Noise Threshold sets the dBm below which packets will be considered lost.
+          <br />
+          Lower means receivers are more sensitive
+          <br />
+          (and thus more able to decode data from transmission that have lost a lot of power).
+          <br />
+        </p>
+        <h3>Suggested Values</h3>
+        <p><strong>Clear/Open Environment:</strong> 2.4GHz = -105dBm | 5GHz = -95dBm</p>
+        <p><strong>Common Environment (ex: apartment/office):</strong> 2.4GHz = -100dBm | 5GHz = -93dBm</p>
+        <p><strong>Noisy/Crowded Environment:</strong> 2.4GHz = -98dBm | 5GHz = -90dBm</p>
         <h2>Model</h2>
         <select v-model="sections.main.nets.propagation_model.model">
           <option v-for="name in main.PropModel">{{ name }}</option>
         </select>
         <br />
-        <label class="field">Exponent</label>:
+        <label class="field">n (exponent)</label>:
         <input v-model="sections.main.nets.propagation_model.exp" type="number" placeholder="Exponent">
         <br />
-        <label class="field">Standard Deviation</label>:
+        <label class="field">σ (shadowing standard deviation)</label>:
         <input v-model="sections.main.nets.propagation_model.s" type="number" placeholder="S">
+        <p class="field-description">
+          Model and its parameters set how Mininet-Wifi calculates energy loss over a given distance.
+          <br />
+          <br />
+          <strong>Friis</strong> is the base model and is accurate for free space, line-of-site calculations.
+          <br />
+          This makes Friis good for theoretical/ideal environments. It ignores both parameters.
+          <br />
+          <br />
+          <strong>Log-Distance</strong> is an extension to Friis that adds a path-loss exponent to better simulate environments with obstacles.
+          <br />
+          This makes Log-Distance more flexible, assuming you pick a good n (exponent).
+          <br />
+          <br />
+          <strong>Log-Normal Shadowing</strong> is an extension to Log-Distance that adds a "randomness" parameter (σ) in dB.
+          <br />
+          Log-Normal Shadowing is the most realistic model given its higher degree of flexibility.
+          <h3>Suggested Values</h3>
+          All values use the <strong>Log-Normal Shadowing</strong> model.
+          <center><table>
+            <tr>
+              <th>Conditions</th>
+              <th>n</th>
+              <th>σ (in dB)</th>
+            </tr>
+            <tr>
+              <td>Unobstructed</td>
+              <td>2.6 - 2.8</td>
+              <td>0.5 - 1.0</td>
+            </tr>
+            <tr>
+              <td>Light Rain</td>
+              <td>2.8 - 3.0</td>
+              <td>1.0 - 2.0</td>
+            </tr>
+            <tr>
+              <td>Heavy Rain</td>
+              <td>2.8 - 3.0</td>
+              <td>2.0 - 4.0</td>
+            </tr>
+            <tr>
+              <td>Snow</td>
+              <td>2.9 - 3.1</td>
+              <td>2.0 - 3.0</td>
+            </tr>
+          </table></center>
+          <p><strong>Unobstructed Conditions:</strong> n=2.6-2.8 | σ=0.5-1.0dB</p>
+          <p><strong>Light Rain:</strong> n=2.8-3.0 | σ=0.5-1.0dB</p>
+          <p><strong>Unobstructed Conditions:</strong> n=2.6-2.8 | σ=0.5-1.0dB</p>
+        </p>
       </div>
     </div>
     <hr />
@@ -91,6 +153,8 @@ const generation_result = ref('') // result of the last GenerateJSON call
 
 // validity state of the sections.
 // Sections with sub-documents are self-contained and thus only need a valid bool.
+//
+// Default values are set here.
 const sections = reactive({
   main: {
     valid: false,
@@ -223,4 +287,14 @@ function generateJSON() {
   line-height: 20px;
   margin: 1.5rem auto;
 }
+
+.section-description {
+  /* placeholder */
+}
+
+.field-description {
+  font-style: italic;
+  word-wrap: break-word;
+}
+
 </style>
