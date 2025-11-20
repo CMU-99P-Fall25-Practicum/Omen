@@ -201,6 +201,9 @@ let validationErrors = computed(() => {
 // generateJSON invokes the backend to create an input.json file.
 // Success or failure is placed in a local variable for display.
 function generateJSON() {
+  // prepare tests
+  sections.main.tests = collapseTests()
+
   GenerateJSON('run_name',
     sections.main.username, sections.main.password,
     sections.main.host, sections.main.port,
