@@ -62,31 +62,35 @@
           <h3>Suggested Values</h3>
           All values use the <strong>Log-Normal Shadowing</strong> model.
           <center><table>
-            <tr>
-              <th>Conditions</th>
-              <th>n</th>
-              <th>σ (in dB)</th>
-            </tr>
-            <tr>
-              <td>Unobstructed</td>
-              <td>2.6 - 2.8</td>
-              <td>0.5 - 1.0</td>
-            </tr>
-            <tr>
-              <td>Light Rain</td>
-              <td>2.8 - 3.0</td>
-              <td>1.0 - 2.0</td>
-            </tr>
-            <tr>
-              <td>Heavy Rain</td>
-              <td>2.8 - 3.0</td>
-              <td>2.0 - 4.0</td>
-            </tr>
-            <tr>
-              <td>Snow</td>
-              <td>2.9 - 3.1</td>
-              <td>2.0 - 3.0</td>
-            </tr>
+            <thead>
+              <tr>
+                <th>Conditions</th>
+                <th>n</th>
+                <th>σ (in dB)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Unobstructed</td>
+                <td>2.6 - 2.8</td>
+                <td>0.5 - 1.0</td>
+              </tr>
+              <tr>
+                <td>Light Rain</td>
+                <td>2.8 - 3.0</td>
+                <td>1.0 - 2.0</td>
+              </tr>
+              <tr>
+                <td>Heavy Rain</td>
+                <td>2.8 - 3.0</td>
+                <td>2.0 - 4.0</td>
+              </tr>
+              <tr>
+                <td>Snow</td>
+                <td>2.9 - 3.1</td>
+                <td>2.0 - 3.0</td>
+              </tr>
+            </tbody>
           </table></center>
       </div>
     </div>
@@ -291,6 +295,14 @@ function generateJSON() {
 .field-description {
   font-style: italic;
   word-wrap: break-word;
+}
+
+table, th, td {
+  border: 2px solid white;
+  border-collapse: collapse;
+}
+td {
+  padding: 10px;
 }
 
 </style>
