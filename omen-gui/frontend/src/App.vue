@@ -1,7 +1,7 @@
 <template>
   <main>
     <!-- main tab content -->
-    <div v-if="currentTab === 'main'">
+    <div>
       <h1 class="section-header">SSH Connection</h1>
       <div>
         <label class="field">Username</label>: <input v-model="sections.main.username" type="text">
@@ -18,7 +18,8 @@
       <h1 class="section-header">Wireless Propagation Settings</h1>
       <div>
         <label class="field">Noise Threshold</label>:
-        <input title="Noise Threshold sets the value (in dBm) below which a message is considered lost." v-model="sections.main.nets.noise_th" type="number" placeholder="Noise Threshold">
+        <input title="Noise Threshold sets the value (in dBm) below which a message is considered lost."
+          v-model="sections.main.nets.noise_th" type="number" placeholder="Noise Threshold">
         <br />
         <h2>Model</h2>
         <select v-model="sections.main.nets.propagation_model.model">
@@ -118,21 +119,20 @@ let validationErrors = computed(() => {
 // generateJSON invokes the backend to create an input.json file.
 // Success or failure is placed in a local variable for display.
 function generateJSON() {
-  GenerateJSON('run_name', 
-    sections.main.username, sections.main.password, 
+  GenerateJSON('run_name',
+    sections.main.username, sections.main.password,
     sections.main.host, sections.main.port,
     sections.main.nets, sections.main.tests).then((success) => {
-    if (success) {
-      generation_result.value = 'successfully generated input file'
-    } else {
-      generation_result.value = 'an error occurred'
-    }
-  })
+      if (success) {
+        generation_result.value = 'successfully generated input file'
+      } else {
+        generation_result.value = 'an error occurred'
+      }
+    })
 }
 </script>
 
 <style>
-
 .result {
   height: 20px;
   line-height: 20px;
