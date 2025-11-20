@@ -5,11 +5,11 @@
       <h1 class="section-header">SSH Connection</h1>
       <div>
         <label class="field">Username</label>: <input v-model="sections.main.username" type="text">
-        <label class="field">Password</label>: <input v-model="password" type="password">
+        <label class="field">Password</label>: <input v-model="sections.main.password" type="password">
       </div>
       <div>
-        <label class="field">Host</label>: <input v-model="host" type="text"> <label>Port</label>:
-        <input v-model="port" type="number" min="1" max="65535">
+        <label class="field">Host</label>: <input v-model="sections.main.host" type="text"> <label>Port</label>:
+        <input v-model="sections.main.port" type="number" min="1" max="65535">
       </div>
       <div class="error-list">
         <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
@@ -18,18 +18,18 @@
       <h1 class="section-header">Wireless Propagation Settings</h1>
       <div>
         <label class="field">Noise Threshold</label>:
-        <input title="Noise Threshold sets the value (in dBm) below which a message is considered lost." v-model="noise_threshold" type="number" placeholder="Noise Threshold">
+        <input title="Noise Threshold sets the value (in dBm) below which a message is considered lost." v-model="sections.main.nets.noise_th" type="number" placeholder="Noise Threshold">
         <br />
         <h2>Model</h2>
-        <select v-model="model.m">
+        <select v-model="sections.main.nets.propagation_model.model">
           <option v-for="name in main.PropModel">{{ name }}</option>
         </select>
         <br />
         <label class="field">Exponent</label>:
-        <input v-model="model.exp" type="number" placeholder="Exponent">
+        <input v-model="sections.main.nets.propagation_model.exp" type="number" placeholder="Exponent">
         <br />
         <label class="field">Standard Deviation</label>:
-        <input v-model="model.s" type="number" placeholder="S">
+        <input v-model="sections.main.nets.propagation_model.s" type="number" placeholder="S">
       </div>
     </div>
     <hr />
@@ -58,15 +58,7 @@ import { main } from '../wailsjs/go/models'
 import { isValid as IsValidIP } from 'ipaddr.js'
 
 // variables used by this tab
-const password = ref(''),
-  host = ref('127.0.0.1'),
-  port = ref(22),
-  noise_threshold = ref(-100),
-  model = reactive({
-    m: main.PropModel.LogNormalShadowing, exp: 0,
-    s: 0
-  }),
-  generation_result = ref(''), // result of the last GenerateJSON call
+const generation_result = ref(''), // result of the last GenerateJSON call
   currentTab = ref('main') // which tab is currently active and displaying
 
 // #region tab handling and validation ----------------------------------------
@@ -74,7 +66,21 @@ const password = ref(''),
 // validity state of the sections.
 // Sections with sub-documents are self-contained and thus only need a valid bool.
 const sections = reactive({
-  main: { valid: false, username: '' }, // this tab
+  main: { valid: false, 
+    username: '', 
+    password: '',
+    nets: new main.Nets({
+      noise_th: -100,
+      propagation_model: new main.PropagationModel({
+        model: main.PropModel.LogNormalShadowing,
+        exp: 0,
+        s: 0,
+      })
+    }),
+    host: '127.0.0.1',
+    port: 22,
+    tests: Array<main.Test>(),
+   }, // this tab
   APs: { valid: false },
   Stations: { valid: false }
 })
@@ -96,12 +102,12 @@ let validationErrors = computed(() => {
   const msgs: string[] = []
 
   if (sections.main.username.trim() === '') msgs.push('SSH username cannot be empty')
-  if (host.value.trim() === '') msgs.push('SSH host cannot be empty')
+  if (sections.main.host.trim() === '') msgs.push('SSH host cannot be empty')
   else {
     // populated-ony checks
-    if (!IsValidIP(host.value)) msgs.push('SSH host must be a valid IPv4 or IPv6 address')
+    if (!IsValidIP(sections.main.host)) msgs.push('SSH host must be a valid IPv4 or IPv6 address')
   }
-  if (port.value < 1 || port.value > (2 << 16) - 1) msgs.push('Port must be between 1 and 65535')
+  if (sections.main.port < 1 || sections.main.port > (2 << 16) - 1) msgs.push('Port must be between 1 and 65535')
 
   sections.main.valid = (msgs.length === 0)
   console.warn(['main tab is valid: ', sections.main.valid])
@@ -112,7 +118,10 @@ let validationErrors = computed(() => {
 // generateJSON invokes the backend to create an input.json file.
 // Success or failure is placed in a local variable for display.
 function generateJSON() {
-  GenerateJSON().then((success) => {
+  GenerateJSON('run_name', 
+    sections.main.username, sections.main.password, 
+    sections.main.host, sections.main.port,
+    sections.main.nets, sections.main.tests).then((success) => {
     if (success) {
       generation_result.value = 'successfully generated input file'
     } else {
