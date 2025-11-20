@@ -36,7 +36,11 @@ Each module strictly follows its [I/O contract](MODULE_CONTRACTS.md) to ensure p
 
 The GUI is built in [Wails](htts://wails.io). On top of the Go dependency above, it requires npm (available [here](https://nodejs.org/en/download/)) and the ipaddr.js (`npm install ipaddr.js`).
 
-Once you have Wails, npm, and ipaddr.js installed, you can simply run `mage gui true` to compile a *debug* version (false for production version) of the input gui and have it placed in the `artefacts` directory.
+Once you have Wails, npm, and ipaddr.js installed, you can simply run `mage gui false` input gui and have it placed in the `artefacts` directory.
+
+#### Developing
+
+Wails includes a development server with hot-reload (thanks to vite) that fronts both a local app and webapp. Access it by navigating into `omen-gui` and calling `wails dev`.
 
 ## Quick Start
 
