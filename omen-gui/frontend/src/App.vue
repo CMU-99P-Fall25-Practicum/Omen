@@ -39,10 +39,10 @@
         </select>
         <br />
         <label class="field">n (exponent)</label>:
-        <input v-model="sections.main.nets.propagation_model.exp" type="number" placeholder="Exponent">
+        <input v-model="sections.main.nets.propagation_model.exp" type="number" placeholder="2.6">
         <br />
         <label class="field">σ (shadowing standard deviation)</label>:
-        <input v-model="sections.main.nets.propagation_model.s" type="number" placeholder="S">
+        <input v-model="sections.main.nets.propagation_model.s" type="number" placeholder="0.5">
         <p class="field-description">
           Model and its parameters set how Mininet-Wifi calculates energy loss over a given distance.
         </p>
