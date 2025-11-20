@@ -8,9 +8,9 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint --ext .js,.ts,.vue . --fix"
-
   },
   "dependencies": {
+    "ipaddr.js": "^2.2.0",
     "vue": "^3.2.37"
   },
   "devDependencies": {

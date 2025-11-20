@@ -1,4 +1,11 @@
-<template>
+<!--
+This file is the primary GUI driver and controller for all submodules.
+The code has a rather noodle-like consistency, given I've never touched TS/JS/Vue before and kept changing the structure every time I hit a roadblock.
+
+It constructs a json file that can be fed into the Omen pipeline.
+Please note, however, that the validation present in this GUI is not as advanced or useful as the validation performed by the actual validator script in the pipeline.
+-->
+<template>  
   <main>
     <!-- main tab content -->
     <div>

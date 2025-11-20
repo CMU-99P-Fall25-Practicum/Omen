@@ -22,6 +22,7 @@ var AllPropModels = []struct {
 	{LogNormalShadowing, "LogNormalShadowing"},
 }
 
+// WifiMode is as it says on the tin
 type WifiMode string
 
 const (

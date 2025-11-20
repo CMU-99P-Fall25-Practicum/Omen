@@ -1,10 +1,5 @@
 export namespace main {
 	
-	export enum PropModel {
-	    Friis = "Friis",
-	    LogDistance = "LogDistance",
-	    LogNormalShadowing = "LogNormalShadowing",
-	}
 	export enum WifiMode {
 	    a = "a",
 	    b = "b",
@@ -12,6 +7,11 @@ export namespace main {
 	    n = "n",
 	    ax = "ax",
 	    ac = "ac",
+	}
+	export enum PropModel {
+	    Friis = "Friis",
+	    LogDistance = "LogDistance",
+	    LogNormalShadowing = "LogNormalShadowing",
 	}
 	export class AP {
 	    id: string;

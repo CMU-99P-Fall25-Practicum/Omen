@@ -1,4 +1,11 @@
+/*
+Package main provides the backend and driver functionality of the GUI.
+
+This includes backend functions and struct definitions to-be bound to the front end.
+*/
 package main
+
+// This file is basically just boilerplate code from Wails so it can spool itself up.
 
 import (
 	"embed"
@@ -12,15 +19,14 @@ import (
 var assets embed.FS
 
 func main() {
-	// Create an instance of the app structure
 	app, err := NewApp()
 	if err != nil {
 		panic(err)
 	}
 
-	// Create application with options
-	err = wails.Run(&options.App{
-		Title:  "omen-gui",
+	// set the basic parameters and bound objects
+	opts := options.App{
+		Title:  "input generator",
 		Width:  1024,
 		Height: 768,
 		AssetServer: &assetserver.Options{
@@ -31,13 +37,13 @@ func main() {
 		Bind: []any{
 			app,
 		},
-		EnumBind: []interface{}{
+		EnumBind: []any{
 			AllPropModels,
 			AllWifiModes,
 		},
-	})
+	}
 
-	if err != nil {
-		println("Error:", err.Error())
+	if err = wails.Run(&opts); err != nil {
+		app.log.Error().Err(err).Msg("failed to run the app")
 	}
 }

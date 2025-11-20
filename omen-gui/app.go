@@ -1,5 +1,7 @@
 package main
 
+// This file defines and controls the App struct, a singleton of which is the actual backend and will be bound to the frontend.
+
 import (
 	"context"
 	"encoding/json"
@@ -15,7 +17,6 @@ import (
 const outPath string = "in.json"
 
 // App is the driver application itself.
-// Some of the components of Input are stored in other fields for easier processing.
 // Input is fully composed and marshaled in GenerateJSON.
 type App struct {
 	ctx context.Context
@@ -23,12 +24,11 @@ type App struct {
 
 	// input components
 
-	//TODO //tests map[uint]map
 	aps map[string]AP  // ap name -> ap info
 	sta map[string]Sta // station name -> station info
 }
 
-// NewApp creates a new App application struct
+// NewApp instantiates the backend application.
 func NewApp() (*App, error) {
 	l := zerolog.New(zerolog.ConsoleWriter{
 		Out:        os.Stdout,
@@ -45,13 +45,13 @@ func NewApp() (*App, error) {
 	}, nil
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
+// startup is called when the app starts.
+// Saving the context is currently unnecessary, but is suggested by Wails.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// AddAP attach an access point to the the input file.
+// AddAP inserts a new access point to be marshalled into the Input.
 func (a *App) AddAP(ap AP) {
 	// check if we are adding or editing
 	_, found := a.aps[ap.ID]
@@ -63,6 +63,7 @@ func (a *App) AddAP(ap AP) {
 	}
 }
 
+// AddSta inserts a new station to be marshalled into the Input.
 func (a *App) AddSta(sta Sta) {
 	// check if we are adding or editing
 	_, found := a.sta[sta.ID]
@@ -75,9 +76,10 @@ func (a *App) AddSta(sta Sta) {
 }
 
 // GenerateJSON composes an input json from the current input values.
+// NOTE(rlandau): validation is expected to have taken place before this point!
 func (a *App) GenerateJSON(runName, sshUsername, sshPassword, sshHost string, sshPort uint, net Nets, tests []Test) (success bool) {
 	// set non-inputtable data and pass in data not already held in the backend
-	var i Input = Input{
+	var i = Input{
 		SchemaVersion: "1.0",
 		Meta: Meta{
 			Backend:   "mininet-wifi",
