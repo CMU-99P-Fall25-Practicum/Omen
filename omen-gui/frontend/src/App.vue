@@ -18,7 +18,7 @@
       <h1 class="section-header">Wireless Propagation Settings</h1>
       <div>
         <label class="field">Noise Threshold</label>:
-        <input v-model="noise_threshold" type="number" placeholder="Noise Threshold">
+        <input title="Noise Threshold sets the value (in dBm) below which a message is considered lost." v-model="noise_threshold" type="number" placeholder="Noise Threshold">
         <br />
         <h2>Model</h2>
         <select v-model="model.m">
