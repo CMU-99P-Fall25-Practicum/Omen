@@ -45,8 +45,7 @@
         <input v-model="sections.main.nets.propagation_model.s" type="number" placeholder="S">
         <p class="field-description">
           Model and its parameters set how Mininet-Wifi calculates energy loss over a given distance.
-          <br />
-          <br />
+        </p>
           <strong>Friis</strong> is the base model and is accurate for free space, line-of-site calculations.
           <br />
           This makes Friis good for theoretical/ideal environments. It ignores both parameters.
@@ -89,10 +88,6 @@
               <td>2.0 - 3.0</td>
             </tr>
           </table></center>
-          <p><strong>Unobstructed Conditions:</strong> n=2.6-2.8 | σ=0.5-1.0dB</p>
-          <p><strong>Light Rain:</strong> n=2.8-3.0 | σ=0.5-1.0dB</p>
-          <p><strong>Unobstructed Conditions:</strong> n=2.6-2.8 | σ=0.5-1.0dB</p>
-        </p>
       </div>
     </div>
     <hr />
@@ -104,7 +99,7 @@
     <StationsTab @stationsChanged="StationsValid" />
     <hr />
     <div>
-      <h1 class="section-header">Tests</h1>
+      <h1 class="section-header">Tests</h1> 
       <!-- display each timeframe and enable the creation of more -->
       <button @click="addTimeframe" class="add-timeframe">Add timeframe</button>
       <div v-for="(tf, tfIdx) in sections.Timeframes" :key=tfIdx class="timeframe">
@@ -129,8 +124,9 @@
       <hr />
       <div id="generate">
         <!-- this button is only enabled if every tab has self-reported as valid-->
-        <button class="generate-button" v-show="sections.APs.valid && sections.Stations.valid && sections.main.valid"
+        <button class="generate-button" :disabled="!(sections.APs.valid && sections.Stations.valid && sections.main.valid)"
           @click="generateJSON">Generate</button>
+        <p v-show="!(sections.APs.valid && sections.Stations.valid && sections.main.valid)">Please correct all errors above.</p>
         <div id="generate-result" class="result">{{ generation_result }}</div>
       </div>
     </div>
