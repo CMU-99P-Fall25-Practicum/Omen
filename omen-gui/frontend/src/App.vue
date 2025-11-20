@@ -35,10 +35,10 @@
     </div>
     <hr />
     <!-- the other two tabs are pulled from child files -->
-    <h1>Access Points</h1>
+    <h1 class="section-header">Access Points</h1>
     <APsTab @APsCount="APsValid" />
     <hr />
-    <h1>Stations</h1>
+    <h1 class="section-header">Stations</h1>
     <StationsTab @stationsChanged="StationsValid" />
     <hr />
     <div id="generate">
