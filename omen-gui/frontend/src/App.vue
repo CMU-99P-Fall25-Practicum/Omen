@@ -41,11 +41,36 @@
     <h1 class="section-header">Stations</h1>
     <StationsTab @stationsChanged="StationsValid" />
     <hr />
-    <div id="generate">
-      <!-- this button is only enabled if every tab has self-reported as valid-->
-      <button class="generate-button" v-show="sections.APs.valid && sections.Stations.valid && sections.main.valid"
-        @click="generateJSON">Generate</button>
-      <div id="generate-result" class="result">{{ generation_result }}</div>
+    <div>
+      <h1 class="section-header">Tests</h1>
+      <!-- display each timeframe and enable the creation of more -->
+      <button @click="addTimeframe" class="add-timeframe">Add timeframe</button>
+      <div v-for="(tf, tfIdx) in sections.Timeframes" :key=tfIdx class="timeframe">
+        <h2>Timeframe {{ tfIdx + 1 }}</h2>
+
+        <!-- enable adding more tests within this timeframe -->
+        <button @click="addTest(tfIdx)" class="add-test">Add test</button>
+        <div v-for="(test, _) in tf.tests" class="test-row">
+          <label class="field">Node:</label>
+          <input v-model="test.node" type="text" placeholder="node" />
+
+          <div class="position-table">
+            <div class="header-row">Position</div>
+            <div class="row">
+              <div class="cell"><label>X</label><input v-model="test.x" type="number"></div>
+              <div class="cell"><label>Y</label><input v-model="test.y" type="number"></div>
+              <div class="cell"><label>Z</label><input v-model="test.z" type="number"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div id="generate">
+        <!-- this button is only enabled if every tab has self-reported as valid-->
+        <button class="generate-button" v-show="sections.APs.valid && sections.Stations.valid && sections.main.valid"
+          @click="generateJSON">Generate</button>
+        <div id="generate-result" class="result">{{ generation_result }}</div>
+      </div>
     </div>
   </main>
 </template>
@@ -57,6 +82,7 @@ import APsTab from './components/APsTab.vue'
 import StationsTab from './components/StationsTab.vue'
 import { main } from '../wailsjs/go/models'
 import { isValid as IsValidIP } from 'ipaddr.js'
+import { CoalescePosition } from './components/shared.vue'
 
 // variables used by this tab
 const generation_result = ref('') // result of the last GenerateJSON call
@@ -102,6 +128,52 @@ function APsValid(count: number) {
 function StationsValid(count: number) {
   sections['Stations'].valid = (count > 0)
   console.warn(['Station tab is valid:', sections['Stations'].valid])
+}
+
+// addTimeframe inserts a new timeframe into the local holder of timeframes.
+function addTimeframe() {
+  sections.Timeframes.push({
+    tests: [{
+      node: '',
+      x: 0,
+      y: 0,
+      z: 0
+    }],
+  })
+}
+
+// addTest inserts a new test into the given timeframe.
+function addTest(tfIdx: number) {
+  const tf = sections.Timeframes[tfIdx]
+  if (!tf) return
+
+  tf.tests.push({
+    node: '',
+    x: 0,
+    y: 0,
+    z: 0
+  })
+}
+
+// collapseTests coalesces timeframes and their tests into how the backend expects them.
+function collapseTests(): Array<main.Test> {
+  const result: Array<main.Test> = []
+
+  sections.Timeframes.forEach((tf, tfIdx) => {
+    tf.tests.forEach(test => {
+      const pos = CoalescePosition(test.x, test.y, test.z)
+      result.push(
+        new main.Test({
+          name: `move ${test.node} to ${pos}`,
+          type: 'node movements',
+          timeframe: tfIdx + 1, // our timeframes are 1-indexed
+          node: test.node,
+          position: pos,
+        }))
+    })
+  })
+
+  return result
 }
 
 // #endregion tab handling ----------------------------------------------------
