@@ -72,7 +72,19 @@ function addStation() {
         <div class="cell"><label>Z</label><input v-model="pos.z" type="number"></div>
       </div>
     </div>
-    <button @click="addStation" v-show="validationErrors.length === 0">Add Station</button>
+    <br><br>
+    <!-- bubbles showing added AP IDs -->
+    <div class="bubbles">
+      <button v-for="id in AddedStas"
+:key="id"
+class="bubble"
+type="button"
+@click.stop>
+        <!-- TODO click a button to load that AP's information-->
+        {{ id }}
+      </button>
+    </div>
+    <button class="add-button" @click="addStation" v-show="validationErrors.length === 0">Add Station</button>
     <div class="error-list">
       <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
     </div>
