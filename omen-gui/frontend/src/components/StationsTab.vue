@@ -2,7 +2,7 @@
 import { main } from '../../wailsjs/go/models'
 import { reactive, computed, watchEffect } from 'vue'
 import { AddSta } from '../../wailsjs/go/main/App'
-import { GetNumberGroup } from './shared.vue'
+import { GetNumberGroup, CoalescePosition } from './shared.vue'
 
 const emit = defineEmits<{
   stationsChanged: [count: number] // the number of stations that will be generated
@@ -41,7 +41,7 @@ watchEffect(() => {
 })
 
 function addStation() {
-  curSta.position = `(${pos.x},${pos.y},${pos.z})`
+  curSta.position = CoalescePosition(pos.x, pos.y, pos.z)
 
   AddedStas.push(curSta.id)
   // pass to the backend

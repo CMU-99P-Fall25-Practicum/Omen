@@ -2,7 +2,7 @@
 import { main } from '../../wailsjs/go/models'
 import { AddAP } from '../../wailsjs/go/main/App'
 import { reactive, computed, watchEffect } from 'vue'
-import { GetNumberGroup } from './shared.vue'
+import { CoalescePosition, GetNumberGroup } from './shared.vue'
 
 const emit = defineEmits<{
   APsCount: [count: number] // the number APs that will be generated
@@ -44,7 +44,7 @@ watchEffect(() => { emit('APsCount', addedAPs.length) })
 // addAP passes the current AP information to the backend and clears out the existing data.
 function addAP() {
   // coalesce x,y,z into cur
-  curAP.position = `(${pos.x},${pos.y},${pos.z})`
+  curAP.position = CoalescePosition(pos.x, pos.y, pos.z)
 
   // save off ID for later retrieval
   addedAPs.push(curAP.id)
