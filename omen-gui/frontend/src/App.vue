@@ -123,33 +123,6 @@ function generateJSON() {
 </script>
 
 <style>
-.tab-container {
-  display: flex;
-  border-bottom: 1px solid #ccc;
-}
-
-.tab-container button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px 5px 0 0;
-  cursor: pointer;
-}
-
-.tab-container button.active {
-  background-color: #ccc;
-}
-
-.tab-content {
-  padding: 20px;
-}
-
-.tab-pane {
-  display: none;
-}
-
-.tab-pane.active {
-  display: block;
-}
 
 .result {
   height: 20px;
