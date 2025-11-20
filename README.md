@@ -34,14 +34,13 @@ Each module strictly follows its [I/O contract](MODULE_CONTRACTS.md) to ensure p
 
 ### GUI
 
-The GUI is built in Wails. On top of the Go dependency above, it requires npm (available [here](https://nodejs.org/en/download/)).
-We built against npm 24, but other versions should work okay.
-I am not a JS developer; don't ask me.
-For more information, see the [Wails docs](https://wails.io/docs/gettingstarted/installation).
+The GUI is built in [Wails](htts://wails.io). On top of the Go dependency above, it requires npm (available [here](https://nodejs.org/en/download/)) and the ipaddr.js (`npm install ipaddr.js`).
+
+Once you have Wails, npm, and ipaddr.js installed, you can simply run `mage gui true` to compile a *debug* version (false for production version) of the input gui and have it placed in the `artefacts` directory.
 
 ## Quick Start
 
-Build all components by executing `mage` at repo root.
+Build all non-GUI components by executing `mage` at repo root.
 
 Execute coordinator with an input json file: `artefacts/coordinator <input>.json`.
 
