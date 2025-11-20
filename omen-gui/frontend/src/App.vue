@@ -161,6 +161,7 @@ function collapseTests(): Array<main.Test> {
 
   sections.Timeframes.forEach((tf, tfIdx) => {
     tf.tests.forEach(test => {
+      if (test.node.trim() !== '') {
       const pos = CoalescePosition(test.x, test.y, test.z)
       result.push(
         new main.Test({
@@ -170,6 +171,7 @@ function collapseTests(): Array<main.Test> {
           node: test.node,
           position: pos,
         }))
+      }
     })
   })
 
