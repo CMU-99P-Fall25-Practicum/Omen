@@ -10,6 +10,6 @@ export function AddSta(arg1) {
   return window['go']['main']['App']['AddSta'](arg1);
 }
 
-export function GenerateJSON() {
-  return window['go']['main']['App']['GenerateJSON']();
+export function GenerateJSON(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['main']['App']['GenerateJSON'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }

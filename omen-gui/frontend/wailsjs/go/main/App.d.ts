@@ -6,4 +6,4 @@ export function AddAP(arg1:main.AP):Promise<void>;
 
 export function AddSta(arg1:main.Sta):Promise<void>;
 
-export function GenerateJSON():Promise<boolean>;
+export function GenerateJSON(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:main.Nets,arg7:Array<main.Test>):Promise<boolean>;
