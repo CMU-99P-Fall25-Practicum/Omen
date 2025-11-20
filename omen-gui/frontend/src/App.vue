@@ -59,16 +59,16 @@ import { main } from '../wailsjs/go/models'
 import { isValid as IsValidIP } from 'ipaddr.js'
 
 // variables used by this tab
-const generation_result = ref(''), // result of the last GenerateJSON call
-  currentTab = ref('main') // which tab is currently active and displaying
+const generation_result = ref('') // result of the last GenerateJSON call
 
 // #region tab handling and validation ----------------------------------------
 
 // validity state of the sections.
 // Sections with sub-documents are self-contained and thus only need a valid bool.
 const sections = reactive({
-  main: { valid: false, 
-    username: '', 
+  main: {
+    valid: false,
+    username: '',
     password: '',
     nets: new main.Nets({
       noise_th: -100,
@@ -80,10 +80,18 @@ const sections = reactive({
     }),
     host: '127.0.0.1',
     port: 22,
-    tests: Array<main.Test>(),
-   }, // this tab
+    tests: [new main.Test({})],
+  }, // this tab
   APs: { valid: false },
-  Stations: { valid: false }
+  Stations: { valid: false },
+  Timeframes: [{
+    tests: [{
+      node: '',
+      x: 0,
+      y: 0,
+      z: 0
+    }],
+  }]
 })
 
 function APsValid(count: number) {
