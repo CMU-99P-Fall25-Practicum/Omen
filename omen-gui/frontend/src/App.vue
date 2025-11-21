@@ -132,6 +132,9 @@ Please note, however, that the validation present in this GUI is not as advanced
           </div>
         </div>
       </div>
+      <div class="error-list" v-show="atLeastOneMovement">You must add at least 1 movement.</div>
+    </div>
+    <div>
       <hr />
       <div id="generate">
         <!-- this button is only enabled if every tab has self-reported as valid-->
@@ -189,6 +192,21 @@ const sections = reactive({
       z: 0
     }],
   }]
+})
+
+// used to check that at least one timeframe has at least one test
+const atLeastOneMovement = computed(() => {
+  let found: boolean = false
+  for (let tf of sections.Timeframes) {
+    for (let test of tf.tests) {
+      if (test.node.trim() !== '') {
+        found = true
+        break
+      }
+    }
+    if (found) break
+  }
+  return !found
 })
 
 function APsValid(count: number) {
