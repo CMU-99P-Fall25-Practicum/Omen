@@ -1,0 +1,25 @@
+Vagrant.configure("2") do |config|
+  # use a reasonably new ubuntu box
+  config.vm.box = "debian/bookworm64"
+  config.vm.box_version = "12.20250126.1"
+  
+
+  # provision resources
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "mininet-wifi-vf"
+    vb.memory = 4096
+    vb.cpus = 2
+  end
+
+  # provision the box
+  config.vm.provision "shell", path: "setup.sh"
+
+  # Per https://wiki.debian.org/Teams/Cloud/VagrantBaseBoxes, the kernel modules are already included in the box itself, since the kernel modules are now part of the official kernel releases.
+  # Thus, vbguest can be disabled.
+  config.vbguest.auto_update = false
+
+  # Prevent shared folder UID/GID issues (optional)
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+  end
+end

@@ -44,7 +44,7 @@ Execute coordinator with an input json file: `artefacts/coordinator <input>.json
 
 Coordinator (`./artefacts/coordinator`) is responsible for executing each step and passing I/O between modules. Each module can be executed individually, if that is preferred (see [below](#running-manually) sections).
 
-Under the hood, the Omen is a pipeline composed of disparate modules with their I/O chained together. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module's I/O expectations and results.
+Under the hood, Omen is a pipeline composed of disparate modules with their I/O chained together. See [Module Contracts](MODULE_CONTRACTS.md) for more information about each module's I/O expectations and results.
 
 ### Running Manually
 
@@ -151,6 +151,82 @@ Finally, update the Dashboard.json file with the UID of the sqlite datasource in
 For example: `sed -i 's/YOUR UID HERE/P0CD8666848BF286D/gI' timeframe0.json`
 
 Import a new dashboard and feed in Dashboard.json. Tada!
+
+# Wireless Propagation Models
+
+To simulate varying environmental conditions and states, we have collected some suggested values for different target environments. Mininet-Wifi currently supports 3 wireless propagation models:
+
+- Friis
+  - Most accurate for free space and LoS calculations
+  - Good for theoretical / ideal environment testing (open area scenarios)
+- Log-Distance
+  - Extension to Friis with a path-loss exponent parameter to enable better simulation of environments with barriers
+  - Good for urban area, indoor testing
+  - Param:
+    - Path-loss exponent (n) -> 2: free space | 3: suburban | 4 - 5: indoor (dense)
+- Log-Normal Shadowing
+  - Extension to Log-Distance with a "randomness" parameter
+  - Most realistic model; the model we recommend using in all cases.
+  - Param:
+    - Path-loss exponent (n)
+    - Shadowing standard deviation (σ, in dB)
+
+## Suggested Values
+
+### Propagation Model
+
+- Normal/Unobstructed Conditions
+  - Log-Distance
+    - exp = 2.6 - 2.8
+  - Log-Normal Shadowing
+    - exp = 2.6 - 2.8
+    - s = 0.5 - 1 dB
+- Slight Rain
+  - Log-Normal Shadowing
+    - exp = 2.8 - 3.0
+    - s = 1 - 2 dB
+  - *Optional*: Set extra loss for certain long links
+    - 2.4GHz: +0.01 dB per km
+    - 5GHz: +0.1 - 0.3 dB per km
+- Heavy Rain
+  - Log-Normal Shadowing:
+    - exp = 2.9 - 3.1
+    - s = 2 - 4 dB
+  - *Optional*: Set extra loss for certain long links
+    - 5GHz: 1 dB per km
+- Snow
+  - Log-Normal Shadowing: 
+    - exp = 2.9 - 3.1
+    - s = 2 - 3 dB
+
+### Noise Threshold
+
+- Clear/open environment:
+  - 2.4 GHz: -105
+  - 5 GHz: -95
+- Typical Normal environment (apartment / office) (default)
+  - 2.4 GHz: -100
+  - 5 GHz: -93
+- Noisy environment
+  - 2.4 GHz: -98
+  - 5 GHz: -90
+
+> [!NOTE]
+> At 2.4/2.5 GHz, rain and snow attenuation is tiny over Wi-Fi distances. Therefore, instead of using a huge noise penalty, it will be more ideal to manipulate the path-loss exponent and shadowing standard deviation. Additionally, 5GHz suffers slightly greater loss than 2.4 GHz.
+
+### References
+
+[Out-of-Band Interference and Noise Floors – MetaGeek Support](https://support.metageek.com/hc/en-us/articles/202424234-Out-of-Band-Interference-and-Noise-Floors)
+
+[Friis Free Space Propagation Model – GaussianWaves](https://www.gaussianwaves.com/2013/09/friss-free-space-propagation-model/)
+
+[RECOMMENDATION ITU-R P.838-3 - Specific attenuation model for rain for use in prediction methods](https://www.itu.int/dms_pubrec/itu-r/rec/p/r-rec-p.838-3-200503-i%21%21pdf-e.pdf)
+
+[How does rain affect my 2.4 GHz and 5 GHz links? – Edgecore Help Center](https://support.edge-core.com/hc/en-us/articles/900004117526-How-does-rain-affect-my-2-4-GHz-and-5-GHz-links)
+
+[https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.840-7-201712-S%21%21PDF-E.pdf](https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.840-7-201712-S%21%21PDF-E.pdf)
+
+[Signal-to-Noise Ratio (SNR) and Wireless Signal Strength - Cisco Meraki Documentation](https://documentation.meraki.com/MR/Design_and_Configure/Architecture_and_Best_Practices/Signal-to-Noise_Ratio_(SNR)_and_Wireless_Signal_Strength)
 
 # Architectural Diagrams
 

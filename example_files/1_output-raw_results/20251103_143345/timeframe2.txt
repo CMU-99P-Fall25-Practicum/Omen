@@ -1,0 +1,144 @@
+
+
+[node movements] 2: move sta1: moving sta1 -> [0.0, 15.0, 0.0]
+Moved sta1 to [0.0, 15.0, 0.0]
+
+[node movements] 2: move sta2: moving sta2 -> [0.0, -15.0, 0.0]
+Moved sta2 to [0.0, -15.0, 0.0]
+
+[node movements] 2: move sta3: moving sta3 -> [10.0, 10.0, 0.0]
+Moved sta3 to [10.0, 10.0, 0.0]
+
+[node movements] 2: move sta4: moving sta4 -> [80.0, 10.0, 0.0]
+Moved sta4 to [80.0, 10.0, 0.0]
+
+[node movements] 2: move ap1: moving ap1 -> [0.0, 0.0, 0.0]
+Moved ap1 to [0.0, 0.0, 0.0]
+
+[node movements] 2: move ap2: moving ap2 -> [70.0, 0.0, 0.0]
+Moved ap2 to [70.0, 0.0, 0.0]
+
+[pingall_full] 2: pairwise matrix (-c 1)
+src,dst,tx,rx,loss_pct,avg_rtt_ms
+sta1,sta2,1,1,0,1.934
+sta1,sta3,1,1,0,2.147
+sta1,sta4,1,1,0,4.046
+sta1,ap1,1,1,0,0.022
+sta1,ap2,1,1,0,0.016
+sta2,sta1,1,1,0,2.418
+sta2,sta3,1,1,0,2.468
+sta2,sta4,1,1,0,1.954
+sta2,ap1,1,1,0,0.018
+sta2,ap2,1,1,0,0.015
+sta3,sta1,1,1,0,17.872
+sta3,sta2,1,1,0,2.918
+sta3,sta4,1,1,0,2.465
+sta3,ap1,1,1,0,0.039
+sta3,ap2,1,1,0,0.045
+sta4,sta1,1,1,0,2.237
+sta4,sta2,1,1,0,3.047
+sta4,sta3,1,1,0,1.868
+sta4,ap1,1,1,0,0.024
+sta4,ap2,1,1,0,0.026
+ap1,sta1,1,0,+1 errors,?
+ap1,sta2,1,0,100,?
+ap1,sta3,1,0,+1 errors,?
+ap1,sta4,1,0,100,?
+ap1,ap2,1,1,0,0.049
+ap2,sta1,1,0,+1 errors,?
+ap2,sta2,1,0,100,?
+ap2,sta3,1,0,+1 errors,?
+ap2,sta4,1,0,100,?
+ap2,ap1,1,1,0,0.081
+
+[iw_stations] check_all_links: running 'iw dev {interface} link' on all stations
+============================================================
+
+--- Station sta1 ---
+Command: iw dev sta1-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta1-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 123850 bytes (2941 packets)
+	TX: 4350 bytes (48 packets)
+	signal: -44 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 54.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Station sta2 ---
+Command: iw dev sta2-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta2-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 123670 bytes (2938 packets)
+	TX: 4230 bytes (46 packets)
+	signal: -44 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 54.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Station sta3 ---
+Command: iw dev sta3-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta3-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 123670 bytes (2938 packets)
+	TX: 4290 bytes (47 packets)
+	signal: -44 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 54.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Station sta4 ---
+Command: iw dev sta4-wlan0 link
+Output:
+Connected to 02:00:00:00:04:00 (on sta4-wlan0)
+	SSID: test-ssid1
+	freq: 5180.0
+	RX: 123610 bytes (2937 packets)
+	TX: 4290 bytes (47 packets)
+	signal: -64 dBm
+	rx bitrate: 54.0 MBit/s
+	tx bitrate: 54.0 MBit/s
+	bss flags: short-slot-time
+	dtim period: 2
+	beacon int: 100
+
+
+--- Access Point ap1 ---
+Command: ap1 ifconfig ap1-wlan1
+Output:
+ap1-wlan1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether 02:00:00:00:04:00  txqueuelen 1000  (Ethernet)
+        RX packets 176  bytes 13536 (13.5 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 176  bytes 16704 (16.7 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+--- Access Point ap2 ---
+Command: ap2 ifconfig ap2-wlan1
+Output:
+ap2-wlan1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether 02:00:00:00:05:00  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+============================================================

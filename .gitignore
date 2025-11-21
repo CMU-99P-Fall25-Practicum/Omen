@@ -13,6 +13,9 @@
 # Unignore Dockerfiles
 !Dockerfile
 
+# unignore Vagrantfiles
+!Vagrantfile
+
 # ignore build artefacts
 artefacts
 
