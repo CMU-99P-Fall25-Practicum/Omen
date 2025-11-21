@@ -19,7 +19,7 @@ Please note, however, that the validation present in this GUI is not as advanced
         <label class="field">Host</label>: <input v-model="sections.main.host" type="text"> <label>Port</label>:
         <input v-model="sections.main.port" type="number" min="1" max="65535">
       </div>
-      <div class="error-list">
+      <div class="error-text">
         <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
       </div>
       <hr />
@@ -136,7 +136,7 @@ Please note, however, that the validation present in this GUI is not as advanced
           </div>
         </div>
       </div>
-      <div class="error-list" v-show="atLeastOneMovement">You must add at least 1 movement.</div>
+      <div class="error-text" v-show="atLeastOneMovement">You must add at least 1 movement.</div>
     </div>
     <div>
       <hr />
@@ -322,14 +322,5 @@ function generateJSON() {
   word-wrap: break-word;
 }
 
-table,
-th,
-td {
-  border: 2px solid white;
-  border-collapse: collapse;
-}
 
-td {
-  padding: 10px;
-}
 </style>

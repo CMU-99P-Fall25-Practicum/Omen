@@ -99,10 +99,10 @@ function addAP() {
       </button>
     </div>
     <button class="add-button" @click="addAP" v-show="validationErrors.length === 0">Add AP</button>
-    <div class="error-list">
+    <div class="error-text">
       <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
     </div>
-    <div class="error-list">
+    <div class="error-text">
       <div v-show="addedAPs.length===0">You must add at least 1 access point.</div>
     </div>
   </div>

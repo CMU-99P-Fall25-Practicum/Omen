@@ -39,7 +39,7 @@ body {
 }
 
 /* Used for printing validation errors inside of a tab */
-.error-list {
+.error-text {
   color: rgb(252, 107, 107);
 }
 
@@ -70,34 +70,45 @@ body {
 }
 
 .position-table {
-    display: inline-block;
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    table-layout: auto;
-  }
+  display: inline-block;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  table-layout: auto;
+}
 
-  .row {
-    display: flex;
-  }
+.row {
+  display: flex;
+}
 
-  .cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 10px;
-  }
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
 
-  .cell label {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
+.cell label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
 
-  .section-header h1 {
-    /* placeholder */
-  }
+.section-header h1 {
+  /* placeholder */
+}
 
-  .field label {
-    /* placeholder */
-  }
+.field label {
+  /* placeholder */
+}
+
+table,
+th,
+td {
+  border: 2px solid white;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 10px;
+}
