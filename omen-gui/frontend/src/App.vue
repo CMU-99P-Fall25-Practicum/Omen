@@ -5,7 +5,7 @@ The code has a rather noodle-like consistency, given I've never touched TS/JS/Vu
 It constructs a json file that can be fed into the Omen pipeline.
 Please note, however, that the validation present in this GUI is not as advanced or useful as the validation performed by the actual validator script in the pipeline.
 -->
-<template>  
+<template>
   <main>
     <!-- main tab content -->
     <div>
@@ -53,22 +53,25 @@ Please note, however, that the validation present in this GUI is not as advanced
         <p class="field-description">
           Model and its parameters set how Mininet-Wifi calculates energy loss over a given distance.
         </p>
-          <strong>Friis</strong> is the base model and is accurate for free space, line-of-site calculations.
-          <br />
-          This makes Friis good for theoretical/ideal environments. It ignores both parameters.
-          <br />
-          <br />
-          <strong>Log-Distance</strong> is an extension to Friis that adds a path-loss exponent to better simulate environments with obstacles.
-          <br />
-          This makes Log-Distance more flexible, assuming you pick a good n (exponent).
-          <br />
-          <br />
-          <strong>Log-Normal Shadowing</strong> is an extension to Log-Distance that adds a "randomness" parameter (σ) in dB.
-          <br />
-          Log-Normal Shadowing is the most realistic model given its higher degree of flexibility.
-          <h3>Suggested Values</h3>
-          All values use the <strong>Log-Normal Shadowing</strong> model.
-          <center><table>
+        <strong>Friis</strong> is the base model and is accurate for free space, line-of-site calculations.
+        <br />
+        This makes Friis good for theoretical/ideal environments. It ignores both parameters.
+        <br />
+        <br />
+        <strong>Log-Distance</strong> is an extension to Friis that adds a path-loss exponent to better simulate
+        environments with obstacles.
+        <br />
+        This makes Log-Distance more flexible, assuming you pick a good n (exponent).
+        <br />
+        <br />
+        <strong>Log-Normal Shadowing</strong> is an extension to Log-Distance that adds a "randomness" parameter (σ) in
+        dB.
+        <br />
+        Log-Normal Shadowing is the most realistic model given its higher degree of flexibility.
+        <h3>Suggested Values</h3>
+        All values use the <strong>Log-Normal Shadowing</strong> model.
+        <center>
+          <table>
             <thead>
               <tr>
                 <th>Conditions</th>
@@ -98,7 +101,8 @@ Please note, however, that the validation present in this GUI is not as advanced
                 <td>2.0 - 3.0</td>
               </tr>
             </tbody>
-          </table></center>
+          </table>
+        </center>
       </div>
     </div>
     <hr />
@@ -110,7 +114,7 @@ Please note, however, that the validation present in this GUI is not as advanced
     <StationsTab @stationsChanged="StationsValid" />
     <hr />
     <div>
-      <h1 class="section-header">Tests</h1> 
+      <h1 class="section-header">Tests</h1>
       <!-- display each timeframe and enable the creation of more -->
       <button @click="addTimeframe" class="add-timeframe">Add timeframe</button>
       <div v-for="(tf, tfIdx) in sections.Timeframes" :key=tfIdx class="timeframe">
@@ -138,9 +142,11 @@ Please note, however, that the validation present in this GUI is not as advanced
       <hr />
       <div id="generate">
         <!-- this button is only enabled if every tab has self-reported as valid-->
-        <button class="generate-button" :disabled="!(sections.APs.valid && sections.Stations.valid && sections.main.valid)"
+        <button class="generate-button"
+          :disabled="!(sections.APs.valid && sections.Stations.valid && sections.main.valid)"
           @click="generateJSON">Generate</button>
-        <p v-show="!(sections.APs.valid && sections.Stations.valid && sections.main.valid)">Please correct all errors above.</p>
+        <p v-show="!(sections.APs.valid && sections.Stations.valid && sections.main.valid)">Please correct all errors
+          above.</p>
         <div id="generate-result" class="result">{{ generation_result }}</div>
       </div>
     </div>
@@ -185,12 +191,7 @@ const sections = reactive({
   APs: { valid: false },
   Stations: { valid: false },
   Timeframes: [{
-    tests: [{
-      node: '',
-      x: 0,
-      y: 0,
-      z: 0
-    }],
+    tests: [{ node: '', x: 0, y: 0, z: 0 }],
   }]
 })
 
@@ -251,15 +252,15 @@ function collapseTests(): Array<main.Test> {
   sections.Timeframes.forEach((tf, tfIdx) => {
     tf.tests.forEach(test => {
       if (test.node.trim() !== '') {
-      const pos = CoalescePosition(test.x, test.y, test.z)
-      result.push(
-        new main.Test({
-          name: `move ${test.node} to ${pos}`,
-          type: 'node movements',
-          timeframe: tfIdx + 1, // our timeframes are 1-indexed
-          node: test.node,
-          position: pos,
-        }))
+        const pos = CoalescePosition(test.x, test.y, test.z)
+        result.push(
+          new main.Test({
+            name: `move ${test.node} to ${pos}`,
+            type: 'node movements',
+            timeframe: tfIdx + 1, // our timeframes are 1-indexed
+            node: test.node,
+            position: pos,
+          }))
       }
     })
   })
@@ -282,7 +283,6 @@ let validationErrors = computed(() => {
   if (sections.main.port < 1 || sections.main.port > (2 << 16) - 1) msgs.push('Port must be between 1 and 65535')
 
   sections.main.valid = (msgs.length === 0)
-  console.warn(['main tab is valid: ', sections.main.valid])
 
   return msgs
 })
@@ -322,12 +322,14 @@ function generateJSON() {
   word-wrap: break-word;
 }
 
-table, th, td {
+table,
+th,
+td {
   border: 2px solid white;
   border-collapse: collapse;
 }
+
 td {
   padding: 10px;
 }
-
 </style>
