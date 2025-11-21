@@ -40,6 +40,7 @@ Please note, however, that the validation present in this GUI is not as advanced
         <p><strong>Clear/Open Environment:</strong> 2.4GHz = -105dBm | 5GHz = -95dBm</p>
         <p><strong>Common Environment (ex: apartment/office):</strong> 2.4GHz = -100dBm | 5GHz = -93dBm</p>
         <p><strong>Noisy/Crowded Environment:</strong> 2.4GHz = -98dBm | 5GHz = -90dBm</p>
+        <hr class="half-rule"/>
         <h2>Model</h2>
         <select v-model="sections.main.nets.propagation_model.model">
           <option v-for="name in main.PropModel">{{ name }}</option>
@@ -114,14 +115,22 @@ Please note, however, that the validation present in this GUI is not as advanced
     <StationsTab @stationsChanged="StationsValid" />
     <hr />
     <div>
-      <h1 class="section-header">Tests</h1>
+      <h1 class="section-header">Movements</h1>
+      <p class="field-description">
+        Movements defines when nodes should change their coordinates and to where they should move.
+        All movements within a timeframe are effectively simultaneously and, once all have taken place,
+        a topology-wide connectivity test will occur before control is handed off to the next timeframe.
+        <br />
+        Once all timeframes have executed, the pipeline completes and visualizes the results of the connectivity tests.
+      </p>
       <!-- display each timeframe and enable the creation of more -->
       <button @click="addTimeframe" class="add-timeframe">Add timeframe</button>
       <div v-for="(tf, tfIdx) in sections.Timeframes" :key=tfIdx class="timeframe">
+        <hr class="half-rule" />
         <h2>Timeframe {{ tfIdx + 1 }}</h2>
 
         <!-- enable adding more tests within this timeframe -->
-        <button @click="addTest(tfIdx)" class="add-test">Add test</button>
+        <button @click="addTest(tfIdx)" class="add-test">Add movement</button>
         <div v-for="(test, _) in tf.tests" class="test-row">
           <label class="field">Node:</label>
           <input v-model="test.node" type="text" placeholder="node" />
@@ -305,22 +314,3 @@ function generateJSON() {
     })
 }
 </script>
-
-<style>
-.result {
-  height: 20px;
-  line-height: 20px;
-  margin: 1.5rem auto;
-}
-
-.section-description {
-  /* placeholder */
-}
-
-.field-description {
-  font-style: italic;
-  word-wrap: break-word;
-}
-
-
-</style>
