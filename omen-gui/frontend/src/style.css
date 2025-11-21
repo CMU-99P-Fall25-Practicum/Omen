@@ -112,3 +112,27 @@ td {
 td {
   padding: 10px;
 }
+
+.result {
+  height: 20px;
+  line-height: 20px;
+  margin: 1.5rem auto;
+}
+
+.section-description {
+  /* placeholder */
+}
+
+.field-description {
+  font-style: italic;
+  /* word-wrap: break-word; */
+  width: 80%;
+  margin: auto;
+  margin-bottom: 1em;
+}
+
+/* Used to create child horizontal rules */
+.half-rule {
+  width: 50%;
+  margin-top: 0.5em;
+}
