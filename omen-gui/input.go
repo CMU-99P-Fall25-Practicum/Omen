@@ -8,9 +8,9 @@ package main
 type PropModel string
 
 const (
-	Friis              PropModel = "Friis"
-	LogDistance        PropModel = "LogDistance"
-	LogNormalShadowing PropModel = "LogNormalShadowing"
+	Friis              PropModel = "friis"
+	LogDistance        PropModel = "logDistance"
+	LogNormalShadowing PropModel = "logNormalShadowing"
 )
 
 var AllPropModels = []struct {

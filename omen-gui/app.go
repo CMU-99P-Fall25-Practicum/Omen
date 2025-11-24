@@ -84,7 +84,7 @@ func (a *App) GenerateJSON(runName, sshUsername, sshPassword, sshHost string, ss
 		Meta: Meta{
 			Backend:   "mininet-wifi",
 			Name:      runName,
-			DurationS: 0, // unused
+			DurationS: 60, // unused
 		},
 		Topo: Topo{
 			Nets: net,
