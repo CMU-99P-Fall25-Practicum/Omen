@@ -32,9 +32,23 @@ Each module strictly follows its [I/O contract](MODULE_CONTRACTS.md) to ensure p
 
 - A Mininet_Wifi VM available over SSH
 
+### GUI
+
+The GUI is built in [Wails](htts://wails.io). On top of the Go dependency above, it requires npm (available [here](https://nodejs.org/en/download/)) and the ipaddr.js (`npm install ipaddr.js`).
+
+Once you have Wails, npm, and ipaddr.js installed, you can simply run `mage gui false` input gui and have it placed in the `artefacts` directory.
+
+>[!NOTE]
+>`mage build` does *not* build the GUI, as it is tangential and thus its build dependencies are not assumed when compiling the rest of the pipeline.
+
+
+#### Developing
+
+Wails includes a development server with hot-reload (thanks to vite) that fronts both a local app and webapp. Access it by navigating into `omen-gui` and calling `wails dev`.
+
 ## Quick Start
 
-Build all components by executing `mage` at repo root.
+Build all non-GUI components by executing `mage` at repo root.
 
 Execute coordinator with an input json file: `artefacts/coordinator <input>.json`.
 

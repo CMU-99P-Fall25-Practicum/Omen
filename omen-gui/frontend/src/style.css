@@ -1,0 +1,138 @@
+/* NOTE(rlandau): most of this is from the boilerplate Wails Vue template. */
+
+html {
+  background-color: rgba(27, 38, 54, 1);
+  text-align: center;
+  color: white;
+}
+
+body {
+  margin: 0;
+  color: white;
+  font-family:
+    "Nunito",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    sans-serif;
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400;
+  src:
+    local(""),
+    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+}
+
+#app {
+  height: 100vh;
+  text-align: center;
+}
+
+/* Used for printing validation errors inside of a tab */
+.error-text {
+  color: rgb(252, 107, 107);
+}
+
+/* region: bubble stylings for inserted APs and STAs */
+.bubbles {
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.bubble {
+  background: #007aff;
+  /* TODO replace with secondary color var */
+  color: #fff;
+  /* TODO replace with text color var */
+  border: none;
+  border-radius: 50%;
+  /* rounded */
+  justify-content: center;
+
+  /* minimums so small bubbles look like circles */
+  min-width: 2em;
+  min-height: 2em;
+
+  font-size: 12px;
+  /* space the bubbles out a bit */
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}
+
+.position-table {
+  display: inline-block;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  table-layout: auto;
+}
+
+.row {
+  display: flex;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+
+.cell label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.section-header h1 {
+  /* placeholder */
+}
+
+.field label {
+  /* placeholder */
+}
+
+table,
+th,
+td {
+  border: 2px solid white;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 10px;
+}
+
+.result {
+  height: 20px;
+  line-height: 20px;
+  margin: 1.5rem auto;
+}
+
+.section-description {
+  /* placeholder */
+}
+
+.field-description {
+  font-style: italic;
+  /* word-wrap: break-word; */
+  width: 80%;
+  margin: auto;
+  margin-bottom: 1em;
+}
+
+/* Used to create child horizontal rules */
+.half-rule {
+  width: 50%;
+  margin-top: 0.5em;
+}

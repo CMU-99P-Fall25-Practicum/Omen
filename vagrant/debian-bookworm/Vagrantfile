@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
 
   # Per https://wiki.debian.org/Teams/Cloud/VagrantBaseBoxes, the kernel modules are already included in the box itself, since the kernel modules are now part of the official kernel releases.
   # Thus, vbguest can be disabled.
-  config.vbguest.auto_update = false
+  #config.vbguest.auto_update = false
 
   # Prevent shared folder UID/GID issues (optional)
   config.vm.provider "virtualbox" do |vb|
