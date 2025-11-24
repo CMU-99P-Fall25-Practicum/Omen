@@ -18,7 +18,7 @@ export function GetNumberGroup(s: string): string {
 
 // CoalescePosition simply formats the numbers as (x,y,z).
 export function CoalescePosition(x: number, y: number, z: number): string {
-  return `(${x},${y},${z})`
+  return `${x},${y},${z}`
 }
 
 </script>
