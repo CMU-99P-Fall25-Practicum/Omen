@@ -38,6 +38,10 @@ The GUI is built in [Wails](htts://wails.io). On top of the Go dependency above,
 
 Once you have Wails, npm, and ipaddr.js installed, you can simply run `mage gui false` input gui and have it placed in the `artefacts` directory.
 
+>[!NOTE]
+>`mage build` does *not* build the GUI, as it is tangential and thus its build dependencies are not assumed when compiling the rest of the pipeline.
+
+
 #### Developing
 
 Wails includes a development server with hot-reload (thanks to vite) that fronts both a local app and webapp. Access it by navigating into `omen-gui` and calling `wails dev`.
