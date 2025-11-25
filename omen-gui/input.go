@@ -30,7 +30,6 @@ const (
 	B  WifiMode = "b"
 	G  WifiMode = "g"
 	N  WifiMode = "n"
-	AX WifiMode = "ax"
 	AC WifiMode = "ac"
 )
 
@@ -42,7 +41,6 @@ var AllWifiModes = []struct {
 	{B, "b"},
 	{G, "g"},
 	{N, "n"},
-	{AX, "ax"},
 	{AC, "ac"},
 }
 
