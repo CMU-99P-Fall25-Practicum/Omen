@@ -252,7 +252,7 @@ To simulate varying environmental conditions and states, we have collected some 
 >[!NOTE]
 >The source files for every diagram are available inside [img/src](img/src).
 
-![diagram of the full pipeline logic](img/Pipeline_4.svg)
+![diagram of the full pipeline logic](img/Pipeline_4.drawio.png)
 
 This diagram showcases the final iteration of the pipeline's end-to-end operation. Each stage is kicked off via coordinator and returns control to coordinator upon completion. 
 
