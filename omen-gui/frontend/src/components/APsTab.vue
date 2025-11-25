@@ -24,8 +24,8 @@ const addedAPs = reactive(Array<string>()),
 const _2_4GHzChannels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
   _5GHzModes = ['a', 'n', 'ac'],
   _5GHzChannels = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132,
-                     136, 140, 149, 153, 157, 161, 165, 169, 171, 172, 173, 174, 175, 176,
-                     177, 178, 179, 180, 181, 182, 183, 184, 185]
+    136, 140, 149, 153, 157, 161, 165, 169, 171, 172, 173, 174, 175, 176,
+    177, 178, 179, 180, 181, 182, 183, 184, 185]
 
 // validation errors is recomputed every time cur (as its one dependency) is touched.
 // It is used to disable the Add AP button and provide reasons why.
@@ -130,7 +130,7 @@ function addAP() {
       <div v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</div>
     </div>
     <div class="error-text">
-      <div v-show="addedAPs.length===0">You must add at least 1 access point.</div>
+      <div v-show="addedAPs.length === 0">You must add at least 1 access point.</div>
     </div>
   </div>
 </template>

@@ -40,7 +40,7 @@ Please note, however, that the validation present in this GUI is not as advanced
         <p><strong>Clear/Open Environment:</strong> 2.4GHz = -105dBm | 5GHz = -95dBm</p>
         <p><strong>Common Environment (ex: apartment/office):</strong> 2.4GHz = -100dBm | 5GHz = -93dBm</p>
         <p><strong>Noisy/Crowded Environment:</strong> 2.4GHz = -98dBm | 5GHz = -90dBm</p>
-        <hr class="half-rule"/>
+        <hr class="half-rule" />
         <h2>Model</h2>
         <select v-model="sections.main.nets.propagation_model.model">
           <option v-for="name in main.PropModel">{{ name }}</option>
