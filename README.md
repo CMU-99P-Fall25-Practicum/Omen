@@ -260,11 +260,29 @@ This diagram showcases the final iteration of the pipeline's end-to-end operatio
 
 This section contains a selection of earlier diagrams to showcase the development thought process and cutting room floor.
 
-## Milestone 2 Overview
+### Proposal Architectural
+
+![diagram of the original pipeline proposal](img/Pipeline_0.drawio.png)
+
+This is the design I (Rory) originally proposed to the team and I still believe it forms a strong basis for both Omen and future, child projects.
+
+However, the diagram is a fantastic example of "no plan survives contact with the enemy", as the earliest research stages and timeline analysis revealed flaws in it (such as querying OSM, (not) needing to load custom modules, and the design to build our own output visualization). In the end, this diagram served to bring together each team member's understanding of the problem space and how we could begin to explore it.
+
+### Milestone 2 Architectural
 
 ![simplified milestone 2](img/Pipeline_2.drawio.png)
 
-## Milestone 3 Updated Test Driver Flow
+Milestone 2's archietcture diagram shows several features that were either dropped, tweaked, or cleared up by the final design.
+
+The input file was known, but noted greater detail as its form had not yet been established. The callout box also hints at batching requests, which was an early feature of Coordinator that was scrapped latter: Coordinator was originally intended to be able to take a variable amount of input files, and run tests either in parallel or in sequence.
+
+OpenStreetMaps was still an open question. This diagram was created after scouting OSM, but before we had landed on exactly how to integrate it (and before the decision was made to scrap it all together). "Fetch Obstacles" refers to the stretch goal to take line-of-sight into account, an important feature that was, unfortunately, deemed well out of scope.
+
+Perhaps the most interesting section of this diagram: Frame Generation. In a nutshell, the Frame Generation module would figure out how to move a node from point A to point B over the duration of the test, updating its wireless characteristics at each step/timeframe based on distance and weather.
+It is important to note that this logic was developed before we understood the limitations of Mininet's wireless propagation model (specifically that it is applied topology-wide and cannot easily be made to affect a given radius).
+The ultimate intention of Frame Generation was to prepare each unique topology (each (time)frame) such that it could be loaded into the test runner and executed as a whole without further processing. This design makes no assumptions about the backend's (Mininet-WiFi's) ability to *actually* change node positions or alter an existing topology; Frame Generation functionally rebuilds and tests the topology from scratch at each frame, decoupling it from the capabilities of a given backend.
+
+### Milestone 3 Updated Test Driver Flow
 
 ![proposed milestone 3 upgrade](img/milestone3_script_flow.drawio.png)
 
