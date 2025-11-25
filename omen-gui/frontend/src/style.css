@@ -41,6 +41,8 @@ body {
 /* Used for printing validation errors inside of a tab */
 .error-text {
   color: rgb(252, 107, 107);
+  width: 80%;
+  margin: auto;
 }
 
 /* region: bubble stylings for inserted APs and STAs */
