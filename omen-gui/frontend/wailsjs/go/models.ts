@@ -10,7 +10,6 @@ export namespace main {
 	    b = "b",
 	    g = "g",
 	    n = "n",
-	    ax = "ax",
 	    ac = "ac",
 	}
 	export class AP {

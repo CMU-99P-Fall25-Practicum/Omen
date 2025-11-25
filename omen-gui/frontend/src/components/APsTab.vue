@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { main } from '../../wailsjs/go/models'
 import { AddAP } from '../../wailsjs/go/main/App'
-import { reactive, computed, watchEffect } from 'vue'
+import { reactive, computed, watchEffect, watch } from 'vue'
 import { CoalescePosition, GetNumberGroup } from './shared.vue'
 
 const emit = defineEmits<{
@@ -18,6 +18,15 @@ const addedAPs = reactive(Array<string>()),
     position: '' // NOTE: x, y, and z are composed into main.AP.position
   })),
   pos = reactive({ x: 0, y: 0, z: 0 })
+
+// NOTE(rlandau): these were pulled from Mininet-Wifi's Frequency object:
+// https://github.com/intrig-unicamp/mininet-wifi/blob/eaa5accbddee4f43d5743fabf6748ef5d4d75608/mn_wifi/frequency.py
+const _2_4GHzChannels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  _5GHzModes = ['a', 'n', 'ac'],
+  _5GHzChannels = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132,
+                     136, 140, 149, 153, 157, 161, 165, 169, 171, 172, 173, 174, 175, 176,
+                     177, 178, 179, 180, 181, 182, 183, 184, 185]
+
 // validation errors is recomputed every time cur (as its one dependency) is touched.
 // It is used to disable the Add AP button and provide reasons why.
 let validationErrors = computed(() => {
@@ -33,6 +42,10 @@ let validationErrors = computed(() => {
       if (Number(ng) < 0) msgs.push('ID number group must be positive')
     }
     if (addedAPs.findIndex((v) => curAP.id === v) != -1) msgs.push('AP ids must be unique')
+
+    // check channel
+    if (curAP.channel === 0)
+      msgs.push('You must select a channel')
   }
 
   return msgs
@@ -40,6 +53,14 @@ let validationErrors = computed(() => {
 
 // alert our parent about our current state
 watchEffect(() => { emit('APsCount', addedAPs.length) })
+// clear channel whenever mode changes
+watch(
+  () => curAP.mode,
+  (mode, prevMode) => {
+    if (mode != prevMode) curAP.channel = 0
+  }
+)
+
 
 // addAP passes the current AP information to the backend and clears out the existing data.
 function addAP() {
@@ -77,7 +98,12 @@ function addAP() {
     </select>
     <br />
     <label class='field'>Channel</label>:
-    <input v-model="curAP.channel" type="number" placeholder="Channel" min="0">
+    <select v-if="_5GHzModes.includes(curAP.mode)" v-model="curAP.channel">
+      <option v-for="ch in _5GHzChannels">{{ ch }}</option>
+    </select>
+    <select v-else v-model="curAP.channel">
+      <option v-for="ch in _2_4GHzChannels">{{ ch }}</option>
+    </select>
     <br />
     <label class='field'>SSID</label>:
     <input v-model="curAP.ssid" type="text" placeholder="SSID">
