@@ -66,7 +66,9 @@ watch(
 function addAP() {
   // coalesce x,y,z into cur
   curAP.position = CoalescePosition(pos.x, pos.y, pos.z)
-
+  // NOTE(rlandau): unclear why this is necessary.
+  // If omitted, channel is passed to Go as a string, which causes the function call to fail due to mismatched types.
+  curAP.channel = Number(curAP.channel)
   // save off ID for later retrieval
   addedAPs.push(curAP.id)
   AddAP(curAP)
