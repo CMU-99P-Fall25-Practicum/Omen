@@ -109,7 +109,7 @@ Because Omen is a set of disparate modules run in sequence, this binary (the Coo
 // Otherwise, leaves a message about still-spinning containers.
 func cleanup(errored bool) {
 	defer dCLI.Close()
-	if errored { // force-shutter the grafana container
+	if errored && grafanaContainerID != "" { // force-shutter the grafana container
 		if err := dCLI.ContainerRemove(context.Background(), grafanaContainerID, container.RemoveOptions{Force: true}); err != nil {
 			log.Error().Err(err).Msg("failed to force-remove the Grafana container")
 		}
