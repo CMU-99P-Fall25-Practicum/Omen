@@ -23,3 +23,8 @@ artefacts
 .vscode/**
 
 .DS_Store
+
+# gui ignores
+**/build/bin
+**/node_modules
+**/frontend/dist
