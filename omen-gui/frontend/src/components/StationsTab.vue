@@ -80,7 +80,6 @@ function addStation() {
 class="bubble"
 type="button"
 @click.stop>
-        <!-- TODO click a button to load that station's information-->
         {{ id }}
       </button>
     </div>

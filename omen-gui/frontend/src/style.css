@@ -53,9 +53,7 @@ body {
 
 .bubble {
   background: #007aff;
-  /* TODO replace with secondary color var */
   color: #fff;
-  /* TODO replace with text color var */
   border: none;
   border-radius: 50%;
   /* rounded */

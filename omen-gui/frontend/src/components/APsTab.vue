@@ -122,7 +122,6 @@ function addAP() {
     <!-- bubbles showing added AP IDs -->
     <div class="bubbles">
       <button v-for="id in addedAPs" :key="id" class="bubble" type="button" @click.stop>
-        <!-- TODO click a button to load that AP's information-->
         {{ id }}
       </button>
     </div>

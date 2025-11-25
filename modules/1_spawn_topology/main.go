@@ -44,11 +44,6 @@ import (
 	"github.com/spf13/pflag"
 )
 
-/* TODO
-- This is currently a stand-alone runner
-- No test script customization yet (cannot feed a .cli file automatically)
-*/
-
 var appName string = "test_runner"
 
 // Configuration - Set these to hardcode values, leave empty for prompting
