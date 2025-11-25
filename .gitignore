@@ -19,6 +19,9 @@
 # ignore build artefacts
 artefacts
 
+# ignore draw.io's backups
+*.drawio.bkp
+
 *.log
 .vscode/**
 
