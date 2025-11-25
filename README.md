@@ -2,6 +2,10 @@
 
 A prototype modular pipeline for instrumenting network simulations and visualizing outcomes. Omen seeks to prove the feasibility of turning static, user inputs into usable test results that can be roughly applied to real life scenarios. As a prototype, Omen is *not* focused on accuracy or granularity so much as it is trialing available technologies to assess limitations, workarounds, and alternative options.
 
+Here is a high-level overview of how the pipeline operates:
+
+![diagram of a high-level pipeline overview](img/pipeline_4_high-level.drawio.png)
+
 # Team Members
 
 *Tech Team*
@@ -40,6 +44,7 @@ Once you have Wails, npm, and ipaddr.js installed, you can simply run `mage gui 
 
 >[!NOTE]
 >`mage build` does *not* build the GUI, as it is tangential and thus its build dependencies are not assumed when compiling the rest of the pipeline.
+>This same reason applies to why it is its own Go module.
 
 
 #### Developing
@@ -244,15 +249,23 @@ To simulate varying environmental conditions and states, we have collected some 
 
 # Architectural Diagrams
 
-![original pipeline diagram](img/Pipeline.drawio.png)
+>[!NOTE]
+>The source files for every diagram are available inside [img/src](img/src).
+
+![diagram of the full pipeline logic](img/Pipeline_4.svg)
+
+This diagram showcases the final iteration of the pipeline's end-to-end operation. Each stage is kicked off via coordinator and returns control to coordinator upon completion. 
+
+## Old/Out-of-Date Diagrams
+
+This section contains a selection of earlier diagrams to showcase the development thought process and cutting room floor.
 
 ## Milestone 2 Overview
 
-![simplified milestone 2](img/milestone2.drawio.png)
+![simplified milestone 2](img/Pipeline_2.drawio.png)
 
 ## Milestone 3 Updated Test Driver Flow
 
 ![proposed milestone 3 upgrade](img/milestone3_script_flow.drawio.png)
 
->[!NOTE]
->Support for outputting extra files is theoretical and not currently supported.
+Milestone 3 saw the introduction of timeframes, enabling movements to occur simultaneously (rather than each movement implying a new timeframe). It also proposed continued support for alternative tests/timeframe actions (like `iperf`). This feature was cut due only to time-constraint.
