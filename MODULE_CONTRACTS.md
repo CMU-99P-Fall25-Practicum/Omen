@@ -123,9 +123,102 @@ This module consumes the raw data from Test Runner and transforms it such that V
   - `timeframeX/ping_data_movement_X.csv` has 11 columns: data_type,movement_number,test_file,node_name,position,src,dst,tx,rx,loss_pct,avg_rtt_ms
 
 ## [Visualization](modules/3_output_visualization)
+The Visualization module consumes the normalized CSV output from Coalesce Output and exposes it in a form that is easy for dashboards and operators to explore. 
+
+In this implementation, visualization is a two-stage process:
+
+1. Loading results into a SQLite database (via omenloader.py)
+2. Rendering dashboards in Grafana using that database as a data source.
 
 *In*: 
-- arg1: path to the results directory (a directory containing two files: `nodes.csv` and `edges.csv`)
+- arg1: path to the results directory (a directory produced by the Coalesce Output module.
+  This directory is expected to contain:
+  - Top-level CSVs:
+    - `final_iw_data.csv`
+    - `ping_data.csv`
+  - One subdirectory per timeframe, each containing:
+    - `timeframeX/nodes.csv`
+    - `timeframeX/edges.csv`
+    - `timeframeX/ping_data_movement_X.csv`
+  Example:
+ `results/
+    ├── final_iw_data.csv
+    ├── ping_data.csv
+    ├── timeframe0/
+    │   ├── edges.csv
+    │   ├── nodes.csv
+    │   └── ping_data_movement0.csv
+    ├── timeframe1/
+    │   ├── edges.csv
+    │   ├── nodes.csv
+    │   └── ping_data_movement1.csv
+    ├── timeframe2/
+    │   └── ...
+    └── timeframeN/
+        └── ...`
 
-*Out*: [variable. Entirely dependent on the visualization technique employed by the specific implementation of this module]
+*Out*: 
+1. SQLite database (for dashboards to query)
+The visualization module writes a SQLite database (by default at `/opt/homebrew/var/lib/grafana/omen.db` containing:
+- Per-timeframe graph tables (one prefix per timeframe), e.g:
+  - `<prefix>_nodes`
+     Columns (example):
+      `id, title, subTitle, mainStat, severity, detail__rx_bytes, detail__rx_packets, detail__tx_bytes, detail__tx_packets, detail__success_rate, arc__success, arc__errors, latitude, longitude`
+  - `<prefix>_edges`:
+     Columns (example):
+      `id, source, target, status`
+  - `<prefix>_timeseries`:
+    Columns taken directly from `timeframeX/ping_data_movement_X.csv`
+- Global ping tables:
+  - `ping_data`: Raw rows from `ping_data.csv` (all movements, all timeframe)
+  - `ping_data_agg`:
+    - Aggregated view of `ping_data`, grouped by `movement_number`
+    - Numeric metrics (e.g., tx, rx, loss_pct, avg_rtt_ms) are averaged per movement to support smoother time-series       plots.
+- Optionally: additonal tables reflecting `final_iw_data.csv` for link-level statistics.
+These tables are indexed on common query keys (node IDs, edge endpoints) so that dashboard queries remain fast even as the dataset grows.
+
+2. Visualization Layer (Grafana dashboards)
+A Grafana instance is configured to point at the SQLite file via a SQLite data source. Dashboards (for eg, Dashboard.json) assume the schemas above and render:
+- Node Graph panels:
+  - Use `<prefix>_nodes` and `<prefix>_edges` to show APs and stations as nodes, links as edges.
+  - Visual encodings:
+    - severity -> node color (ok/ warning/ critical)
+    - mainstat/ detail__sucess_rate -> primary health metric
+    - `arc_success` / `arc_errors` -> proportional "donut" sucess vs errors.
+   
+<img width="620" height="287" alt="Screenshot 2025-11-25 at 4 29 04 PM" src="https://github.com/user-attachments/assets/203493f5-f9f4-45a1-86db-d8f1b1045967" />
+
+   
+<img width="1123" height="336" alt="Screenshot 2025-11-25 at 4 28 24 PM" src="https://github.com/user-attachments/assets/56c50e67-f0f7-4809-8677-5723433d721a" />
+
+  
+- Time-series panels:
+  - Use `ping_data` or `ping_data_agg` to show connectivity metrics over time or movement number.
+  - Typical metrics: success rate, loss fraction, average RTT per movement or per timeframe.
+
+<img width="1478" height="333" alt="Screenshot 2025-11-25 at 4 32 25 PM" src="https://github.com/user-attachments/assets/53edf718-9eb9-4610-ad97-b9a3a15f9cf5" />
+
+<img width="1486" height="326" alt="Screenshot 2025-11-25 at 4 32 05 PM" src="https://github.com/user-attachments/assets/2f38a8aa-6ba0-40e3-bfda-ef338aed4fde" />
+
+
+- Geomap view:
+  - Uses latitude/longitude derived from node position to overlay nodes on a campus map or geographic background.
+
+ <img width="1484" height="401" alt="Screenshot 2025-11-25 at 4 34 08 PM" src="https://github.com/user-attachments/assets/0aef229c-31f8-48af-b8f9-ca8a7652dc32" />
+ 
+Contract summary
+Any Visualization module implementing this contract should:
+- Consume the results/ directory structure described above, specifically:
+  - ping_data.csv
+  - final_iw_data.csv 
+  - timeframeX/nodes.csv, timeframeX/edges.csv, timeframeX/ping_data_movement_X.csv for each timeframe.
+- Produce:
+  - A machine-readable data store (here: a SQLite database) with:
+    - One set of node/edge tables per timeframe (prefix-based),
+    - A raw ping table,
+    - An aggregated ping table keyed by movement_number.
+  - One or more visualization artifacts (here: Grafana dashboards) that rely only on this data contract.
+
+As long as a replacement Visualization module reads the same input files and provides an equivalent data interface (tables or API), it can be swapped in without changing upstream modules.
+  
 
